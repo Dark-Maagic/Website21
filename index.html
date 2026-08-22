@@ -28,26 +28,16 @@
       max-width: 600px;
       white-space: pre-wrap;
     }
-    .comparison-container {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 30px;
+    #image-wrapper {
       margin-top: 25px;
-      flex-wrap: wrap;
+      display: none;
     }
-    .box {
-      border: 1px solid #ddd;
-      padding: 15px;
-      border-radius: 8px;
-      background-color: #fafafa;
-      max-width: 340px;
-      min-height: 250px;
-    }
-    .box img, .box svg {
-      max-width: 100%;
+    #cat-image {
+      max-width: 500px;
+      width: 90%;
       height: auto;
-      border-radius: 4px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
   </style>
 </head>
@@ -59,35 +49,26 @@
   <h2>Cloudflare Pages Functions Demo</h2>
   <div>
     <button id="fetch-cat-btn">Get ASCII Cat</button>
-    <button id="fetch-gemini-btn">Convert Web Photo to HTML Art</button>
+    <button id="fetch-gemini-btn">Get Cat in Nature Photo</button>
   </div>
 
   <br>
   <pre id="output-box">Click a button to load data...</pre>
 
-  <!-- Container for side-by-side display of source photo and Gemini HTML output -->
-  <div class="comparison-container" id="display-area" style="display: none;">
-    <div class="box">
-      <h3>Original Web Image</h3>
-      <img id="source-img" src="" alt="Source Cat" />
-    </div>
-
-    <div class="box">
-      <h3>Gemini-Rendered HTML/SVG</h3>
-      <div id="html-art-container"></div>
-    </div>
+  <!-- Single container for the rotating cat photo -->
+  <div id="image-wrapper">
+    <img id="cat-image" src="" alt="Cat in Nature" />
   </div>
 
   <script>
     const output = document.getElementById('output-box');
-    const displayArea = document.getElementById('display-area');
-    const sourceImg = document.getElementById('source-img');
-    const htmlArtContainer = document.getElementById('html-art-container');
+    const imageWrapper = document.getElementById('image-wrapper');
+    const catImage = document.getElementById('cat-image');
 
     // 1. ASCII Cat button handler
     document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
-      displayArea.style.display = 'none';
-      output.textContent = 'Loading cat...';
+      imageWrapper.style.display = 'none';
+      output.textContent = 'Loading ASCII cat...';
       try {
         const response = await fetch('/api/cat');
         if (!response.ok) {
@@ -101,25 +82,22 @@
       }
     });
 
-    // 2. Gemini Image-to-HTML converter handler
+    // 2. Random Cat Photo button handler
     document.getElementById('fetch-gemini-btn').addEventListener('click', async () => {
-      displayArea.style.display = 'none';
-      htmlArtContainer.innerHTML = '';
-      output.textContent = 'Gemini is analyzing the image and coding the HTML/SVG representation...';
+      output.textContent = 'Selecting a random cat photo...';
 
       try {
         const response = await fetch('/api/gemini');
         const data = await response.json();
-        
+
         if (!response.ok || data.error) {
           output.textContent = 'API Error:\n' + JSON.stringify(data, null, 2);
           return;
         }
 
-        output.textContent = 'HTML/SVG generated successfully!';
-        sourceImg.src = data.sourceImageUrl;
-        htmlArtContainer.innerHTML = data.generatedHtml;
-        displayArea.style.display = 'flex';
+        output.textContent = 'New cat photo loaded!';
+        catImage.src = data.sourceImageUrl;
+        imageWrapper.style.display = 'block';
       } catch (error) {
         output.textContent = 'Network/Fetch Error: ' + error.message;
         console.error(error);
