@@ -2,6 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloudflare Pages Function Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    pre {
+      font-family: monospace;
+      margin-top: 20px;
+      font-size: 18px;
+      display: inline-block;
+      text-align: left;
+      background-color: #f4f4f4;
+      padding: 15px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cloudflare Pages Functions Demo</h1>
+  <button id="fetch-cat-btn">Get ASCII Cat</button>
+  <br>
+  <pre id="cat-output">Click the button to load the cat...</pre>
+
+  <script>
+    document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
+      const output = document.getElementById('cat-output');
+      output.textContent = 'Loading...';
+
+      try {
+        // Fetch from the local Pages Function endpoint
+        const response = await fetch('/api/cat');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const asciiCat = await response.text();
+        output.textContent = asciiCat;
+      } catch (error) {
+        output.textContent = 'Error fetching cat: ' + error.message;
+        console.error(error);
+      }
+    });
+  </script>
+
   <title>My Homepage</title>
 </head>
 <body>
