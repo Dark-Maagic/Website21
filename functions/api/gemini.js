@@ -12,8 +12,7 @@ export async function onRequest(context) {
   }
 
   try {
-    // 1. Fetch an existing web image of a cat
-    // We supply a User-Agent header to prevent CDNs from returning a 403 Forbidden
+    // 1. Fetch source cat image from the web
     const sourceImageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80";
     
     const imageResponse = await fetch(sourceImageUrl, {
@@ -26,7 +25,6 @@ export async function onRequest(context) {
       throw new Error(`Failed to fetch source image: ${imageResponse.status}`);
     }
 
-    // Convert the image buffer to Base64
     const imageBuffer = await imageResponse.arrayBuffer();
     const bytes = new Uint8Array(imageBuffer);
     let binaryString = "";
@@ -35,51 +33,93 @@ export async function onRequest(context) {
     }
     const base64Image = btoa(binaryString);
 
-    // 2. Send the image to Gemini's vision model
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${apiKey}`;
     const prompt = `Analyze this cat picture. Recreate the image as a standalone, visually detailed SVG/HTML snippet with shapes, gradients, and colors matching the cat and background. 
 Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending with </svg> or </div>). Do NOT include markdown formatting, backticks, or explanations.`;
 
-    const geminiResponse = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
+    // Exact model priority hierarchy
+    const modelHierarchy = [
+      "gemini-3.7-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite"
+    ];
+
+    let lastErrorDetails = "";
+    let geminiResponse = null;
+    let successfulModel = null;
+
+    // 2. Iterate through the priority hierarchy
+    for (const model of modelHierarchy) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        geminiResponse = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
               {
-                inline_data: {
-                  mime_type: "image/jpeg",
-                  data: base64Image,
-                },
-              },
-              {
-                text: prompt,
+                parts: [
+                  {
+                    inline_data: {
+                      mime_type: "image/jpeg",
+                      data: base64Image,
+                    },
+                  },
+                  {
+                    text: prompt,
+                  },
+                ],
               },
             ],
-          },
-        ],
-      }),
-    });
+          }),
+        });
 
-    if (!geminiResponse.ok) {
-      const errorDetails = await geminiResponse.text();
+        if (geminiResponse.ok) {
+          successfulModel = model;
+          break; // Success on current model
+        }
+
+        lastErrorDetails = await geminiResponse.text();
+
+        // If 503 (high demand) or 429 (rate-limit), retry briefly before fallback
+        if (geminiResponse.status === 503 || geminiResponse.status === 429) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+        } else {
+          break; // Skip immediately to the next fallback model
+        }
+      }
+
+      if (geminiResponse && geminiResponse.ok) {
+        break; // Stop fallback loop once a model succeeds
+      }
+    }
+
+    // 3. Final error if 3.5 Flash Lite (and all previous models) failed
+    if (!geminiResponse || !geminiResponse.ok) {
       return new Response(
-        JSON.stringify({ error: `Gemini API returned status ${geminiResponse.status}`, details: errorDetails }),
-        { status: geminiResponse.status, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Gemini 3.5 Flash Lite (and all preceding models: 3.7 Flash, 3.6 Flash, 3.5 Flash) failed to generate content.",
+          details: lastErrorDetails,
+        }),
+        {
+          status: geminiResponse ? geminiResponse.status : 503,
+          headers: { "Content-Type": "application/json" },
+        }
       );
     }
 
     const data = await geminiResponse.json();
     let rawHtml = data.candidates?.[0]?.content?.parts?.[0]?.text || "<p>No output generated</p>";
 
-    // Strip markdown code fences if Gemini wraps its response in ```html ... ```
+    // Clean any markdown code blocks
     rawHtml = rawHtml.replace(/```html/gi, "").replace(/```/g, "").trim();
 
     return new Response(
       JSON.stringify({
         sourceImageUrl: sourceImageUrl,
         generatedHtml: rawHtml,
+        modelUsed: successfulModel,
       }),
       {
         headers: { "Content-Type": "application/json" },
@@ -87,7 +127,7 @@ Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending 
     );
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: "Failed to convert image to HTML", details: err.message }),
+      JSON.stringify({ error: "Failed to process image", details: err.message }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
