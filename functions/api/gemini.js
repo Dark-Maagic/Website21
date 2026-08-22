@@ -12,9 +12,15 @@ export async function onRequest(context) {
   }
 
   try {
-    // 1. Fetch an existing web image of a cat in nature (using a Wikimedia photo)
-    const sourceImageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/320px-Cat03.jpg";
-    const imageResponse = await fetch(sourceImageUrl);
+    // 1. Fetch an existing web image of a cat
+    // We supply a User-Agent header to prevent CDNs from returning a 403 Forbidden
+    const sourceImageUrl = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80";
+    
+    const imageResponse = await fetch(sourceImageUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      }
+    });
 
     if (!imageResponse.ok) {
       throw new Error(`Failed to fetch source image: ${imageResponse.status}`);
@@ -29,11 +35,11 @@ export async function onRequest(context) {
     }
     const base64Image = btoa(binaryString);
 
-    // 2. Send the image to Gemini with instructions to convert it into HTML/SVG
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${apiKey}`;
+    // 2. Send the image to Gemini's vision model
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const prompt = `Analyze this cat picture. Recreate the image as a standalone, visually detailed SVG/HTML snippet with shapes, gradients, and colors matching the cat and background. 
-    Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending with </svg> or </div>). Do NOT include markdown formatting, backticks, or explanations.`;
+Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending with </svg> or </div>). Do NOT include markdown formatting, backticks, or explanations.`;
 
     const geminiResponse = await fetch(url, {
       method: "POST",
@@ -68,7 +74,7 @@ export async function onRequest(context) {
     const data = await geminiResponse.json();
     let rawHtml = data.candidates?.[0]?.content?.parts?.[0]?.text || "<p>No output generated</p>";
 
-    // Clean any markdown code blocks if returned
+    // Strip markdown code fences if Gemini wraps its response in ```html ... ```
     rawHtml = rawHtml.replace(/```html/gi, "").replace(/```/g, "").trim();
 
     return new Response(
