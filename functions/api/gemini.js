@@ -16,7 +16,7 @@ export async function onRequest(context) {
   const prompt = "Give me a one-sentence inspiring quote about programming.";
 
   // Using the Gemini Flash model
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+ const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${apiKey}`;
 
   try {
     const geminiResponse = await fetch(url, {
