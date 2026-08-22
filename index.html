@@ -28,6 +28,27 @@
       max-width: 600px;
       white-space: pre-wrap;
     }
+    .comparison-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+    .box {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: #fafafa;
+      max-width: 340px;
+      min-height: 250px;
+    }
+    .box img, .box svg {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -38,17 +59,34 @@
   <h2>Cloudflare Pages Functions Demo</h2>
   <div>
     <button id="fetch-cat-btn">Get ASCII Cat</button>
-    <button id="fetch-gemini-btn">Test Gemini API</button>
+    <button id="fetch-gemini-btn">Convert Web Photo to HTML Art</button>
   </div>
 
   <br>
   <pre id="output-box">Click a button to load data...</pre>
 
+  <!-- Container for side-by-side display of source photo and Gemini HTML output -->
+  <div class="comparison-container" id="display-area" style="display: none;">
+    <div class="box">
+      <h3>Original Web Image</h3>
+      <img id="source-img" src="" alt="Source Cat" />
+    </div>
+
+    <div class="box">
+      <h3>Gemini-Rendered HTML/SVG</h3>
+      <div id="html-art-container"></div>
+    </div>
+  </div>
+
   <script>
     const output = document.getElementById('output-box');
+    const displayArea = document.getElementById('display-area');
+    const sourceImg = document.getElementById('source-img');
+    const htmlArtContainer = document.getElementById('html-art-container');
 
     // 1. ASCII Cat button handler
     document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
+      displayArea.style.display = 'none';
       output.textContent = 'Loading cat...';
       try {
         const response = await fetch('/api/cat');
@@ -63,19 +101,25 @@
       }
     });
 
-    // 2. Gemini API button handler
+    // 2. Gemini Image-to-HTML converter handler
     document.getElementById('fetch-gemini-btn').addEventListener('click', async () => {
-      output.textContent = 'Contacting Gemini API...';
+      displayArea.style.display = 'none';
+      htmlArtContainer.innerHTML = '';
+      output.textContent = 'Gemini is analyzing the image and coding the HTML/SVG representation...';
+
       try {
         const response = await fetch('/api/gemini');
         const data = await response.json();
         
-        if (!response.ok) {
+        if (!response.ok || data.error) {
           output.textContent = 'API Error:\n' + JSON.stringify(data, null, 2);
           return;
         }
 
-        output.textContent = `Prompt: ${data.prompt}\n\nResponse:\n${data.reply}`;
+        output.textContent = 'HTML/SVG generated successfully!';
+        sourceImg.src = data.sourceImageUrl;
+        htmlArtContainer.innerHTML = data.generatedHtml;
+        displayArea.style.display = 'flex';
       } catch (error) {
         output.textContent = 'Network/Fetch Error: ' + error.message;
         console.error(error);
