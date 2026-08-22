@@ -30,7 +30,7 @@ export async function onRequest(context) {
     const base64Image = btoa(binaryString);
 
     // 2. Send the image to Gemini with instructions to convert it into HTML/SVG
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.7-flash:generateContent?key=${apiKey}`;
 
     const prompt = `Analyze this cat picture. Recreate the image as a standalone, visually detailed SVG/HTML snippet with shapes, gradients, and colors matching the cat and background. 
     Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending with </svg> or </div>). Do NOT include markdown formatting, backticks, or explanations.`;
