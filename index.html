@@ -14,38 +14,47 @@
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
+      margin: 5px;
     }
     pre {
       font-family: monospace;
       margin-top: 20px;
-      font-size: 18px;
+      font-size: 16px;
       display: inline-block;
       text-align: left;
       background-color: #f4f4f4;
       padding: 15px;
       border-radius: 5px;
+      max-width: 600px;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <h1>Cloudflare Pages Functions Demo</h1>
-  <button id="fetch-cat-btn">Get ASCII Cat</button>
+
+  <h1>Welcome to My Website!</h1>
+  <p>Deploys automatically via Cloudflare Pages!!</p>
+
+  <h2>Cloudflare Pages Functions Demo</h2>
+  <div>
+    <button id="fetch-cat-btn">Get ASCII Cat</button>
+    <button id="fetch-gemini-btn">Test Gemini API</button>
+  </div>
+
   <br>
-  <pre id="cat-output">Click the button to load the cat...</pre>
+  <pre id="output-box">Click a button to load data...</pre>
 
   <script>
-    document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
-      const output = document.getElementById('cat-output');
-      output.textContent = 'Loading...';
+    const output = document.getElementById('output-box');
 
+    // 1. ASCII Cat button handler
+    document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
+      output.textContent = 'Loading cat...';
       try {
-        // Fetch from the local Pages Function endpoint
         const response = await fetch('/api/cat');
-        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
         const asciiCat = await response.text();
         output.textContent = asciiCat;
       } catch (error) {
@@ -53,12 +62,26 @@
         console.error(error);
       }
     });
+
+    // 2. Gemini API button handler
+    document.getElementById('fetch-gemini-btn').addEventListener('click', async () => {
+      output.textContent = 'Contacting Gemini API...';
+      try {
+        const response = await fetch('/api/gemini');
+        const data = await response.json();
+        
+        if (!response.ok) {
+          output.textContent = 'API Error:\n' + JSON.stringify(data, null, 2);
+          return;
+        }
+
+        output.textContent = `Prompt: ${data.prompt}\n\nResponse:\n${data.reply}`;
+      } catch (error) {
+        output.textContent = 'Network/Fetch Error: ' + error.message;
+        console.error(error);
+      }
+    });
   </script>
 
-  <title>My Homepage</title>
-</head>
-<body>
-  <h1>Welcome to My Website!</h1>
-  <p>Deploys automatically via Cloudflare Pages!!</p>
 </body>
 </html>
