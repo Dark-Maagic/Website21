@@ -1,132 +1,785 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cloudflare Pages Function Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eladio Dieste — The Poetry of Structural Efficiency</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      margin-top: 50px;
+    :root {
+      --bg: #121110;
+      --surface: #1a1918;
+      --card-bg: #22201e;
+      --text: #e8e4df;
+      --text-muted: #9e9890;
+      --brick: #c25e38;
+      --brick-light: #e07a52;
+      --clay: #d68c68;
+      --border: rgba(232, 228, 223, 0.12);
+      --font-serif: "Playfair Display", Georgia, serif;
+      --font-display: "Cinzel", Georgia, serif;
+      --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+    }
+
+    /* Custom Cursor */
+    .custom-cursor {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      background: var(--brick);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  height 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  background-color 0.3s ease;
+      z-index: 9999;
+      mix-blend-mode: difference;
+    }
+
+    .custom-cursor-follower {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(224, 122, 82, 0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease-out;
+      z-index: 9998;
+    }
+
+    /* Navigation */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 24px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      mix-blend-mode: normal;
+      background: linear-gradient(180deg, rgba(18,17,16,0.9) 0%, rgba(18,17,16,0) 100%);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--brick-light);
+    }
+
+    .btn-demo {
+      padding: 8px 18px;
+      border: 1px solid var(--brick);
+      border-radius: 40px;
+      color: var(--brick-light) !important;
+      transition: all 0.3s ease;
+    }
+
+    .btn-demo:hover {
+      background: var(--brick);
+      color: #fff !important;
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 120px 48px 80px;
+      overflow: hidden;
+    }
+
+    .hero-bg-vault {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .hero-meta {
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--brick-light);
+      margin-bottom: 20px;
+      z-index: 1;
+    }
+
+    .hero-title {
+      font-family: var(--font-serif);
+      font-size: clamp(3.2rem, 8vw, 7.5rem);
+      font-weight: 400;
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      max-width: 1200px;
+      z-index: 1;
+      margin-bottom: 40px;
+    }
+
+    .hero-title span.italic {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--clay);
+    }
+
+    .hero-footer {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 40px;
+      align-items: flex-end;
+      border-top: 1px solid var(--border);
+      padding-top: 30px;
+      z-index: 1;
+    }
+
+    .hero-desc {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      max-width: 640px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 30px;
+      justify-content: flex-end;
+    }
+
+    .stat-item span.num {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      color: var(--text);
+    }
+
+    .stat-item span.label {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* Section Global */
+    section {
+      padding: 120px 48px;
+      border-top: 1px solid var(--border);
+      position: relative;
+    }
+
+    .section-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--brick);
+      margin-bottom: 24px;
+      display: block;
+    }
+
+    /* Architectural Philosophy */
+    .philosophy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .philosophy-quote {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      line-height: 1.25;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    .philosophy-text p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      line-height: 1.75;
+      margin-bottom: 24px;
+    }
+
+    /* Works Grid / Interactive Preview */
+    .works-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 60px;
+    }
+
+    .works-header h2 {
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      font-weight: 400;
+    }
+
+    .works-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .work-item {
+      display: grid;
+      grid-template-columns: 100px 2fr 1.5fr 1fr;
+      padding: 32px 16px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
       cursor: pointer;
-      margin: 5px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+      position: relative;
     }
-    pre {
-      font-family: monospace;
-      margin-top: 20px;
-      font-size: 16px;
-      display: inline-block;
-      text-align: left;
-      background-color: #f4f4f4;
-      padding: 15px;
-      border-radius: 5px;
-      max-width: 600px;
-      white-space: pre-wrap;
+
+    .work-item:hover {
+      background-color: var(--surface);
+      padding-left: 28px;
+      border-bottom-color: var(--brick);
     }
-    .comparison-container {
+
+    .work-year {
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .work-name {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      font-weight: 400;
+    }
+
+    .work-loc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .work-tag {
+      text-align: right;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--clay);
+    }
+
+    /* Floating Image Hover */
+    .floating-preview {
+      position: fixed;
+      width: 320px;
+      height: 220px;
+      border-radius: 6px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      border: 1px solid var(--border);
+    }
+
+    .floating-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Gaussian Vault SVG Demo Section */
+    .interactive-vault {
+      background: radial-gradient(circle at center, #261f1b 0%, #121110 70%);
+      text-align: center;
+      padding: 100px 48px;
+    }
+
+    .vault-canvas-container {
+      max-width: 900px;
+      margin: 40px auto;
+      height: 280px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Modal Viewer */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(18, 17, 16, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 2000;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      gap: 30px;
-      margin-top: 25px;
-      flex-wrap: wrap;
+      align-items: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
     }
-    .box {
-      border: 1px solid #ddd;
-      padding: 15px;
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      max-width: 800px;
+      width: 100%;
       border-radius: 8px;
-      background-color: #fafafa;
-      max-width: 360px;
-      min-height: 250px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      position: relative;
     }
-    .box img, .box svg {
-      max-width: 100%;
-      height: auto;
-      border-radius: 6px;
+
+    .modal-card img {
+      width: 100%;
+      height: 380px;
+      object-fit: cover;
+    }
+
+    .modal-body {
+      padding: 32px;
+    }
+
+    .modal-body h3 {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .modal-body p {
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-top: 12px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    /* Footer & CF Integration Banner */
+    .cf-banner {
+      background: linear-gradient(135deg, #241c18 0%, #151413 100%);
+      border: 1px solid var(--brick);
+      border-radius: 12px;
+      padding: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 60px;
+    }
+
+    .cf-banner h3 {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+
+    .cf-banner p {
+      color: var(--text-muted);
+    }
+
+    footer {
+      padding: 48px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 860px) {
+      header {
+        padding: 20px 24px;
+      }
+      .hero {
+        padding: 100px 24px 60px;
+      }
+      .hero-footer {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .philosophy-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .work-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .work-tag {
+        text-align: left;
+      }
+      .cf-banner {
+        flex-direction: column;
+        text-align: center;
+        gap: 24px;
+      }
+      .custom-cursor, .custom-cursor-follower {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h1>Welcome to My Website!</h1>
-  <p>Deploys automatically via Cloudflare Pages!!</p>
+  <!-- Custom Cursor -->
+  <div class="custom-cursor" id="cursor"></div>
+  <div class="custom-cursor-follower" id="cursor-follower"></div>
 
-  <h2>Cloudflare Pages Functions Demo</h2>
-  <div>
-    <button id="fetch-cat-btn">Get ASCII Cat</button>
-    <button id="fetch-gemini-btn">Convert Random Cat Photo to HTML Art</button>
+  <!-- Header -->
+  <header>
+    <a href="#" class="brand">Dieste Archive</a>
+    <nav>
+      <a href="#works">Works</a>
+      <a href="#philosophy">Technique</a>
+      <a href="#vault-demo">Gaussian Curve</a>
+      <a href="/demo.html" class="btn-demo">Pages API Demo ↗</a>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero">
+      <!-- Animated Vault Wave Background SVG -->
+      <svg class="hero-bg-vault" viewBox="0 0 1440 600" preserveAspectRatio="none">
+        <path id="vault-wave-1" fill="none" stroke="url(#brickGrad)" stroke-width="1.5" d="M0,300 C360,100 720,500 1080,200 C1260,50 1380,250 1440,300" />
+        <path id="vault-wave-2" fill="none" stroke="rgba(224,122,82,0.3)" stroke-width="1" d="M0,350 C360,150 720,550 1080,250 C1260,100 1380,300 1440,350" />
+        <defs>
+          <linearGradient id="brickGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#c25e38" stop-opacity="0.2"/>
+            <stop offset="50%" stop-color="#e07a52" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#c25e38" stop-opacity="0.2"/>
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div class="hero-meta">1917 — 2000 • URUGUAY</div>
+      <h1 class="hero-title">
+        The poetry of <span class="italic">structural efficiency</span> & reinforced brick.
+      </h1>
+
+      <div class="hero-footer">
+        <p class="hero-desc">
+          Eladio Dieste revolutionized modern architecture by bending clay into self-supporting Gaussian vaults, achieving breathtaking lightness through mathematical geometry.
+        </p>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="num">1960</span>
+            <span class="label">Atlántida Church</span>
+          </div>
+          <div class="stat-item">
+            <span class="num">UNESCO</span>
+            <span class="label">World Heritage</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Philosophy & Method -->
+    <section id="philosophy">
+      <span class="section-label">01 / Philosophy</span>
+      <div class="philosophy-grid">
+        <div class="philosophy-quote">
+          “Form is not an arbitrary choice, but the direct result of resistance through geometry.”
+        </div>
+        <div class="philosophy-text">
+          <p>
+            Dieste turned clay, mortar, and steel into self-supporting thin-shell structures. By relying on double-curvature surfaces rather than heavy reinforcement, his vaults span immense spaces using minimal material.
+          </p>
+          <p>
+            His work stands at the intersection of rigorous mathematical calculation and profound humanism—what he termed an <em>“architecture of necessity”</em>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Selected Works List with Floating Image Reveal -->
+    <section id="works">
+      <span class="section-label">02 / Built Archive</span>
+      <div class="works-header">
+        <h2>Selected Works</h2>
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Hover to preview</span>
+      </div>
+
+      <div class="works-list">
+        <div class="work-item" 
+             data-title="Church of Christ the Worker" 
+             data-year="1960" 
+             data-loc="Estación Atlántida, Canelones" 
+             data-desc="UNESCO World Heritage site featuring undulating reinforced brick walls and Gaussian catenary vaults."
+             data-img="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1000&q=80">
+          <span class="work-year">1960</span>
+          <span class="work-name">Church of Atlántida</span>
+          <span class="work-loc">Canelones, Uruguay</span>
+          <span class="work-tag">Double Curvature</span>
+        </div>
+
+        <div class="work-item" 
+             data-title="Church of San Pedro" 
+             data-year="1971" 
+             data-loc="Durazno, Uruguay" 
+             data-desc="Reconstruction of a historic church interior with a folded thin-shell brick roof and hexagonal rosette window."
+             data-img="https://images.unsplash.com/photo-1548625361-195fe579b292?auto=format&fit=crop&w=1000&q=80">
+          <span class="work-year">1971</span>
+          <span class="work-name">San Pedro Church</span>
+          <span class="work-loc">Durazno, Uruguay</span>
+          <span class="work-tag">Folded Plates</span>
+        </div>
+
+        <div class="work-item" 
+             data-title="Cadyl Silo Grain Storage" 
+             data-year="1976" 
+             data-loc="Young, Río Negro" 
+             data-desc="A monument of structural efficiency: continuous reinforced brick vault designed to withstand tremendous agricultural loads."
+             data-img="https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1000&q=80">
+          <span class="work-year">1976</span>
+          <span class="work-name">Silo Cadyl Young</span>
+          <span class="work-loc">Río Negro, Uruguay</span>
+          <span class="work-tag">Ceramic Vault</span>
+        </div>
+
+        <div class="work-item" 
+             data-title="Montevideo Shopping Center" 
+             data-year="1985" 
+             data-loc="Montevideo, Uruguay" 
+             data-desc="A commercial space crowned with wide-span ceramic brick domes and undulating facades."
+             data-img="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80">
+          <span class="work-year">1985</span>
+          <span class="work-name">Montevideo Shopping</span>
+          <span class="work-loc">Montevideo, Uruguay</span>
+          <span class="work-tag">Free-form Shell</span>
+        </div>
+      </div>
+
+      <!-- Cloudflare Functions Direct Callout -->
+      <div class="cf-banner">
+        <div>
+          <h3>Cloudflare Functions & AI Experiments</h3>
+          <p>Explore your serverless backend endpoints (ASCII Cats, Gemini HTML artwork generators).</p>
+        </div>
+        <a href="/demo.html" class="btn-demo" style="padding: 12px 28px; font-size: 1rem;">Launch Demo Page →</a>
+      </div>
+    </section>
+
+    <!-- Interactive Gaussian Vault Simulator -->
+    <section id="vault-demo" class="interactive-vault">
+      <span class="section-label">03 / Interactive Mathematics</span>
+      <h2 style="font-family: var(--font-serif); font-size: 2.4rem; margin-bottom: 12px;">Gaussian Waveform Simulator</h2>
+      <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Move your pointer across the canvas to modulate the catenary curve tension and vault amplitude.</p>
+      
+      <div class="vault-canvas-container" id="canvas-container">
+        <canvas id="vaultCanvas"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating Work Preview Element -->
+  <div class="floating-preview" id="floating-preview">
+    <img src="" id="floating-img" alt="Work Preview" />
   </div>
 
-  <br>
-  <pre id="output-box">Click a button to load data...</pre>
-
-  <!-- Side-by-side comparison container -->
-  <div class="comparison-container" id="display-area" style="display: none;">
-    <div class="box">
-      <h3>Original Web Image</h3>
-      <img id="source-img" src="" alt="Source Cat" />
-    </div>
-
-    <div class="box">
-      <h3>Gemini-Rendered HTML/SVG</h3>
-      <div id="html-art-container"></div>
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="work-modal">
+    <div class="modal-card">
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+      <img src="" id="modal-img" alt="Modal Visual" />
+      <div class="modal-body">
+        <span class="section-label" id="modal-tag" style="margin-bottom: 8px;"></span>
+        <h3 id="modal-title"></h3>
+        <span id="modal-meta" style="color: var(--clay); font-size: 0.9rem;"></span>
+        <p id="modal-desc"></p>
+      </div>
     </div>
   </div>
 
+  <!-- Footer -->
+  <footer>
+    <p>Inspired by the architectural works of Eladio Dieste (1917–2000). Powered by Cloudflare Workers & Pages.</p>
+  </footer>
+
+  <!-- Interactive Scripts -->
   <script>
-    const output = document.getElementById('output-box');
-    const displayArea = document.getElementById('display-area');
-    const sourceImg = document.getElementById('source-img');
-    const htmlArtContainer = document.getElementById('html-art-container');
+    // 1. Custom Magnetic Cursor
+    const cursor = document.getElementById('cursor');
+    const follower = document.getElementById('cursor-follower');
+    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+    let followerX = mouseX, followerY = mouseY;
 
-    // 1. ASCII Cat button handler
-    document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
-      displayArea.style.display = 'none';
-      output.textContent = 'Loading ASCII cat...';
-      try {
-        const response = await fetch('/api/cat');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const asciiCat = await response.text();
-        output.textContent = asciiCat;
-      } catch (error) {
-        output.textContent = 'Error fetching cat: ' + error.message;
-        console.error(error);
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursor.style.left = `${mouseX}px`;
+      cursor.style.top = `${mouseY}px`;
+    });
+
+    function animateCursor() {
+      followerX += (mouseX - followerX) * 0.15;
+      followerY += (mouseY - followerY) * 0.15;
+      follower.style.left = `${followerX}px`;
+      follower.style.top = `${followerY}px`;
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // 2. Floating Hover Image for Works
+    const floatingPreview = document.getElementById('floating-preview');
+    const floatingImg = document.getElementById('floating-img');
+    const workItems = document.querySelectorAll('.work-item');
+
+    workItems.forEach(item => {
+      item.addEventListener('mouseenter', (e) => {
+        const imgSrc = item.getAttribute('data-img');
+        floatingImg.src = imgSrc;
+        floatingPreview.style.opacity = '1';
+        floatingPreview.style.transform = 'scale(1)';
+      });
+
+      item.addEventListener('mousemove', (e) => {
+        floatingPreview.style.left = `${e.clientX + 24}px`;
+        floatingPreview.style.top = `${e.clientY - 110}px`;
+      });
+
+      item.addEventListener('mouseleave', () => {
+        floatingPreview.style.opacity = '0';
+        floatingPreview.style.transform = 'scale(0.85)';
+      });
+
+      // Click to open detail modal
+      item.addEventListener('click', () => {
+        document.getElementById('modal-title').textContent = item.getAttribute('data-title');
+        document.getElementById('modal-meta').textContent = `${item.getAttribute('data-year')} — ${item.getAttribute('data-loc')}`;
+        document.getElementById('modal-desc').textContent = item.getAttribute('data-desc');
+        document.getElementById('modal-tag').textContent = item.querySelector('.work-tag').textContent;
+        document.getElementById('modal-img').src = item.getAttribute('data-img');
+        document.getElementById('work-modal').classList.add('active');
+      });
+    });
+
+    // Close Modal
+    document.getElementById('modal-close-btn').addEventListener('click', () => {
+      document.getElementById('work-modal').classList.remove('active');
+    });
+    document.getElementById('work-modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('work-modal')) {
+        document.getElementById('work-modal').classList.remove('active');
       }
     });
 
-    // 2. Gemini Random Image to HTML Art button handler
-    document.getElementById('fetch-gemini-btn').addEventListener('click', async () => {
-      displayArea.style.display = 'none';
-      htmlArtContainer.innerHTML = '';
-      output.textContent = 'Selecting a random cat image and generating HTML/SVG artwork...';
+    // 3. Dynamic Gaussian Vault Canvas Wave Simulation
+    const canvas = document.getElementById('vaultCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let waveAmplitude = 40;
+    let waveFrequency = 0.015;
+    let phase = 0;
 
-      try {
-        const response = await fetch('/api/gemini');
-        const data = await response.json();
-        
-        if (!response.ok || data.error) {
-          output.textContent = 'API Error:\n' + JSON.stringify(data, null, 2);
-          return;
-        }
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      width = canvas.width = container.offsetWidth;
+      height = canvas.height = container.offsetHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-        output.textContent = `Success! Rendered with model: ${data.modelUsed || 'Gemini'}`;
-        sourceImg.src = data.sourceImageUrl;
-        htmlArtContainer.innerHTML = data.generatedHtml;
-        displayArea.style.display = 'flex';
-      } catch (error) {
-        output.textContent = 'Network/Fetch Error: ' + error.message;
-        console.error(error);
-      }
+    // Canvas interactivity
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      waveAmplitude = (y / height) * 80 + 10;
+      waveFrequency = (x / width) * 0.025 + 0.005;
     });
+
+    function drawVault() {
+      ctx.clearRect(0, 0, width, height);
+
+      const layers = 10;
+      for (let j = 0; j < layers; j++) {
+        ctx.beginPath();
+        const offsetY = (height / (layers + 1)) * (j + 1);
+        ctx.strokeStyle = `rgba(224, 122, 82, ${0.15 + (j / layers) * 0.55})`;
+        ctx.lineWidth = 1.5;
+
+        for (let x = 0; x < width; x += 4) {
+          const y = offsetY + Math.sin(x * waveFrequency + phase + (j * 0.4)) * waveAmplitude;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      phase += 0.02;
+      requestAnimationFrame(drawVault);
+    }
+    drawVault();
   </script>
-
 </body>
 </html>
