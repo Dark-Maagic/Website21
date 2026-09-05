@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloudflare Pages Function Test</title>
+  <style>
+    :root {
+      --bg: #f8f6f2;
+      --card-bg: #ffffff;
+      --text: #1a1a1a;
+      --accent: #b4532a;
+      --border: #e2ded5;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 40px 20px 80px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+    .nav-back {
+      display: inline-block;
+      margin-bottom: 30px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .nav-back:hover {
+      text-decoration: underline;
+    }
+    h1 {
+      font-family: Georgia, serif;
+      font-weight: normal;
+      font-size: 2.4rem;
+      margin-bottom: 8px;
+    }
+    p {
+      color: #666;
+      margin-top: 0;
+    }
+    .button-group {
+      margin: 24px 0;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      background: #222;
+      color: #fff;
+      border: 1px solid #222;
+      padding: 12px 24px;
+      font-size: 15px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      margin-top: 20px;
+      font-size: 14px;
+      display: inline-block;
+      text-align: left;
+      background-color: #eee9e0;
+      padding: 20px;
+      border-radius: 6px;
+      max-width: 700px;
+      width: calc(100% - 40px);
+      box-sizing: border-box;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    .comparison-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 25px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    .box {
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 6px;
+      background-color: var(--card-bg);
+      max-width: 400px;
+      width: 100%;
+      min-height: 250px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      text-align: left;
+    }
+    .box h3 {
+      margin-top: 0;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #555;
+    }
+    .box img, .box svg {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="/" class="nav-back">← Back to Overview</a>
+
+  <h1>Welcome to My Website!</h1>
+  <p>Deploys automatically via Cloudflare Pages Functions</p>
+
+  <h2>Cloudflare Pages Functions Demo</h2>
+  <div class="button-group">
+    <button id="fetch-cat-btn">Get ASCII Cat</button>
+    <button id="fetch-gemini-btn">Convert Random Cat Photo to HTML Art</button>
+  </div>
+
+  <pre id="output-box">Click a button to load data...</pre>
+
+  <!-- Side-by-side comparison container -->
+  <div class="comparison-container" id="display-area" style="display: none;">
+    <div class="box">
+      <h3>Original Web Image</h3>
+      <img id="source-img" src="" alt="Source Cat" />
+    </div>
+
+    <div class="box">
+      <h3>Gemini-Rendered HTML/SVG</h3>
+      <div id="html-art-container"></div>
+    </div>
+  </div>
+
+  <script>
+    const output = document.getElementById('output-box');
+    const displayArea = document.getElementById('display-area');
+    const sourceImg = document.getElementById('source-img');
+    const htmlArtContainer = document.getElementById('html-art-container');
+
+    // 1. ASCII Cat button handler
+    document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
+      displayArea.style.display = 'none';
+      output.textContent = 'Loading ASCII cat...';
+      try {
+        const response = await fetch('/api/cat');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const asciiCat = await response.text();
+        output.textContent = asciiCat;
+      } catch (error) {
+        output.textContent = 'Error fetching cat: ' + error.message;
+        console.error(error);
+      }
+    });
+
+    // 2. Gemini Random Image to HTML Art button handler
+    document.getElementById('fetch-gemini-btn').addEventListener('click', async () => {
+      displayArea.style.display = 'none';
+      htmlArtContainer.innerHTML = '';
+      output.textContent = 'Selecting a random cat image and generating HTML/SVG artwork...';
+
+      try {
+        const response = await fetch('/api/gemini');
+        const data = await response.json();
+        
+        if (!response.ok || data.error) {
+          output.textContent = 'API Error:\n' + JSON.stringify(data, null, 2);
+          return;
+        }
+
+        output.textContent = `Success! Rendered with model: ${data.modelUsed || 'Gemini'}`;
+        sourceImg.src = data.sourceImageUrl;
+        htmlArtContainer.innerHTML = data.generatedHtml;
+        displayArea.style.display = 'flex';
+      } catch (error) {
+        output.textContent = 'Network/Fetch Error: ' + error.message;
+        console.error(error);
+      }
+    });
+  </script>
+
+</body>
+</html>
