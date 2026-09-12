@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GIF to ASCII Generator</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.5; }
+    textarea { width: 100%; height: 280px; font-family: monospace; font-size: 11px; margin-top: 15px; }
+    button { background: #222; color: #fff; border: none; padding: 10px 20px; font-size: 15px; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #b4532a; }
+    .status { margin: 15px 0; font-weight: bold; color: #b4532a; }
+  </style>
+  <script type="module">
+    import { parseGIF, decompressFrames } from 'https://cdn.jsdelivr.net/npm/gifuct-js/+esm';
+
+    const CHARS = "@%#*+=-:. ";
+    const WIDTH = 55;
+
+    async function processBuffer(buffer) {
+      const status = document.getElementById('status');
+      status.textContent = 'Parsing GIF frames...';
+
+      const gif = parseGIF(buffer);
+      const frames = decompressFrames(gif, true);
+      status.textContent = `Converting ${frames.length} frames to ASCII...`;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = gif.lsd.width;
+      canvas.height = gif.lsd.height;
+      const ctx = canvas.getContext('2d');
+
+      const patchCanvas = document.createElement('canvas');
+      const patchCtx = patchCanvas.getContext('2d');
+
+      const sampleCanvas = document.createElement('canvas');
+      const sampleCtx = sampleCanvas.getContext('2d');
+      const aspect = gif.lsd.height / gif.lsd.width;
+      const targetHeight = Math.round(WIDTH * aspect * 0.52);
+      sampleCanvas.width = WIDTH;
+      sampleCanvas.height = targetHeight;
+
+      const asciiFrames = [];
+      let totalDelay = 0;
+
+      for (const frame of frames) {
+        totalDelay += frame.delay || 100;
+
+        patchCanvas.width = frame.dims.width;
+        patchCanvas.height = frame.dims.height;
+        const patchData = patchCtx.createImageData(frame.dims.width, frame.dims.height);
+        patchData.data.set(frame.patch);
+        patchCtx.putImageData(patchData, 0, 0);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(patchCanvas, frame.dims.left, frame.dims.top);
+
+        sampleCtx.drawImage(canvas, 0, 0, WIDTH, targetHeight);
+        const data = sampleCtx.getImageData(0, 0, WIDTH, targetHeight).data;
+
+        let frameText = "";
+        for (let y = 0; y < targetHeight; y++) {
+          let line = "";
+          for (let x = 0; x < WIDTH; x++) {
+            const idx = (y * WIDTH + x) * 4;
+            const brightness = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
+            const charIdx = Math.floor((brightness / 255) * (CHARS.length - 1));
+            line += CHARS[charIdx];
+          }
+          frameText += line + (y < targetHeight - 1 ? "\n" : "");
+        }
+        asciiFrames.push(frameText);
+      }
+
+      const avgDelay = Math.round(totalDelay / frames.length) || 100;
+      const outputCode = `const gifFrames = ${JSON.stringify(asciiFrames, null, 2)};\nconst gifDelay = ${avgDelay};`;
+
+      document.getElementById('output').value = outputCode;
+      status.textContent = `Done! Converted ${frames.length} frames.`;
+      document.getElementById('copyBtn').style.display = 'inline-block';
+    }
+
+    document.getElementById('convertBtn').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      const file = document.getElementById('fileInput').files[0];
+      const url = document.getElementById('gifUrl').value;
+
+      try {
+        if (file) {
+          status.textContent = 'Reading local file...';
+          const buffer = await file.arrayBuffer();
+          await processBuffer(buffer);
+        } else {
+          status.textContent = 'Downloading GIF from Giphy...';
+          const res = await fetch(url);
+          const buffer = await res.arrayBuffer();
+          await processBuffer(buffer);
+        }
+      } catch (err) {
+        status.textContent = 'Notice: Browser blocked direct URL fetch. Please right-click save the GIF to your computer, then select it with "Choose File" above.';
+      }
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const output = document.getElementById('output');
+      output.select();
+      navigator.clipboard.writeText(output.value);
+      alert('Copied to clipboard!');
+    });
+  </script>
+</head>
+<body>
+  <h2>GIF to ASCII Web Converter</h2>
+  <p>Run this directly in your browser without installing anything.</p>
+
+  <label><strong>GIF URL:</strong></label><br>
+  <input id="gifUrl" type="text" style="width: 100%; padding: 8px; margin: 8px 0 15px;" value="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjZzM3dleDZlNW9mMHEyZmRlb3BiOWNmejcwYW00am50YmRkOXhuOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3OBaasSmMPfxAkasWc/giphy.gif" />
+
+  <label><strong>Or upload saved GIF file (bypasses browser URL blocks):</strong></label><br>
+  <input id="fileInput" type="file" accept="image/gif" style="margin: 8px 0 20px;" /><br>
+
+  <button id="convertBtn">Convert GIF</button>
+  <div class="status" id="status"></div>
+
+  <textarea id="output" placeholder="Generated JavaScript code will appear here..."></textarea><br>
+  <button id="copyBtn" style="display:none; margin-top: 10px;">📋 Copy Code</button>
+</body>
+</html>
