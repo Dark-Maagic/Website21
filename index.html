@@ -117,7 +117,7 @@
       padding: 120px 48px;
       border-top: 1px solid var(--border);
       position: relative;
-      overflow: hidden; /* Constrains background decals within each section */
+      overflow: hidden;
     }
 
     .section-label {
@@ -334,6 +334,32 @@
       margin-bottom: 22px;
     }
 
+    /* Gaussian Vault Simulator Section */
+    .interactive-vault {
+      background: radial-gradient(circle at center, #231c18 0%, #121110 75%);
+      text-align: center;
+      padding: 110px 48px;
+    }
+
+    .vault-canvas-container {
+      max-width: 960px;
+      margin: 40px auto 10px;
+      height: 300px;
+      background: rgba(18, 17, 16, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    #vaultCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
     /* Floating Image Hover Preview */
     .floating-preview {
       position: fixed;
@@ -484,6 +510,9 @@
       .custom-cursor, .custom-cursor-follower {
         display: none;
       }
+      .vault-canvas-container {
+        height: 220px;
+      }
     }
   </style>
 </head>
@@ -503,8 +532,9 @@
     </nav>
   </header>
 
-  <!-- Hero Section -->
+  <!-- Main Content -->
   <main>
+    <!-- Hero Section -->
     <section class="hero">
       <!-- Ambient Background Gaussian Vault Decal (Hero) -->
       <svg class="bg-decal" viewBox="0 0 1440 700" preserveAspectRatio="none">
@@ -534,7 +564,6 @@
         <!-- Multilayer Perceptron (MLP) as Seamless Background Graphic -->
         <div class="mlp-container">
           <svg class="mlp-visual" viewBox="0 0 280 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- Synaptic Weights / Connections -->
             <g stroke="rgba(224, 122, 82, 0.28)" stroke-width="1">
               <!-- Layer 1 to Layer 2 -->
               <line x1="30" y1="30" x2="105" y2="20" />
@@ -717,6 +746,21 @@
         </div>
       </div>
     </section>
+
+    <!-- Gaussian Curve Simulator (Restored Section) -->
+    <section id="vault-demo" class="interactive-vault">
+      <span class="section-label">04 / Interactive Mathematics Mini-Project</span>
+      <h2 style="font-family: var(--font-serif); font-size: 2.5rem; margin-bottom: 12px; font-weight: 400;">
+        Gaussian Waveform Simulator
+      </h2>
+      <p style="color: var(--text-muted); max-width: 620px; margin: 0 auto; font-size: 1.05rem; line-height: 1.6;">
+        Move your pointer or touch across the canvas to modulate the catenary curve tension, frequency, and harmonic amplitudes.
+      </p>
+      
+      <div class="vault-canvas-container" id="canvas-container">
+        <canvas id="vaultCanvas"></canvas>
+      </div>
+    </section>
   </main>
 
   <!-- Floating Work Preview Element -->
@@ -821,6 +865,65 @@
         document.getElementById('work-modal').classList.remove('active');
       }
     });
+
+    // 3. Dynamic Gaussian Vault Canvas Simulation
+    const canvas = document.getElementById('vaultCanvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let waveAmplitude = 38;
+    let waveFrequency = 0.012;
+    let phase = 0;
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      if (!container) return;
+      width = canvas.width = container.offsetWidth;
+      height = canvas.height = container.offsetHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Mouse & Touch modulation
+    function updateWaveParams(x, y) {
+      waveAmplitude = (y / height) * 75 + 10;
+      waveFrequency = (x / width) * 0.022 + 0.006;
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      updateWaveParams(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        const rect = canvas.getBoundingClientRect();
+        updateWaveParams(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+      }
+    }, { passive: true });
+
+    function drawVault() {
+      ctx.clearRect(0, 0, width, height);
+
+      const layers = 11;
+      for (let j = 0; j < layers; j++) {
+        ctx.beginPath();
+        const offsetY = (height / (layers + 1)) * (j + 1);
+        const alpha = 0.15 + (j / layers) * 0.65;
+        ctx.strokeStyle = `rgba(224, 122, 82, ${alpha})`;
+        ctx.lineWidth = 1.3;
+
+        for (let x = 0; x < width; x += 3) {
+          const y = offsetY + Math.sin(x * waveFrequency + phase + (j * 0.35)) * waveAmplitude;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      phase += 0.022;
+      requestAnimationFrame(drawVault);
+    }
+    drawVault();
   </script>
 </body>
 </html>
