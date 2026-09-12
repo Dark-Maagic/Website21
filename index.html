@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Eladio Dieste — The Poetry of Structural Efficiency</title>
+  <title>Gabriel Forman — Computational Intelligence</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,15 +77,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      mix-blend-mode: normal;
-      background: linear-gradient(180deg, rgba(18,17,16,0.9) 0%, rgba(18,17,16,0) 100%);
+      background: linear-gradient(180deg, rgba(18,17,16,0.95) 0%, rgba(18,17,16,0) 100%);
       backdrop-filter: blur(8px);
       border-bottom: 1px solid var(--border);
     }
 
     .brand {
       font-family: var(--font-display);
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--text);
@@ -103,28 +102,45 @@
       color: var(--text-muted);
       text-decoration: none;
       font-size: 0.85rem;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
       font-weight: 500;
       transition: color 0.3s ease;
-      position: relative;
     }
 
-    nav a:hover, nav a.active {
+    nav a:hover {
       color: var(--brick-light);
     }
 
-    .btn-demo {
-      padding: 8px 18px;
-      border: 1px solid var(--brick);
-      border-radius: 40px;
-      color: var(--brick-light) !important;
-      transition: all 0.3s ease;
+    /* Section Global & Decal Architecture */
+    section {
+      padding: 120px 48px;
+      border-top: 1px solid var(--border);
+      position: relative;
+      overflow: hidden; /* Constrains background decals within each section */
     }
 
-    .btn-demo:hover {
-      background: var(--brick);
-      color: #fff !important;
+    .section-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--brick);
+      margin-bottom: 24px;
+      display: block;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Ambient Background Decal Vectors */
+    .bg-decal {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.28;
     }
 
     /* Hero Section */
@@ -134,19 +150,9 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      padding: 120px 48px 80px;
+      padding: 140px 48px 80px;
       overflow: hidden;
-    }
-
-    .hero-bg-vault {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      opacity: 0.25;
-      pointer-events: none;
+      border-top: none;
     }
 
     .hero-meta {
@@ -161,85 +167,66 @@
 
     .hero-title {
       font-family: var(--font-serif);
-      font-size: clamp(3.2rem, 8vw, 7.5rem);
+      font-size: clamp(3.2rem, 7.5vw, 7rem);
       font-weight: 400;
-      line-height: 0.95;
+      line-height: 1.02;
       letter-spacing: -0.02em;
-      max-width: 1200px;
+      max-width: 1250px;
       z-index: 1;
-      margin-bottom: 40px;
-    }
-
-    .hero-title span.italic {
-      font-style: italic;
-      font-weight: 400;
-      color: var(--clay);
+      margin-bottom: 44px;
     }
 
     .hero-footer {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 40px;
-      align-items: flex-end;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 50px;
+      align-items: center;
       border-top: 1px solid var(--border);
-      padding-top: 30px;
+      padding-top: 36px;
       z-index: 1;
     }
 
     .hero-desc {
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       line-height: 1.6;
       color: var(--text-muted);
-      max-width: 640px;
+      max-width: 680px;
     }
 
-    .hero-stats {
+    /* MLP Network Graphic as Background Art */
+    .mlp-container {
       display: flex;
-      gap: 30px;
       justify-content: flex-end;
-    }
-
-    .stat-item span.num {
-      display: block;
-      font-family: var(--font-display);
-      font-size: 1.8rem;
-      color: var(--text);
-    }
-
-    .stat-item span.label {
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-
-    /* Section Global */
-    section {
-      padding: 120px 48px;
-      border-top: 1px solid var(--border);
+      align-items: center;
       position: relative;
     }
 
-    .section-label {
-      font-size: 0.8rem;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--brick);
-      margin-bottom: 24px;
-      display: block;
+    .mlp-visual {
+      width: 100%;
+      max-width: 330px;
+      height: auto;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      opacity: 0.5;
+      pointer-events: none;
+      filter: drop-shadow(0 0 16px rgba(194, 94, 56, 0.25));
     }
 
-    /* Architectural Philosophy */
+    /* Philosophy / Perspectives */
     .philosophy-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 80px;
       align-items: center;
+      position: relative;
+      z-index: 1;
     }
 
     .philosophy-quote {
       font-family: var(--font-serif);
-      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-size: clamp(2.2rem, 3.8vw, 3.4rem);
       line-height: 1.25;
       font-weight: 400;
       color: var(--text);
@@ -247,17 +234,19 @@
 
     .philosophy-text p {
       color: var(--text-muted);
-      font-size: 1.1rem;
-      line-height: 1.75;
+      font-size: 1.15rem;
+      line-height: 1.8;
       margin-bottom: 24px;
     }
 
-    /* Works Grid / Interactive Preview */
+    /* Selected Projects */
     .works-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      margin-bottom: 60px;
+      margin-bottom: 50px;
+      position: relative;
+      z-index: 1;
     }
 
     .works-header h2 {
@@ -269,53 +258,83 @@
     .works-list {
       display: flex;
       flex-direction: column;
+      position: relative;
+      z-index: 1;
     }
 
     .work-item {
       display: grid;
-      grid-template-columns: 100px 2fr 1.5fr 1fr;
-      padding: 32px 16px;
+      grid-template-columns: 80px 1fr auto;
+      padding: 24px 16px;
       border-bottom: 1px solid var(--border);
       align-items: center;
+      gap: 24px;
       cursor: pointer;
       text-decoration: none;
       color: var(--text);
       transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
       position: relative;
+      background: rgba(18, 17, 16, 0.35);
+      backdrop-filter: blur(2px);
     }
 
     .work-item:hover {
       background-color: var(--surface);
-      padding-left: 28px;
+      padding-left: 24px;
       border-bottom-color: var(--brick);
     }
 
-    .work-year {
-      font-family: var(--font-sans);
-      font-size: 0.9rem;
-      color: var(--text-muted);
+    .work-thumb {
+      width: 70px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--border);
     }
 
     .work-name {
       font-family: var(--font-serif);
-      font-size: 1.8rem;
+      font-size: 1.7rem;
       font-weight: 400;
-    }
-
-    .work-loc {
-      color: var(--text-muted);
-      font-size: 0.95rem;
     }
 
     .work-tag {
       text-align: right;
       font-size: 0.8rem;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--clay);
     }
 
-    /* Floating Image Hover */
+    /* About Section */
+    #about {
+      background: linear-gradient(180deg, rgba(26,25,24,0.3) 0%, rgba(18,17,16,0.8) 100%);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 60px;
+      margin-top: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .about-title {
+      font-family: var(--font-serif);
+      font-size: 2.8rem;
+      font-weight: 400;
+      line-height: 1.2;
+    }
+
+    .about-body p {
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+      margin-bottom: 22px;
+    }
+
+    /* Floating Image Hover Preview */
     .floating-preview {
       position: fixed;
       width: 320px;
@@ -326,8 +345,8 @@
       z-index: 50;
       opacity: 0;
       transform: scale(0.85);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.65);
       border: 1px solid var(--border);
     }
 
@@ -337,25 +356,7 @@
       object-fit: cover;
     }
 
-    /* Gaussian Vault SVG Demo Section */
-    .interactive-vault {
-      background: radial-gradient(circle at center, #261f1b 0%, #121110 70%);
-      text-align: center;
-      padding: 100px 48px;
-    }
-
-    .vault-canvas-container {
-      max-width: 900px;
-      margin: 40px auto;
-      height: 280px;
-      background: rgba(0,0,0,0.4);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Modal Viewer */
+    /* Detail Modal */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -382,7 +383,7 @@
     .modal-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      max-width: 800px;
+      max-width: 760px;
       width: 100%;
       border-radius: 8px;
       overflow: hidden;
@@ -391,7 +392,7 @@
 
     .modal-card img {
       width: 100%;
-      height: 380px;
+      height: 360px;
       object-fit: cover;
     }
 
@@ -402,13 +403,30 @@
     .modal-body h3 {
       font-family: var(--font-serif);
       font-size: 2rem;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
     .modal-body p {
       color: var(--text-muted);
-      line-height: 1.6;
-      margin-top: 12px;
+      line-height: 1.65;
+      margin-top: 10px;
+    }
+
+    .modal-link-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 22px;
+      background: var(--brick);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      transition: background 0.2s ease;
+    }
+
+    .modal-link-btn:hover {
+      background: var(--brick-light);
     }
 
     .modal-close {
@@ -425,62 +443,43 @@
       font-size: 1.2rem;
     }
 
-    /* Footer & CF Integration Banner */
-    .cf-banner {
-      background: linear-gradient(135deg, #241c18 0%, #151413 100%);
-      border: 1px solid var(--brick);
-      border-radius: 12px;
-      padding: 48px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 60px;
-    }
-
-    .cf-banner h3 {
-      font-family: var(--font-serif);
-      font-size: 1.8rem;
-      margin-bottom: 8px;
-    }
-
-    .cf-banner p {
-      color: var(--text-muted);
-    }
-
+    /* Footer */
     footer {
       padding: 48px;
       text-align: center;
       border-top: 1px solid var(--border);
       color: var(--text-muted);
       font-size: 0.85rem;
+      letter-spacing: 0.05em;
     }
 
     @media (max-width: 860px) {
       header {
         padding: 20px 24px;
       }
+      nav {
+        gap: 20px;
+      }
       .hero {
-        padding: 100px 24px 60px;
+        padding: 110px 24px 60px;
       }
       .hero-footer {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 30px;
       }
-      .philosophy-grid {
+      .mlp-container {
+        justify-content: flex-start;
+      }
+      .philosophy-grid, .about-grid {
         grid-template-columns: 1fr;
-        gap: 40px;
+        gap: 30px;
       }
       .work-item {
-        grid-template-columns: 1fr;
-        gap: 8px;
+        grid-template-columns: 60px 1fr;
       }
       .work-tag {
+        grid-column: span 2;
         text-align: left;
-      }
-      .cf-banner {
-        flex-direction: column;
-        text-align: center;
-        gap: 24px;
       }
       .custom-cursor, .custom-cursor-follower {
         display: none;
@@ -496,154 +495,233 @@
 
   <!-- Header -->
   <header>
-    <a href="#" class="brand">Dieste Archive</a>
+    <a href="#" class="brand">Gabriel Forman</a>
     <nav>
-      <a href="#works">Works</a>
-      <a href="#philosophy">Technique</a>
-      <a href="#vault-demo">Gaussian Curve</a>
-      <a href="/demo.html" class="btn-demo">Pages API Demo ↗</a>
+      <a href="#about">About</a>
+      <a href="#projects">Projects</a>
+      <a href="sports.html">Sports</a>
     </nav>
   </header>
 
   <!-- Hero Section -->
   <main>
     <section class="hero">
-      <!-- Animated Vault Wave Background SVG -->
-      <svg class="hero-bg-vault" viewBox="0 0 1440 600" preserveAspectRatio="none">
-        <path id="vault-wave-1" fill="none" stroke="url(#brickGrad)" stroke-width="1.5" d="M0,300 C360,100 720,500 1080,200 C1260,50 1380,250 1440,300" />
-        <path id="vault-wave-2" fill="none" stroke="rgba(224,122,82,0.3)" stroke-width="1" d="M0,350 C360,150 720,550 1080,250 C1260,100 1380,300 1440,350" />
+      <!-- Ambient Background Gaussian Vault Decal (Hero) -->
+      <svg class="bg-decal" viewBox="0 0 1440 700" preserveAspectRatio="none">
+        <path fill="none" stroke="url(#heroGrad1)" stroke-width="1.5" d="M0,320 C360,120 720,520 1080,220 C1260,70 1380,260 1440,320" />
+        <path fill="none" stroke="rgba(224,122,82,0.25)" stroke-width="1.2" d="M0,370 C360,170 720,570 1080,270 C1260,120 1380,310 1440,370" />
+        <path fill="none" stroke="rgba(214,140,104,0.18)" stroke-width="1" d="M0,420 C360,220 720,620 1080,320 C1260,170 1380,360 1440,420" />
+        <path fill="none" stroke="rgba(194,94,56,0.12)" stroke-width="1" d="M0,470 C360,270 720,670 1080,370 C1260,220 1380,410 1440,470" />
         <defs>
-          <linearGradient id="brickGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#c25e38" stop-opacity="0.2"/>
-            <stop offset="50%" stop-color="#e07a52" stop-opacity="0.8"/>
-            <stop offset="100%" stop-color="#c25e38" stop-opacity="0.2"/>
+          <linearGradient id="heroGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#c25e38" stop-opacity="0.15"/>
+            <stop offset="50%" stop-color="#e07a52" stop-opacity="0.75"/>
+            <stop offset="100%" stop-color="#c25e38" stop-opacity="0.15"/>
           </linearGradient>
         </defs>
       </svg>
 
-      <div class="hero-meta">1917 — 2000 • URUGUAY</div>
+      <div class="hero-meta">Brookline • Massachusetts</div>
       <h1 class="hero-title">
-        The poetry of <span class="italic">structural efficiency</span> & reinforced brick.
+        Big problems. Algorithmically compressed.
       </h1>
 
       <div class="hero-footer">
         <p class="hero-desc">
-          Eladio Dieste revolutionized modern architecture by bending clay into self-supporting Gaussian vaults, achieving breathtaking lightness through mathematical geometry.
+          Gabriel Forman works at the frontier of computational intelligence in the pursuit of maximizing human efficiency.
         </p>
-        <div class="hero-stats">
-          <div class="stat-item">
-            <span class="num">1960</span>
-            <span class="label">Atlántida Church</span>
-          </div>
-          <div class="stat-item">
-            <span class="num">UNESCO</span>
-            <span class="label">World Heritage</span>
-          </div>
+        
+        <!-- Multilayer Perceptron (MLP) as Seamless Background Graphic -->
+        <div class="mlp-container">
+          <svg class="mlp-visual" viewBox="0 0 280 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Synaptic Weights / Connections -->
+            <g stroke="rgba(224, 122, 82, 0.28)" stroke-width="1">
+              <!-- Layer 1 to Layer 2 -->
+              <line x1="30" y1="30" x2="105" y2="20" />
+              <line x1="30" y1="30" x2="105" y2="55" />
+              <line x1="30" y1="30" x2="105" y2="90" />
+              <line x1="30" y1="30" x2="105" y2="125" />
+              <line x1="30" y1="70" x2="105" y2="20" />
+              <line x1="30" y1="70" x2="105" y2="55" />
+              <line x1="30" y1="70" x2="105" y2="90" />
+              <line x1="30" y1="70" x2="105" y2="125" />
+              <line x1="30" y1="110" x2="105" y2="20" />
+              <line x1="30" y1="110" x2="105" y2="55" />
+              <line x1="30" y1="110" x2="105" y2="90" />
+              <line x1="30" y1="110" x2="105" y2="125" />
+
+              <!-- Layer 2 to Layer 3 -->
+              <line x1="105" y1="20" x2="180" y2="20" />
+              <line x1="105" y1="20" x2="180" y2="55" />
+              <line x1="105" y1="20" x2="180" y2="90" />
+              <line x1="105" y1="20" x2="180" y2="125" />
+              <line x1="105" y1="55" x2="180" y2="20" />
+              <line x1="105" y1="55" x2="180" y2="55" />
+              <line x1="105" y1="55" x2="180" y2="90" />
+              <line x1="105" y1="55" x2="180" y2="125" />
+              <line x1="105" y1="90" x2="180" y2="20" />
+              <line x1="105" y1="90" x2="180" y2="55" />
+              <line x1="105" y1="90" x2="180" y2="90" />
+              <line x1="105" y1="90" x2="180" y2="125" />
+              <line x1="105" y1="125" x2="180" y2="20" />
+              <line x1="105" y1="125" x2="180" y2="55" />
+              <line x1="105" y1="125" x2="180" y2="90" />
+              <line x1="105" y1="125" x2="180" y2="125" />
+
+              <!-- Layer 3 to Layer 4 (Output) -->
+              <line x1="180" y1="20" x2="250" y2="50" />
+              <line x1="180" y1="20" x2="250" y2="95" />
+              <line x1="180" y1="55" x2="250" y2="50" />
+              <line x1="180" y1="55" x2="250" y2="95" />
+              <line x1="180" y1="90" x2="250" y2="50" />
+              <line x1="180" y1="90" x2="250" y2="95" />
+              <line x1="180" y1="125" x2="250" y2="50" />
+              <line x1="180" y1="125" x2="250" y2="95" />
+            </g>
+
+            <!-- Layer 1 Nodes (Input) -->
+            <circle cx="30" cy="30" r="4.5" fill="#c25e38" />
+            <circle cx="30" cy="70" r="4.5" fill="#c25e38" />
+            <circle cx="30" cy="110" r="4.5" fill="#c25e38" />
+
+            <!-- Layer 2 Nodes (Hidden 1) -->
+            <circle cx="105" cy="20" r="4.5" fill="#d68c68" />
+            <circle cx="105" cy="55" r="4.5" fill="#d68c68" />
+            <circle cx="105" cy="90" r="4.5" fill="#d68c68" />
+            <circle cx="105" cy="125" r="4.5" fill="#d68c68" />
+
+            <!-- Layer 3 Nodes (Hidden 2) -->
+            <circle cx="180" cy="20" r="4.5" fill="#d68c68" />
+            <circle cx="180" cy="55" r="4.5" fill="#d68c68" />
+            <circle cx="180" cy="90" r="4.5" fill="#d68c68" />
+            <circle cx="180" cy="125" r="4.5" fill="#d68c68" />
+
+            <!-- Layer 4 Nodes (Output) -->
+            <circle cx="250" cy="50" r="5" fill="#e07a52" />
+            <circle cx="250" cy="95" r="5" fill="#e07a52" />
+          </svg>
         </div>
       </div>
     </section>
 
-    <!-- Philosophy & Method -->
+    <!-- Perspectives / Methodology -->
     <section id="philosophy">
-      <span class="section-label">01 / Philosophy</span>
+      <!-- Ambient Background Catenary Wave Decal (Philosophy) -->
+      <svg class="bg-decal" viewBox="0 0 1440 500" preserveAspectRatio="none">
+        <path fill="none" stroke="rgba(224,122,82,0.22)" stroke-width="1.5" d="M-100,100 C300,450 650,50 1100,400 C1300,550 1500,200 1600,150" />
+        <path fill="none" stroke="rgba(214,140,104,0.16)" stroke-width="1.2" d="M-100,150 C300,500 650,100 1100,450 C1300,600 1500,250 1600,200" />
+        <path fill="none" stroke="rgba(194,94,56,0.1)" stroke-width="1" d="M-100,200 C300,550 650,150 1100,500 C1300,650 1500,300 1600,250" />
+      </svg>
+
+      <span class="section-label">01 / Perspectives</span>
       <div class="philosophy-grid">
         <div class="philosophy-quote">
-          “Form is not an arbitrary choice, but the direct result of resistance through geometry.”
+          “A master musician, must also conduct.”
         </div>
         <div class="philosophy-text">
           <p>
-            Dieste turned clay, mortar, and steel into self-supporting thin-shell structures. By relying on double-curvature surfaces rather than heavy reinforcement, his vaults span immense spaces using minimal material.
+            I have found that in order to begin to innovate in intelligence, it becomes necessary not just to modify the way that you approach a problem, but also to modify the tools that you employ in approaching the problem.
           </p>
           <p>
-            His work stands at the intersection of rigorous mathematical calculation and profound humanism—what he termed an <em>“architecture of necessity”</em>.
+            For me, the goal is to create a set of efficient methods for problem-solving, giving room for future innovations--not mounting a collection of solutions with no direction.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- Selected Works List with Floating Image Reveal -->
-    <section id="works">
-      <span class="section-label">02 / Built Archive</span>
+    <!-- Selected Projects -->
+    <section id="projects">
+      <!-- Ambient Background Gaussian Wave Decal (Projects) -->
+      <svg class="bg-decal" viewBox="0 0 1440 600" preserveAspectRatio="none">
+        <path fill="none" stroke="rgba(224,122,82,0.2)" stroke-width="1.4" d="M0,450 C320,180 620,580 940,240 C1140,50 1320,380 1440,220" />
+        <path fill="none" stroke="rgba(214,140,104,0.14)" stroke-width="1" d="M0,500 C320,230 620,630 940,290 C1140,100 1320,430 1440,270" />
+        <path fill="none" stroke="rgba(194,94,56,0.1)" stroke-width="1" d="M0,550 C320,280 620,680 940,340 C1140,150 1320,480 1440,320" />
+      </svg>
+
+      <span class="section-label">02 / Archive</span>
       <div class="works-header">
-        <h2>Selected Works</h2>
+        <h2>Selected Projects</h2>
         <span style="color: var(--text-muted); font-size: 0.9rem;">Hover to preview</span>
       </div>
 
       <div class="works-list">
         <div class="work-item" 
              data-title="Church of Christ the Worker" 
-             data-year="1960" 
-             data-loc="Estación Atlántida, Canelones" 
              data-desc="UNESCO World Heritage site featuring undulating reinforced brick walls and Gaussian catenary vaults."
              data-img="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1000&q=80">
-          <span class="work-year">1960</span>
+          <img class="work-thumb" src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=200&q=70" alt="Church of Atlántida thumbnail" />
           <span class="work-name">Church of Atlántida</span>
-          <span class="work-loc">Canelones, Uruguay</span>
           <span class="work-tag">Double Curvature</span>
         </div>
 
         <div class="work-item" 
              data-title="Church of San Pedro" 
-             data-year="1971" 
-             data-loc="Durazno, Uruguay" 
              data-desc="Reconstruction of a historic church interior with a folded thin-shell brick roof and hexagonal rosette window."
              data-img="https://images.unsplash.com/photo-1548625361-195fe579b292?auto=format&fit=crop&w=1000&q=80">
-          <span class="work-year">1971</span>
+          <img class="work-thumb" src="https://images.unsplash.com/photo-1548625361-195fe579b292?auto=format&fit=crop&w=200&q=70" alt="San Pedro Church thumbnail" />
           <span class="work-name">San Pedro Church</span>
-          <span class="work-loc">Durazno, Uruguay</span>
           <span class="work-tag">Folded Plates</span>
         </div>
 
         <div class="work-item" 
              data-title="Cadyl Silo Grain Storage" 
-             data-year="1976" 
-             data-loc="Young, Río Negro" 
              data-desc="A monument of structural efficiency: continuous reinforced brick vault designed to withstand tremendous agricultural loads."
              data-img="https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1000&q=80">
-          <span class="work-year">1976</span>
+          <img class="work-thumb" src="https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=200&q=70" alt="Silo Cadyl Young thumbnail" />
           <span class="work-name">Silo Cadyl Young</span>
-          <span class="work-loc">Río Negro, Uruguay</span>
           <span class="work-tag">Ceramic Vault</span>
         </div>
 
         <div class="work-item" 
              data-title="Montevideo Shopping Center" 
-             data-year="1985" 
-             data-loc="Montevideo, Uruguay" 
              data-desc="A commercial space crowned with wide-span ceramic brick domes and undulating facades."
              data-img="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80">
-          <span class="work-year">1985</span>
+          <img class="work-thumb" src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=200&q=70" alt="Montevideo Shopping thumbnail" />
           <span class="work-name">Montevideo Shopping</span>
-          <span class="work-loc">Montevideo, Uruguay</span>
           <span class="work-tag">Free-form Shell</span>
         </div>
-      </div>
 
-      <!-- Cloudflare Functions Direct Callout -->
-      <div class="cf-banner">
-        <div>
-          <h3>Cloudflare Functions & AI Experiments</h3>
-          <p>Explore your serverless backend endpoints (ASCII Cats, Gemini HTML artwork generators).</p>
+        <div class="work-item" 
+             data-title="Cloudflare Workers Demonstration" 
+             data-desc="Serverless AI and backend function pipeline connected via Cloudflare Pages and GitHub. Features real-time ASCII cat streaming and vision-to-SVG conversion."
+             data-img="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1000&q=80"
+             data-link="/demo.html">
+          <img class="work-thumb" src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=200&q=70" alt="Cloudflare Workers Demonstration thumbnail" />
+          <span class="work-name">Cloudflare Workers Demonstration</span>
+          <span class="work-tag">Serverless &amp; Edge AI</span>
         </div>
-        <a href="/demo.html" class="btn-demo" style="padding: 12px 28px; font-size: 1rem;">Launch Demo Page →</a>
       </div>
     </section>
 
-    <!-- Interactive Gaussian Vault Simulator -->
-    <section id="vault-demo" class="interactive-vault">
-      <span class="section-label">03 / Interactive Mathematics</span>
-      <h2 style="font-family: var(--font-serif); font-size: 2.4rem; margin-bottom: 12px;">Gaussian Waveform Simulator</h2>
-      <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Move your pointer across the canvas to modulate the catenary curve tension and vault amplitude.</p>
-      
-      <div class="vault-canvas-container" id="canvas-container">
-        <canvas id="vaultCanvas"></canvas>
+    <!-- About Section -->
+    <section id="about">
+      <!-- Ambient Background Wave Decal (About) -->
+      <svg class="bg-decal" viewBox="0 0 1440 500" preserveAspectRatio="none">
+        <path fill="none" stroke="rgba(224,122,82,0.24)" stroke-width="1.5" d="M0,220 C280,380 620,80 980,320 C1200,440 1380,180 1440,240" />
+        <path fill="none" stroke="rgba(214,140,104,0.16)" stroke-width="1.2" d="M0,270 C280,430 620,130 980,370 C1200,490 1380,230 1440,290" />
+        <path fill="none" stroke="rgba(194,94,56,0.1)" stroke-width="1" d="M0,320 C280,480 620,180 980,420 C1200,540 1380,280 1440,340" />
+      </svg>
+
+      <span class="section-label">03 / About</span>
+      <div class="about-grid">
+        <h2 class="about-title">
+          Engineering tools for higher-order reasoning.
+        </h2>
+        <div class="about-body">
+          <p>
+            Based in Brookline, Massachusetts, Gabriel Forman focuses on the cross-section of deep learning representations, mathematical systems, and high-performance computation.
+          </p>
+          <p>
+            By designing algorithmic workflows that minimize computational friction, the aim is to synthesize intuition and rigorous engineering into instruments capable of solving complex problems at scale.
+          </p>
+        </div>
       </div>
     </section>
   </main>
 
   <!-- Floating Work Preview Element -->
   <div class="floating-preview" id="floating-preview">
-    <img src="" id="floating-img" alt="Work Preview" />
+    <img src="" id="floating-img" alt="Project Preview" />
   </div>
 
   <!-- Detail Modal -->
@@ -654,18 +732,18 @@
       <div class="modal-body">
         <span class="section-label" id="modal-tag" style="margin-bottom: 8px;"></span>
         <h3 id="modal-title"></h3>
-        <span id="modal-meta" style="color: var(--clay); font-size: 0.9rem;"></span>
         <p id="modal-desc"></p>
+        <div id="modal-action-container"></div>
       </div>
     </div>
   </div>
 
   <!-- Footer -->
   <footer>
-    <p>Inspired by the architectural works of Eladio Dieste (1917–2000). Powered by Cloudflare Workers & Pages.</p>
+    <p>Powered by Cloudflare Workers &amp; Pages</p>
   </footer>
 
-  <!-- Interactive Scripts -->
+  <!-- Scripts -->
   <script>
     // 1. Custom Magnetic Cursor
     const cursor = document.getElementById('cursor');
@@ -689,13 +767,13 @@
     }
     animateCursor();
 
-    // 2. Floating Hover Image for Works
+    // 2. Floating Hover Image for Projects
     const floatingPreview = document.getElementById('floating-preview');
     const floatingImg = document.getElementById('floating-img');
     const workItems = document.querySelectorAll('.work-item');
 
     workItems.forEach(item => {
-      item.addEventListener('mouseenter', (e) => {
+      item.addEventListener('mouseenter', () => {
         const imgSrc = item.getAttribute('data-img');
         floatingImg.src = imgSrc;
         floatingPreview.style.opacity = '1';
@@ -712,13 +790,24 @@
         floatingPreview.style.transform = 'scale(0.85)';
       });
 
-      // Click to open detail modal
+      // Click to open detail modal or navigate
       item.addEventListener('click', () => {
+        const link = item.getAttribute('data-link');
         document.getElementById('modal-title').textContent = item.getAttribute('data-title');
-        document.getElementById('modal-meta').textContent = `${item.getAttribute('data-year')} — ${item.getAttribute('data-loc')}`;
         document.getElementById('modal-desc').textContent = item.getAttribute('data-desc');
         document.getElementById('modal-tag').textContent = item.querySelector('.work-tag').textContent;
         document.getElementById('modal-img').src = item.getAttribute('data-img');
+        
+        const actionContainer = document.getElementById('modal-action-container');
+        actionContainer.innerHTML = '';
+        if (link) {
+          const actionBtn = document.createElement('a');
+          actionBtn.href = link;
+          actionBtn.className = 'modal-link-btn';
+          actionBtn.textContent = 'Open Demo Page →';
+          actionContainer.appendChild(actionBtn);
+        }
+
         document.getElementById('work-modal').classList.add('active');
       });
     });
@@ -732,54 +821,6 @@
         document.getElementById('work-modal').classList.remove('active');
       }
     });
-
-    // 3. Dynamic Gaussian Vault Canvas Wave Simulation
-    const canvas = document.getElementById('vaultCanvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    let waveAmplitude = 40;
-    let waveFrequency = 0.015;
-    let phase = 0;
-
-    function resizeCanvas() {
-      const container = document.getElementById('canvas-container');
-      width = canvas.width = container.offsetWidth;
-      height = canvas.height = container.offsetHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    // Canvas interactivity
-    canvas.addEventListener('mousemove', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      waveAmplitude = (y / height) * 80 + 10;
-      waveFrequency = (x / width) * 0.025 + 0.005;
-    });
-
-    function drawVault() {
-      ctx.clearRect(0, 0, width, height);
-
-      const layers = 10;
-      for (let j = 0; j < layers; j++) {
-        ctx.beginPath();
-        const offsetY = (height / (layers + 1)) * (j + 1);
-        ctx.strokeStyle = `rgba(224, 122, 82, ${0.15 + (j / layers) * 0.55})`;
-        ctx.lineWidth = 1.5;
-
-        for (let x = 0; x < width; x += 4) {
-          const y = offsetY + Math.sin(x * waveFrequency + phase + (j * 0.4)) * waveAmplitude;
-          if (x === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-
-      phase += 0.02;
-      requestAnimationFrame(drawVault);
-    }
-    drawVault();
   </script>
 </body>
 </html>
