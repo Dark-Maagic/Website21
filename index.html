@@ -112,7 +112,7 @@
       color: var(--brick-light);
     }
 
-    /* Section Global & Decal Architecture */
+    /* Section Global & Background Decals */
     section {
       padding: 120px 48px;
       border-top: 1px solid var(--border);
@@ -131,7 +131,6 @@
       z-index: 2;
     }
 
-    /* Ambient Background Decal Vectors */
     .bg-decal {
       position: absolute;
       width: 100%;
@@ -141,6 +140,27 @@
       pointer-events: none;
       z-index: 0;
       opacity: 0.28;
+    }
+
+    .geo-accent {
+      pointer-events: none;
+      user-select: none;
+      z-index: 1;
+    }
+
+    /* Hero Datum Line (without SYS // 0.1) */
+    .hero-datum-line {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 10px 0 36px;
+      opacity: 0.45;
+    }
+
+    .datum-bar {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--brick) 0%, rgba(224,122,82,0.1) 100%);
     }
 
     /* Hero Section */
@@ -173,7 +193,7 @@
       letter-spacing: -0.02em;
       max-width: 1250px;
       z-index: 1;
-      margin-bottom: 44px;
+      margin-bottom: 24px;
     }
 
     .hero-footer {
@@ -217,8 +237,8 @@
     /* Philosophy / Perspectives */
     .philosophy-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 80px;
+      grid-template-columns: 1fr 60px 1.4fr;
+      gap: 30px;
       align-items: center;
       position: relative;
       z-index: 1;
@@ -232,11 +252,38 @@
       color: var(--text);
     }
 
+    .column-datum {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 16px;
+      opacity: 0.45;
+    }
+
+    .datum-vertical-line {
+      width: 1px;
+      height: 100px;
+      background: linear-gradient(180deg, transparent 0%, var(--brick) 50%, transparent 100%);
+    }
+
+    .datum-node {
+      width: 6px;
+      height: 6px;
+      border: 1px solid var(--brick-light);
+      transform: rotate(45deg);
+    }
+
     .philosophy-text p {
       color: var(--text-muted);
       font-size: 1.15rem;
       line-height: 1.8;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
+    }
+
+    .philosophy-text p:last-child {
+      margin-bottom: 0;
     }
 
     /* Selected Projects */
@@ -244,7 +291,7 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
-      margin-bottom: 50px;
+      margin-bottom: 40px;
       position: relative;
       z-index: 1;
     }
@@ -334,6 +381,10 @@
       margin-bottom: 22px;
     }
 
+    .about-body p:last-child {
+      margin-bottom: 0;
+    }
+
     /* Gaussian Vault Simulator Section */
     .interactive-vault {
       background: radial-gradient(circle at center, #231c18 0%, #121110 75%);
@@ -345,12 +396,45 @@
       max-width: 960px;
       margin: 40px auto 10px;
       height: 300px;
-      background: rgba(18, 17, 16, 0.6);
+      background: rgba(18, 17, 16, 0.65);
       border: 1px solid var(--border);
       border-radius: 8px;
       position: relative;
       overflow: hidden;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Enhanced Simulator Accents */
+    .vault-scale-y {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-family: monospace;
+      font-size: 0.68rem;
+      color: var(--clay);
+      opacity: 0.55;
+      pointer-events: none;
+      user-select: none;
+      z-index: 3;
+      text-align: left;
+    }
+
+    .vault-readout {
+      position: absolute;
+      right: 18px;
+      bottom: 14px;
+      font-family: monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      color: var(--brick-light);
+      opacity: 0.65;
+      pointer-events: none;
+      user-select: none;
+      z-index: 3;
     }
 
     #vaultCanvas {
@@ -496,7 +580,14 @@
       .mlp-container {
         justify-content: flex-start;
       }
-      .philosophy-grid, .about-grid {
+      .philosophy-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+      .column-datum {
+        display: none;
+      }
+      .about-grid {
         grid-template-columns: 1fr;
         gap: 30px;
       }
@@ -534,9 +625,9 @@
 
   <!-- Main Content -->
   <main>
-    <!-- Hero Section -->
+    <!-- HERO SECTION -->
     <section class="hero">
-      <!-- Ambient Background Gaussian Vault Decal (Hero) -->
+      <!-- Original Hero Background Decal -->
       <svg class="bg-decal" viewBox="0 0 1440 700" preserveAspectRatio="none">
         <path fill="none" stroke="url(#heroGrad1)" stroke-width="1.5" d="M0,320 C360,120 720,520 1080,220 C1260,70 1380,260 1440,320" />
         <path fill="none" stroke="rgba(224,122,82,0.25)" stroke-width="1.2" d="M0,370 C360,170 720,570 1080,270 C1260,120 1380,310 1440,370" />
@@ -551,10 +642,30 @@
         </defs>
       </svg>
 
+      <!-- Drafting Reticle (Upper Right Negative Space) -->
+      <div class="geo-accent" style="position: absolute; top: 120px; right: 52px; opacity: 0.35;">
+        <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
+          <circle cx="34" cy="34" r="28" stroke="var(--brick-light)" stroke-width="0.8" stroke-dasharray="3 3"/>
+          <circle cx="34" cy="34" r="14" stroke="var(--clay)" stroke-width="0.8"/>
+          <line x1="34" y1="0" x2="34" y2="68" stroke="var(--brick)" stroke-width="0.75"/>
+          <line x1="0" y1="34" x2="68" y2="34" stroke="var(--brick)" stroke-width="0.75"/>
+        </svg>
+      </div>
+
       <div class="hero-meta">Brookline • Massachusetts</div>
       <h1 class="hero-title">
         Big problems. Algorithmically compressed.
       </h1>
+
+      <!-- Hero Datum Line (without SYS // 0.1) -->
+      <div class="hero-datum-line">
+        <div class="datum-bar"></div>
+        <svg width="24" height="8" viewBox="0 0 24 8" fill="none" style="opacity: 0.7;">
+          <circle cx="4" cy="4" r="2" fill="var(--clay)"/>
+          <line x1="6" y1="4" x2="18" y2="4" stroke="var(--clay)" stroke-width="1"/>
+          <circle cx="20" cy="4" r="2" fill="var(--brick-light)"/>
+        </svg>
+      </div>
 
       <div class="hero-footer">
         <p class="hero-desc">
@@ -565,7 +676,6 @@
         <div class="mlp-container">
           <svg class="mlp-visual" viewBox="0 0 280 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g stroke="rgba(224, 122, 82, 0.28)" stroke-width="1">
-              <!-- Layer 1 to Layer 2 -->
               <line x1="30" y1="30" x2="105" y2="20" />
               <line x1="30" y1="30" x2="105" y2="55" />
               <line x1="30" y1="30" x2="105" y2="90" />
@@ -579,7 +689,6 @@
               <line x1="30" y1="110" x2="105" y2="90" />
               <line x1="30" y1="110" x2="105" y2="125" />
 
-              <!-- Layer 2 to Layer 3 -->
               <line x1="105" y1="20" x2="180" y2="20" />
               <line x1="105" y1="20" x2="180" y2="55" />
               <line x1="105" y1="20" x2="180" y2="90" />
@@ -597,7 +706,6 @@
               <line x1="105" y1="125" x2="180" y2="90" />
               <line x1="105" y1="125" x2="180" y2="125" />
 
-              <!-- Layer 3 to Layer 4 (Output) -->
               <line x1="180" y1="20" x2="250" y2="50" />
               <line x1="180" y1="20" x2="250" y2="95" />
               <line x1="180" y1="55" x2="250" y2="50" />
@@ -608,24 +716,20 @@
               <line x1="180" y1="125" x2="250" y2="95" />
             </g>
 
-            <!-- Layer 1 Nodes (Input) -->
             <circle cx="30" cy="30" r="4.5" fill="#c25e38" />
             <circle cx="30" cy="70" r="4.5" fill="#c25e38" />
             <circle cx="30" cy="110" r="4.5" fill="#c25e38" />
 
-            <!-- Layer 2 Nodes (Hidden 1) -->
             <circle cx="105" cy="20" r="4.5" fill="#d68c68" />
             <circle cx="105" cy="55" r="4.5" fill="#d68c68" />
             <circle cx="105" cy="90" r="4.5" fill="#d68c68" />
             <circle cx="105" cy="125" r="4.5" fill="#d68c68" />
 
-            <!-- Layer 3 Nodes (Hidden 2) -->
             <circle cx="180" cy="20" r="4.5" fill="#d68c68" />
             <circle cx="180" cy="55" r="4.5" fill="#d68c68" />
             <circle cx="180" cy="90" r="4.5" fill="#d68c68" />
             <circle cx="180" cy="125" r="4.5" fill="#d68c68" />
 
-            <!-- Layer 4 Nodes (Output) -->
             <circle cx="250" cy="50" r="5" fill="#e07a52" />
             <circle cx="250" cy="95" r="5" fill="#e07a52" />
           </svg>
@@ -633,9 +737,9 @@
       </div>
     </section>
 
-    <!-- Perspectives / Methodology -->
+    <!-- 01 / PERSPECTIVES -->
     <section id="philosophy">
-      <!-- Ambient Background Catenary Wave Decal (Philosophy) -->
+      <!-- Original Philosophy Background Decal -->
       <svg class="bg-decal" viewBox="0 0 1440 500" preserveAspectRatio="none">
         <path fill="none" stroke="rgba(224,122,82,0.22)" stroke-width="1.5" d="M-100,100 C300,450 650,50 1100,400 C1300,550 1500,200 1600,150" />
         <path fill="none" stroke="rgba(214,140,104,0.16)" stroke-width="1.2" d="M-100,150 C300,500 650,100 1100,450 C1300,600 1500,250 1600,200" />
@@ -647,6 +751,13 @@
         <div class="philosophy-quote">
           “A master musician, must also conduct.”
         </div>
+
+        <div class="column-datum">
+          <div class="datum-vertical-line"></div>
+          <div class="datum-node"></div>
+          <div class="datum-vertical-line"></div>
+        </div>
+
         <div class="philosophy-text">
           <p>
             I have found that in order to begin to innovate in intelligence, it becomes necessary not just to modify the way that you approach a problem, but also to modify the tools that you employ in approaching the problem.
@@ -658,9 +769,9 @@
       </div>
     </section>
 
-    <!-- Selected Projects -->
+    <!-- 02 / SELECTED PROJECTS -->
     <section id="projects">
-      <!-- Ambient Background Gaussian Wave Decal (Projects) -->
+      <!-- Original Projects Background Decal -->
       <svg class="bg-decal" viewBox="0 0 1440 600" preserveAspectRatio="none">
         <path fill="none" stroke="rgba(224,122,82,0.2)" stroke-width="1.4" d="M0,450 C320,180 620,580 940,240 C1140,50 1320,380 1440,220" />
         <path fill="none" stroke="rgba(214,140,104,0.14)" stroke-width="1" d="M0,500 C320,230 620,630 940,290 C1140,100 1320,430 1440,270" />
@@ -722,9 +833,9 @@
       </div>
     </section>
 
-    <!-- About Section -->
+    <!-- 03 / ABOUT SECTION -->
     <section id="about">
-      <!-- Ambient Background Wave Decal (About) -->
+      <!-- Original About Background Decal -->
       <svg class="bg-decal" viewBox="0 0 1440 500" preserveAspectRatio="none">
         <path fill="none" stroke="rgba(224,122,82,0.24)" stroke-width="1.5" d="M0,220 C280,380 620,80 980,320 C1200,440 1380,180 1440,240" />
         <path fill="none" stroke="rgba(214,140,104,0.16)" stroke-width="1.2" d="M0,270 C280,430 620,130 980,370 C1200,490 1380,230 1440,290" />
@@ -733,9 +844,12 @@
 
       <span class="section-label">03 / About</span>
       <div class="about-grid">
-        <h2 class="about-title">
-          Engineering tools for higher-order reasoning.
-        </h2>
+        <div>
+          <h2 class="about-title">
+            Engineering tools for higher-order reasoning.
+          </h2>
+        </div>
+
         <div class="about-body">
           <p>
             Based in Brookline, Massachusetts, Gabriel Forman focuses on the cross-section of deep learning representations, mathematical systems, and high-performance computation.
@@ -747,9 +861,9 @@
       </div>
     </section>
 
-    <!-- Gaussian Curve Simulator (Restored Section) -->
+    <!-- 04 / GAUSSIAN CURVE SIMULATOR (ENHANCED) -->
     <section id="vault-demo" class="interactive-vault">
-      <span class="section-label">04 / Interactive Mathematics Mini-Project</span>
+      <span class="section-label">04 / Interactive Mathematics</span>
       <h2 style="font-family: var(--font-serif); font-size: 2.5rem; margin-bottom: 12px; font-weight: 400;">
         Gaussian Waveform Simulator
       </h2>
@@ -758,6 +872,16 @@
       </p>
       
       <div class="vault-canvas-container" id="canvas-container">
+        <!-- Amplitude Scale Calibration -->
+        <div class="vault-scale-y">
+          <span>+A</span>
+          <span>0</span>
+          <span>−A</span>
+        </div>
+
+        <!-- Real-time Mathematical Parameter Readout -->
+        <div class="vault-readout" id="vaultReadout">λ: 0.012 • A: 38px</div>
+
         <canvas id="vaultCanvas"></canvas>
       </div>
     </section>
@@ -866,9 +990,10 @@
       }
     });
 
-    // 3. Dynamic Gaussian Vault Canvas Simulation
+    // 3. Dynamic Ruled Gaussian Vault Canvas Simulation
     const canvas = document.getElementById('vaultCanvas');
     const ctx = canvas.getContext('2d');
+    const readout = document.getElementById('vaultReadout');
     let width, height;
     let waveAmplitude = 38;
     let waveFrequency = 0.012;
@@ -883,10 +1008,12 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Mouse & Touch modulation
     function updateWaveParams(x, y) {
       waveAmplitude = (y / height) * 75 + 10;
       waveFrequency = (x / width) * 0.022 + 0.006;
+      if (readout) {
+        readout.textContent = `λ: ${waveFrequency.toFixed(3)} • A: ${Math.round(waveAmplitude)}px`;
+      }
     }
 
     canvas.addEventListener('mousemove', (e) => {
@@ -905,6 +1032,9 @@
       ctx.clearRect(0, 0, width, height);
 
       const layers = 11;
+      const pointsPerLayer = [];
+
+      // Calculate and render each longitudinal wave layer
       for (let j = 0; j < layers; j++) {
         ctx.beginPath();
         const offsetY = (height / (layers + 1)) * (j + 1);
@@ -912,10 +1042,32 @@
         ctx.strokeStyle = `rgba(224, 122, 82, ${alpha})`;
         ctx.lineWidth = 1.3;
 
-        for (let x = 0; x < width; x += 3) {
+        const layerPts = [];
+        for (let x = 0; x <= width; x += 4) {
           const y = offsetY + Math.sin(x * waveFrequency + phase + (j * 0.35)) * waveAmplitude;
+          layerPts.push({ x, y });
           if (x === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
+        }
+        pointsPerLayer.push(layerPts);
+        ctx.stroke();
+      }
+
+      // Render ruled transversal generators connecting adjacent layers (Vault Mesh)
+      const ribStep = 10; // Connect every 40px
+      if (pointsPerLayer.length > 1 && pointsPerLayer[0].length > 0) {
+        ctx.strokeStyle = 'rgba(214, 140, 104, 0.12)';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        for (let i = 0; i < pointsPerLayer[0].length; i += ribStep) {
+          for (let j = 0; j < layers - 1; j++) {
+            const p1 = pointsPerLayer[j][i];
+            const p2 = pointsPerLayer[j + 1][i];
+            if (p1 && p2) {
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+            }
+          }
         }
         ctx.stroke();
       }
