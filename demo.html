@@ -135,23 +135,29 @@
       z-index: 1;
     }
 
-    /* Base ASCII sizing */
+  /* Base ASCII sizing: Shrink-wrap to the exact 55x29 character grid */
     pre.ascii-mode {
       white-space: pre !important;
       font-size: 13.5px;
       line-height: 1.15;
       letter-spacing: 0.5px;
       user-select: none;
+      width: fit-content !important;
+      min-width: 0 !important; /* Removes the 550px stretch causing overlay offset */
+      margin: 0 auto;
     }
 
-    /* Overlay Container: positioned over the ASCII viewport */
+    /* Overlay Container: Bounded exactly to the 24px text area */
     .gif-overlay-container {
       position: absolute;
-      inset: 0;
-      padding: 24px;
+      top: 24px;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      padding: 0;
       box-sizing: border-box;
       pointer-events: none;
-      border-radius: 10px;
+      border-radius: 6px;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -159,7 +165,7 @@
       z-index: 2;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 0.35s ease, visibility 0.35s ease;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
     }
 
     .gif-overlay-container.active {
@@ -167,17 +173,15 @@
       visibility: visible;
     }
 
+    /* 1:1 Pixel Mapping: Every bone ridge and hollow aligns with its ASCII character */
     .gif-overlay-img {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
-      object-fit: contain;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
       pointer-events: none;
       user-select: none;
       transition: filter 0.3s ease;
     }
-
     /* === EFFECT 1: PERSONA 5 / OVERCLOCKED TERMINAL === */
     pre.mode-persona {
       background: 
@@ -189,23 +193,52 @@
           transparent 4px
         ),
         linear-gradient(145deg, #1f0106 0%, #0d0002 60%, #160105 100%);
-      color: #ff3355 !important;
+      color: #ff3355;
       border-color: #ff003c;
       box-shadow: 
-        0 0 35px rgba(255, 0, 60, 0.4), 
-        inset 0 0 25px rgba(255, 0, 60, 0.15);
-      text-shadow: 0 0 8px rgba(255, 51, 85, 0.65);
+        0 0 35px rgba(255, 0, 60, 0.45), 
+        inset 0 0 25px rgba(255, 0, 60, 0.18);
     }
 
+    /* Persona Running Figure Depth Hierarchy (Diamond-White & Crimson) */
+    .mode-persona .p5-hi {
+      /* Searing diamond-white specular glow on the runner's body, head, and limbs */
+      color: #ffffff !important;
+      text-shadow: 0 0 3px #ffffff, 0 0 8px #ff3355, 0 0 16px rgba(255, 0, 60, 0.95);
+      font-weight: 700;
+    }
+    .mode-persona .p5-mid {
+      /* Kinetic electric crimson for motion contours */
+      color: #ff3355 !important;
+      text-shadow: 0 0 6px rgba(255, 51, 85, 0.75);
+    }
+    .mode-persona .p5-dim {
+      /* Dimmed background speedlines and trailing particles */
+      color: #8a0c22 !important;
+      text-shadow: 0 0 2px rgba(138, 12, 34, 0.4);
+      opacity: 0.55;
+    }
+
+    /* Enhanced Persona Overlay: Diamond-White outline core over glowing crimson */
     .overlay-persona .gif-overlay-img {
       mix-blend-mode: screen;
-      filter: url(#persona-edge-filter) contrast(220%) brightness(1.2) drop-shadow(0 0 10px rgba(255, 0, 60, 0.8));
+      filter: url(#persona-edge-filter) contrast(250%) brightness(1.3) drop-shadow(0 0 12px rgba(255, 0, 60, 0.9));
+      animation: persona-overlay-pulse 1.2s infinite alternate ease-in-out;
     }
 
+    @keyframes persona-overlay-pulse {
+      from {
+        filter: url(#persona-edge-filter) contrast(220%) brightness(1.2) drop-shadow(0 0 8px rgba(255, 0, 60, 0.7));
+      }
+      to {
+        filter: url(#persona-edge-filter) contrast(270%) brightness(1.4) drop-shadow(0 0 16px rgba(255, 51, 85, 1));
+      }
+    }
     /* === EFFECT 2: SKULL / HOLOGRAPHIC X-RAY VOID === */
     pre.mode-skull {
       background: 
-        radial-gradient(ellipse at center, rgba(0, 255, 213, 0.12) 0%, rgba(3, 7, 18, 0.95) 70%),
+        /* Central Cavity Shadow: Darkens behind the eye sockets while lighting outer contours */
+        radial-gradient(circle at 48% 48%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 255, 213, 0.06) 38%, rgba(3, 7, 18, 0.98) 72%),
         repeating-linear-gradient(
           0deg, 
           rgba(0, 255, 213, 0.03) 0px, 
@@ -214,36 +247,55 @@
           transparent 4px
         ),
         #030712;
-      color: #00ffd5 !important;
+      color: #00ffd5;
       border-color: #00ffd5;
       box-shadow: 
-        0 0 40px rgba(0, 255, 213, 0.35), 
-        inset 0 0 30px rgba(0, 255, 213, 0.12);
-      text-shadow: 0 0 9px rgba(0, 255, 213, 0.7);
+        0 0 45px rgba(0, 255, 213, 0.4), 
+        inset 0 0 35px rgba(0, 255, 213, 0.18);
       animation: skull-breathe 2.4s infinite alternate ease-in-out;
     }
 
+    /* Skull ASCII Depth Hierarchy */
+    .mode-skull .sk-hi {
+      /* Specular highlights on orbital margins, brow, maxilla & teeth */
+      color: #ffffff !important;
+      text-shadow: 0 0 3px #ffffff, 0 0 8px #00ffd5, 0 0 16px rgba(0, 255, 213, 0.9);
+      font-weight: 700;
+    }
+    .mode-skull .sk-mid {
+      /* Structural bone contours & jawline */
+      color: #00ffd5 !important;
+      text-shadow: 0 0 6px rgba(0, 255, 213, 0.7);
+    }
+    .mode-skull .sk-dim {
+      /* Shading falling into hollows & exterior edges */
+      color: #008775 !important;
+      text-shadow: 0 0 2px rgba(0, 135, 117, 0.4);
+      opacity: 0.55;
+    }
+
+    /* Enhanced Skull Overlay: Sharp cavity margins + intense cranium silhouette */
     .overlay-skull .gif-overlay-img {
       mix-blend-mode: screen;
-      filter: url(#skull-edge-filter) contrast(240%) brightness(1.3) drop-shadow(0 0 12px rgba(0, 255, 213, 0.9));
+      filter: url(#skull-edge-filter) contrast(270%) brightness(1.35) drop-shadow(0 0 14px rgba(0, 255, 213, 0.95));
       animation: skull-overlay-pulse 2.4s infinite alternate ease-in-out;
     }
 
     @keyframes skull-breathe {
       from {
-        box-shadow: 0 0 30px rgba(0, 255, 213, 0.3), inset 0 0 20px rgba(0, 255, 213, 0.1);
+        box-shadow: 0 0 30px rgba(0, 255, 213, 0.3), inset 0 0 20px rgba(0, 255, 213, 0.12);
       }
       to {
-        box-shadow: 0 0 50px rgba(0, 255, 213, 0.55), inset 0 0 35px rgba(0, 255, 213, 0.22);
+        box-shadow: 0 0 55px rgba(0, 255, 213, 0.6), inset 0 0 40px rgba(0, 255, 213, 0.25);
       }
     }
 
     @keyframes skull-overlay-pulse {
       from {
-        filter: url(#skull-edge-filter) contrast(200%) brightness(1.1) drop-shadow(0 0 8px rgba(0, 255, 213, 0.6));
+        filter: url(#skull-edge-filter) contrast(230%) brightness(1.15) drop-shadow(0 0 10px rgba(0, 255, 213, 0.7));
       }
       to {
-        filter: url(#skull-edge-filter) contrast(250%) brightness(1.4) drop-shadow(0 0 16px rgba(0, 255, 213, 1));
+        filter: url(#skull-edge-filter) contrast(290%) brightness(1.45) drop-shadow(0 0 18px rgba(0, 255, 213, 1));
       }
     }
     .comparison-container {
@@ -315,30 +367,53 @@
   <!-- Real-Time SVG Edge Detection Filters -->
   <svg width="0" height="0" aria-hidden="true" style="position: absolute; width: 0; height: 0; pointer-events: none;">
     <defs>
-      <!-- Persona 5 Silhouette Outline Filter -->
+      <!-- Persona 5 Silhouette Outline Filter: Crimson Halo + Diamond-White Core -->
       <filter id="persona-edge-filter" color-interpolation-filters="sRGB">
-        <feConvolveMatrix order="3 3" kernelMatrix="0 -1 0 -1 4 -1 0 -1 0" preserveAlpha="false" result="edges" />
-        <feColorMatrix in="edges" type="matrix" values="
-          3.0  0    0    0    0.35
+        <!-- 3x3 Edge detector isolates runner's silhouette and coat tails -->
+        <feConvolveMatrix order="3 3" kernelMatrix="0 -1 0 -1 4 -1 0 -1 0" preserveAlpha="false" result="rawEdges" />
+        <feComponentTransfer in="rawEdges" result="sharpEdges">
+          <feFuncR type="linear" slope="2.5" intercept="-0.1"/>
+          <feFuncG type="linear" slope="2.5" intercept="-0.1"/>
+          <feFuncB type="linear" slope="2.5" intercept="-0.1"/>
+        </feComponentTransfer>
+        <!-- Layer 1: Atmospheric Crimson Glow -->
+        <feColorMatrix in="sharpEdges" type="matrix" values="
+          3.0  0    0    0    0.2
           0    0.1  0    0    0.0
           0    0    0.3  0    0.1
-          0    0    0    2.2  0" result="coloredEdges" />
-        <feGaussianBlur in="coloredEdges" stdDeviation="0.6" result="glow" />
+          0    0    0    2.2  0" result="crimsonEdges" />
+        <feGaussianBlur in="crimsonEdges" stdDeviation="1.0" result="outerGlow" />
+        <!-- Layer 2: Diamond-White Core Line -->
+        <feColorMatrix in="sharpEdges" type="matrix" values="
+          3.5  3.5  3.5  0    0.0
+          3.5  3.5  3.5  0    0.0
+          3.5  3.5  3.5  0    0.0
+          0    0    0    3.0  -0.25" result="whiteCore" />
+        <!-- Merge: Outer crimson neon halo with crisp diamond-white core highlight -->
         <feMerge>
-          <feMergeNode in="glow" />
-          <feMergeNode in="coloredEdges" />
+          <feMergeNode in="outerGlow" />
+          <feMergeNode in="crimsonEdges" />
+          <feMergeNode in="whiteCore" />
         </feMerge>
       </filter>
 
-      <!-- Skull 3D Edge & Cavity Outline Filter -->
+    <!-- Skull 3D Edge & Cavity Outline Filter: Cavity-thresholding + Hollow Accents -->
       <filter id="skull-edge-filter" color-interpolation-filters="sRGB">
-        <feConvolveMatrix order="3 3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1" preserveAlpha="false" result="edges" />
-        <feColorMatrix in="edges" type="matrix" values="
+        <!-- 8-neighbor discrete Laplacian detects 3D bone contours and orbit perimeters -->
+        <feConvolveMatrix order="3 3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1" preserveAlpha="false" result="rawEdges" />
+        <!-- Thresholding: Keeps deep hollows pure black while intensifying bone rims -->
+        <feComponentTransfer in="rawEdges" result="sharpEdges">
+          <feFuncR type="linear" slope="2.2" intercept="-0.15"/>
+          <feFuncG type="linear" slope="2.2" intercept="-0.15"/>
+          <feFuncB type="linear" slope="2.2" intercept="-0.15"/>
+        </feComponentTransfer>
+        <!-- Map contours to high-intensity electric cyan -->
+        <feColorMatrix in="sharpEdges" type="matrix" values="
           0    0    0    0    0.0
-          0    2.5  0    0    0.4
-          0    0    2.5  0    0.5
-          0    0    0    2.4  0" result="coloredEdges" />
-        <feGaussianBlur in="coloredEdges" stdDeviation="0.8" result="glow" />
+          0    2.8  0    0    0.35
+          0    0    3.0  0    0.55
+          0    0    0    2.6  0" result="coloredEdges" />
+        <feGaussianBlur in="coloredEdges" stdDeviation="0.7" result="glow" />
         <feMerge>
           <feMergeNode in="glow" />
           <feMergeNode in="coloredEdges" />
@@ -692,31 +767,77 @@
     const gifDelay1 = 30; // Persona (fast)
     const gifDelay2 = 70; // Skull (converter speed)
 
-    // 0 = Stopped, 1 = Playing Persona, 2 = Playing Skull
+  // 0 = Stopped, 1 = Playing Persona, 2 = Playing Skull
     let gifState = 0;
-    let gifInterval = null;
+    let animRafId = null;
+    let animStartTime = 0;
     let currentFrame = 0;
 
-    function renderLoop(frames, delay) {
-      if (gifInterval) clearInterval(gifInterval);
-      currentFrame = 0;
-      output.textContent = frames[0];
+    // Accents bone highlights and hollow borders in the skull
+    function accentSkull(frameText) {
+      return frameText.replace(/([@%#]+)|([*+=]+)|([-:.]+)/g, (match, hi, mid, dim) => {
+        if (hi) return `<span class="sk-hi">${hi}</span>`;
+        if (mid) return `<span class="sk-mid">${mid}</span>`;
+        if (dim) return `<span class="sk-dim">${dim}</span>`;
+        return match;
+      });
+    }
 
-      gifInterval = setInterval(() => {
-        currentFrame = (currentFrame + 1) % frames.length;
-        output.textContent = frames[currentFrame];
-      }, delay);
+    // Accents the diamond-white figure, limbs, and speedlines of the runner in Persona
+    function accentPersona(frameText) {
+      return frameText.replace(/([@%#]+)|([*+=]+)|([-:.]+)/g, (match, hi, mid, dim) => {
+        if (hi) return `<span class="p5-hi">${hi}</span>`;
+        if (mid) return `<span class="p5-mid">${mid}</span>`;
+        if (dim) return `<span class="p5-dim">${dim}</span>`;
+        return match;
+      });
+    }
+
+    // Zero-drift animation loop supporting tiered ASCII highlighting for both modes
+    function renderLoop(frames, delay, mode = null) {
+      if (animRafId) cancelAnimationFrame(animRafId);
+      animStartTime = performance.now();
+      currentFrame = 0;
+
+      const drawFrame = (frameIndex) => {
+        if (mode === 'skull') {
+          output.innerHTML = accentSkull(frames[frameIndex]);
+        } else if (mode === 'persona') {
+          output.innerHTML = accentPersona(frames[frameIndex]);
+        } else {
+          output.textContent = frames[frameIndex];
+        }
+      };
+
+      // Draw initial frame 0
+      drawFrame(0);
+
+      function tick(now) {
+        // Calculate frame directly from elapsed milliseconds to eliminate timer drift
+        const elapsed = now - animStartTime;
+        const nextFrame = Math.floor(elapsed / delay) % frames.length;
+
+        if (nextFrame !== currentFrame) {
+          currentFrame = nextFrame;
+          drawFrame(currentFrame);
+        }
+        animRafId = requestAnimationFrame(tick);
+      }
+
+      animRafId = requestAnimationFrame(tick);
     }
 
     function applyOverlay(mode) {
       overlayContainer.classList.remove('overlay-persona', 'overlay-skull');
 
+      // Force-restart the GIF from frame 0 at the exact same millisecond the ASCII loop starts
+      const syncStamp = Math.floor(performance.now());
       if (mode === 'persona') {
         overlayContainer.classList.add('overlay-persona');
-        overlayImg.src = overlayGifSources.persona;
+        overlayImg.src = overlayGifSources.persona + '?sync=' + syncStamp;
       } else if (mode === 'skull') {
         overlayContainer.classList.add('overlay-skull');
-        overlayImg.src = overlayGifSources.skull;
+        overlayImg.src = overlayGifSources.skull + '?sync=' + syncStamp;
       }
 
       if (overlayEnabled) {
@@ -732,9 +853,9 @@
     }
 
     function stopGifAnimation() {
-      if (gifInterval) {
-        clearInterval(gifInterval);
-        gifInterval = null;
+      if (animRafId) {
+        cancelAnimationFrame(animRafId);
+        animRafId = null;
       }
       gifState = 0;
       toggleGifBtn.textContent = 'Play GIF 1 (Persona)';
@@ -745,7 +866,6 @@
       if (overlayControls) overlayControls.style.display = 'none';
       output.classList.remove('ascii-mode', 'mode-persona', 'mode-skull');
     }
-
     // Overlay Toggle Button Handler
     toggleOverlayBtn.addEventListener('click', () => {
       overlayEnabled = !overlayEnabled;
@@ -820,24 +940,24 @@
       output.classList.add('ascii-mode');
 
       if (gifState === 0) {
-        // State 0 -> 1: Persona
+        // State 0 -> 1: Persona (with glowing diamond-white runner highlights)
         gifState = 1;
         toggleGifBtn.textContent = 'Switch to GIF 2 (Skull)';
         
         output.classList.remove('mode-skull');
         output.classList.add('mode-persona');
         applyOverlay('persona');
-        renderLoop(gifFrames1, gifDelay1);
+        renderLoop(gifFrames1, gifDelay1, 'persona');
 
       } else if (gifState === 1) {
-        // State 1 -> 2: Skull
+        // State 1 -> 2: Skull (with enhanced 3D hollows & bone accents)
         gifState = 2;
         toggleGifBtn.textContent = 'Stop Animation';
         
         output.classList.remove('mode-persona');
         output.classList.add('mode-skull');
         applyOverlay('skull');
-        renderLoop(gifFrames2, gifDelay2);
+        renderLoop(gifFrames2, gifDelay2, 'skull');
 
       } else {
         // State 2 -> 0: Stop
