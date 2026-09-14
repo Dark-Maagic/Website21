@@ -135,15 +135,15 @@
       z-index: 1;
     }
 
-  /* Base ASCII sizing: Shrink-wrap to the exact 55x29 character grid */
+  /* Base ASCII sizing: Scaled up to 18px for a larger, high-impact presentation */
     pre.ascii-mode {
       white-space: pre !important;
-      font-size: 13.5px;
+      font-size: 18px;
       line-height: 1.15;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
       user-select: none;
       width: fit-content !important;
-      min-width: 0 !important; /* Removes the 550px stretch causing overlay offset */
+      min-width: 0 !important;
       margin: 0 auto;
     }
 
@@ -202,10 +202,23 @@
 
     /* Persona Running Figure Depth Hierarchy (Diamond-White & Crimson) */
     .mode-persona .p5-hi {
-      /* Searing diamond-white specular glow on the runner's body, head, and limbs */
+      /* Torso and billowing coat tails */
       color: #ffffff !important;
       text-shadow: 0 0 3px #ffffff, 0 0 8px #ff3355, 0 0 16px rgba(255, 0, 60, 0.95);
       font-weight: 700;
+    }
+    .mode-persona .p5-head {
+      /* Dense, hyper-visible specular glow: keeps the head constant and sharp */
+      color: #ffffff !important;
+      text-shadow: 0 0 2px #ffffff, 0 0 6px #ffffff, 0 0 12px #ff003c, 0 0 20px rgba(255, 0, 60, 0.9);
+      font-weight: 900;
+      letter-spacing: 0.7px;
+    }
+    .mode-persona .p5-limb {
+      /* Prominent, continuous contours for running arms, legs, and boots */
+      color: #ffffff !important;
+      text-shadow: 0 0 2px #ffffff, 0 0 5px #ffffff, 0 0 10px rgba(255, 51, 85, 0.95);
+      font-weight: 800;
     }
     .mode-persona .p5-mid {
       /* Kinetic electric crimson for motion contours */
@@ -783,16 +796,286 @@
       });
     }
 
-    // Accents the diamond-white figure, limbs, and speedlines of the runner in Persona
-    function accentPersona(frameText) {
-      return frameText.replace(/([@%#]+)|([*+=]+)|([-:.]+)/g, (match, hi, mid, dim) => {
-        if (hi) return `<span class="p5-hi">${hi}</span>`;
-        if (mid) return `<span class="p5-mid">${mid}</span>`;
-        if (dim) return `<span class="p5-dim">${dim}</span>`;
-        return match;
-      });
-    }
+     // Cache for pre-rendered frames so geometric isolation runs once per frame
+    const p5FrameCache = new Map();
 
+    function accentPersona(frameText, frameIndex = null) {
+      if (frameIndex !== null && p5FrameCache.has(frameIndex)) {
+        return p5FrameCache.get(frameIndex);
+      }
+
+      const lines = frameText.split('\n');
+      const R = lines.length;
+
+      // 1. Candidate rows: strictly rows 8 to 20 (active stage).
+      // Rows 0-7 (header banners) and 21-22 (bottom text/borders) always remain background crimson.
+      const eligible = [];
+      for (let r = 0; r < R; r++) {
+        eligible[r] = new Uint8Array(lines[r].length);
+        if (r >= 8 && r <= 20) {
+          for (let c = 0; c < lines[r].length; c++) {
+            if (lines[r][c] !== ' ') {
+              eligible[r][c] = 1;
+            }
+          }
+        }
+      }
+
+      // 2. Extract spatial clusters with horizontal reach tolerance of 2 (prevents bridging with distant pillars)
+      const visited = [];
+      for (let r = 0; r < R; r++) visited[r] = new Uint8Array(lines[r].length);
+
+      const clusters = [];
+      for (let r = 8; r <= Math.min(20, R - 1); r++) {
+        for (let c = 0; c < lines[r].length; c++) {
+          if (!eligible[r][c] || visited[r][c]) continue;
+
+          const points = [];
+          const queue = [[r, c]];
+          visited[r][c] = 1;
+          let minR = r, maxR = r;
+          let minC = c, maxC = c;
+
+          while (queue.length > 0) {
+            const [cr, cc] = queue.pop();
+            points.push([cr, cc]);
+            if (cr < minR) minR = cr;
+            if (cr > maxR) maxR = cr;
+            if (cc < minC) minC = cc;
+            if (cc > maxC) maxC = cc;
+
+            for (let dr = -1; dr <= 1; dr++) {
+              const nr = cr + dr;
+              if (nr < 8 || nr > 20 || nr >= R) continue;
+              for (let dc = -2; dc <= 2; dc++) {
+                const nc = cc + dc;
+                if (nc < 0 || nc >= lines[nr].length) continue;
+                if (eligible[nr][nc] && !visited[nr][nc]) {
+                  visited[nr][nc] = 1;
+                  queue.push([nr, nc]);
+                }
+              }
+            }
+          }
+
+          clusters.push({
+            points,
+            size: points.length,
+            minR, maxR,
+            rowSpan: maxR - minR + 1,
+            minC, maxC,
+            colSpan: maxC - minC + 1
+          });
+        }
+      }
+
+      // 3. Classify structures: Pillars/walls vs Runner
+      const isPillarOrWall = (cl) => {
+        return (cl.rowSpan >= 6 && cl.colSpan <= 3) ||
+               (cl.rowSpan >= 8 && cl.colSpan <= 4 && (cl.rowSpan / cl.colSpan) >= 2.2);
+      };
+
+      const pillarClusters = [];
+      const nonPillarClusters = [];
+
+      for (const cl of clusters) {
+        if (isPillarOrWall(cl)) {
+          pillarClusters.push(cl);
+        } else if (cl.size >= 3) {
+          nonPillarClusters.push(cl);
+        }
+      }
+
+      // 4. Identify the main running man (dynamic wide silhouette)
+      let mainRunner = null;
+      for (const cl of nonPillarClusters) {
+        if (!mainRunner || cl.size > mainRunner.size) {
+          mainRunner = cl;
+        }
+      }
+
+      // 0 = background, 1 = torso/coat/pillar, 2 = head, 3 = limbs (arms & legs)
+      const runnerZone = [];
+      for (let r = 0; r < R; r++) runnerZone[r] = new Uint8Array(lines[r].length);
+
+      // Char grid clone allows replacing faint punctuation with solid stroke symbols
+      const charGrid = lines.map(l => l.split(''));
+
+      if (mainRunner && mainRunner.size >= 8 && mainRunner.rowSpan >= 4) {
+        for (const [pr, pc] of mainRunner.points) {
+          runnerZone[pr][pc] = 1;
+        }
+
+        let rMinC = mainRunner.minC, rMaxC = mainRunner.maxC;
+        let rMinR = mainRunner.minR, rMaxR = mainRunner.maxR;
+
+        // Group trailing companion parts (coat tails, detached stride marks)
+        for (const cl of nonPillarClusters) {
+          if (cl === mainRunner) continue;
+          if (cl.size >= 4 && cl.rowSpan >= 2) {
+            const hDist = Math.min(Math.abs(cl.maxC - rMinC), Math.abs(cl.minC - rMaxC));
+            if (hDist <= 5) {
+              for (const [pr, pc] of cl.points) {
+                runnerZone[pr][pc] = 1;
+              }
+              if (cl.minC < rMinC) rMinC = cl.minC;
+              if (cl.maxC > rMaxC) rMaxC = cl.maxC;
+              if (cl.minR < rMinR) rMinR = cl.minR;
+              if (cl.maxR > rMaxR) rMaxR = cl.maxR;
+            }
+          }
+        }
+
+        // --- ANATOMICAL REINFORCEMENT & STABILIZATION ENGINE ---
+        const totalH = rMaxR - rMinR + 1;
+        const headEndR = rMinR + Math.min(2, Math.floor(totalH * 0.28));
+        const legStartR = rMinR + Math.floor(totalH * 0.58);
+
+        // A. HEAD STABILIZATION: Keep head width consistent and fully filled
+        let headSumC = 0, headCount = 0;
+        for (let r = rMinR; r <= headEndR; r++) {
+          for (let c = 0; c < lines[r].length; c++) {
+            if (runnerZone[r][c]) {
+              headSumC += c;
+              headCount++;
+            }
+          }
+        }
+
+        if (headCount > 0) {
+          const headCenterC = Math.round(headSumC / headCount);
+          const headRadius = 2; // ~5 columns wide constant head width
+
+          for (let r = rMinR; r <= headEndR; r++) {
+            const minHC = Math.max(0, headCenterC - headRadius);
+            const maxHC = Math.min(lines[r].length - 1, headCenterC + headRadius);
+
+            for (let c = minHC; c <= maxHC; c++) {
+              runnerZone[r][c] = 2; // Tag as head (.p5-head)
+              // Replace faint periods/dashes with solid head mass glyphs
+              if (charGrid[r][c] === ' ' || /[-:.,]/.test(charGrid[r][c])) {
+                charGrid[r][c] = (c === headCenterC) ? '@' : '#';
+              }
+            }
+          }
+        }
+
+        // B. LIMB PROMINENCE & CONTINUITY (Arms and Legs)
+        // 1. Arms (mid-body rows rMinR + 3 to legStartR - 1)
+        for (let r = headEndR + 1; r < legStartR; r++) {
+          // Fill 1-space horizontal gaps between arm/torso strokes
+          for (let c = 1; c < lines[r].length - 1; c++) {
+            if (!runnerZone[r][c] && runnerZone[r][c - 1] && runnerZone[r][c + 1]) {
+              runnerZone[r][c] = 1;
+            }
+          }
+          // Promote outer arm extremities from faint dots to solid arm strokes (.p5-limb)
+          for (let c = 0; c < lines[r].length; c++) {
+            if (runnerZone[r][c] && (c <= rMinC + 2 || c >= rMaxC - 2)) {
+              runnerZone[r][c] = 3; // Tag as limb
+              if (/[-:.,]/.test(charGrid[r][c])) {
+                charGrid[r][c] = '+';
+              }
+            }
+          }
+        }
+
+        // 2. Legs & Boots (lower rows legStartR to rMaxR)
+        for (let r = legStartR; r <= rMaxR; r++) {
+          // Connect up to 2-space gaps along the stride so leg lines remain continuous
+          for (let c = 1; c < lines[r].length - 2; c++) {
+            if (!runnerZone[r][c] && runnerZone[r][c - 1] && runnerZone[r][c + 2]) {
+              runnerZone[r][c] = 3;
+              if (charGrid[r][c] === ' ') charGrid[r][c] = '=';
+            }
+            if (!runnerZone[r][c] && runnerZone[r][c - 1] && runnerZone[r][c + 1]) {
+              runnerZone[r][c] = 3;
+              if (charGrid[r][c] === ' ') charGrid[r][c] = '=';
+            }
+          }
+
+          // Reinforce leg strokes and sturdy boots on lower rows (.p5-limb)
+          for (let c = 0; c < lines[r].length; c++) {
+            if (runnerZone[r][c]) {
+              runnerZone[r][c] = 3; // Tag as limb
+              if (charGrid[r][c] === ' ' || /[-:.,]/.test(charGrid[r][c])) {
+                charGrid[r][c] = (r >= rMaxR - 1) ? '#' : '*';
+              }
+            }
+          }
+        }
+
+        // C. "Running Through" Effect for Pillars/Walls
+        for (const pillar of pillarClusters) {
+          const overlapsHoriz = !(pillar.maxC < rMinC - 1 || pillar.minC > rMaxC + 1);
+          const overlapsVert  = !(pillar.maxR < rMinR || pillar.minR > rMaxR);
+
+          if (overlapsHoriz && overlapsVert) {
+            for (const [pr, pc] of pillar.points) {
+              runnerZone[pr][pc] = 1;
+            }
+          }
+        }
+      }
+
+      // 5. Build HTML output using anatomical classes (.p5-head, .p5-limb, .p5-hi)
+      const outLines = [];
+      for (let r = 0; r < R; r++) {
+        let lineHtml = '';
+        let currentType = null;
+        let buffer = '';
+
+        const flush = () => {
+          if (!buffer) return;
+          if (currentType === 'head') {
+            lineHtml += `<span class="p5-head">${buffer}</span>`;
+          } else if (currentType === 'limb') {
+            lineHtml += `<span class="p5-limb">${buffer}</span>`;
+          } else if (currentType === 'hi') {
+            lineHtml += `<span class="p5-hi">${buffer}</span>`;
+          } else if (currentType === 'dim') {
+            lineHtml += `<span class="p5-dim">${buffer}</span>`;
+          } else if (currentType === 'mid') {
+            lineHtml += `<span class="p5-mid">${buffer}</span>`;
+          } else {
+            lineHtml += buffer;
+          }
+          buffer = '';
+        };
+
+        for (let c = 0; c < lines[r].length; c++) {
+          const ch = charGrid[r][c];
+          let type = null;
+          const z = runnerZone[r][c];
+
+          if (z === 2) {
+            type = 'head';
+          } else if (z === 3) {
+            type = 'limb';
+          } else if (z === 1) {
+            type = 'hi';
+          } else if (ch === ' ') {
+            type = 'space';
+          } else {
+            type = /[-:.]/.test(ch) ? 'dim' : 'mid';
+          }
+
+          if (type !== currentType) {
+            flush();
+            currentType = type;
+          }
+          buffer += ch;
+        }
+        flush();
+        outLines.push(lineHtml);
+      }
+
+      const formatted = outLines.join('\n');
+      if (frameIndex !== null) {
+        p5FrameCache.set(frameIndex, formatted);
+      }
+      return formatted;
+    }
     // Zero-drift animation loop supporting tiered ASCII highlighting for both modes
     function renderLoop(frames, delay, mode = null) {
       if (animRafId) cancelAnimationFrame(animRafId);
@@ -803,7 +1086,7 @@
         if (mode === 'skull') {
           output.innerHTML = accentSkull(frames[frameIndex]);
         } else if (mode === 'persona') {
-          output.innerHTML = accentPersona(frames[frameIndex]);
+          output.innerHTML = accentPersona(frames[frameIndex], frameIndex);
         } else {
           output.textContent = frames[frameIndex];
         }
