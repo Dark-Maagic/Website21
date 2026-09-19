@@ -103,9 +103,19 @@
       display: flex;
       flex-direction: column;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 18px;
       gap: 18px;
-      transition: background-color 0.25s ease, border-color 0.25s ease;
+      transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease, opacity 0.2s ease, background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .sidebar.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      padding: 0 !important;
+      border-right: none !important;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .section-title {
@@ -266,7 +276,6 @@
       color: var(--accent-contrast);
     }
 
-    /* The glowing Embed Button adapts fully to the active theme */
     .btn-glow {
       background: var(--accent);
       color: var(--accent-contrast);
@@ -687,6 +696,7 @@
   <!-- Header -->
   <header>
     <div class="brand">
+      <button class="btn btn-sm" id="btnToggleSidebar" title="Toggle Sidebar (Collapse/Expand)" style="font-size: 0.95rem; padding: 4px 9px;">☰</button>
       <h1>GIF to ASCII <span class="badge">Animator</span></h1>
     </div>
     <div class="header-actions">
@@ -710,7 +720,7 @@
           <button class="btn btn-accent btn-sm" id="btnLoadUrl">Load</button>
         </div>
 
-        <!-- Verified, stable online sample animations -->
+        <!-- Verified sample animations -->
         <div class="quick-links">
           <span style="font-size: 0.7rem; color: var(--text-muted);">Web Presets:</span>
           <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif">🌍 Globe</button>
@@ -786,7 +796,6 @@
             </div>
           </div>
 
-          <!-- Color theme changes entire page styling dynamically -->
           <div class="control-row">
             <span class="control-label">Color Theme</span>
             <select id="themeSelect" style="width: 140px;">
@@ -932,30 +941,11 @@
   <div class="toast" id="toast">Notification</div>
 
   <!-- ========================================================================= -->
-  <!-- EXACT IMPLEMENTATION FROM: victorqribeiro/imgToAscii/src/imgToAscii.js   -->
+  <!-- IMPLEMENTATION OF imgToAscii WITH UNIFIED NEGATIVE SPACE APPROACH        -->
   <!-- ========================================================================= -->
   <script>
     /*
     Copyright (c) 2018 Victor Ribeiro - victorqribeiro@gmail.com
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-
     https://github.com/victorqribeiro/imgToAscii
     */
     class imgToAscii {
@@ -964,10 +954,11 @@
         this.charType = charType || 0;
         this.alphabet = {
           0: ["@", "%", "#", "*", "+", "=", "-", ":", ".", " "],
-          1: ["$", "@", "B", "%", "8", "&", "W", "M", "#", "*", "o", "a", "h", "k", "b", "d", "p", "q", "w", "m", "Z", "O",
+          // Index 0 in Type 1 uses '@' to mirror Type 0's negative space arrangement
+          1: ["@", "@", "B", "%", "8", "&", "W", "M", "#", "*", "o", "a", "h", "k", "b", "d", "p", "q", "w", "m", "Z", "O",
               "0", "Q", "L", "C", "J", "U", "Y", "X", "z", "c", "v", "u", "n", "x", "r", "j", "f", "t", "/", "\\", "|", "(",
               ")", "1", "{", "}", "[", "]", "?", "-", "_", "+", "~", "<", ">", "i", "!", "l", "I", ";", ":", ",", "\"", "^",
-              "`", "'", ".", " "]
+              "`", "@", ".", " "]
         };
         this.string = "";
         this.stringColor = "";
@@ -989,7 +980,14 @@
                 let g = this.imageData.data[i + 1];
                 let b = this.imageData.data[i + 2];
                 if ((r * 0.2126) + (g * 0.7152) + (b * 0.0722) < (j + 1) * grayStep) {
-                  const char = this.alphabet[this.charType][j];
+                  let char = this.alphabet[this.charType][j];
+
+                  // UNIFIED NEGATIVE SPACE: If Type 1 resolves to an apostrophe or backtick,
+                  // replace it with '@' so it adopts the exact same negative space arrangement as Type 0
+                  if (this.charType === 1 && (char === "'" || char === "`")) {
+                    char = "@";
+                  }
+
                   this.string += char;
                   this.stringColor += "<span style=\"color: rgb(" + r + "," + g + "," + b + "); \">"
                     + (char.replace(' ', '&nbsp;'))
@@ -1045,7 +1043,6 @@
   <!-- APPLICATION ORCHESTRATION & GIF ANIMATION ENGINE                          -->
   <!-- ========================================================================= -->
   <script type="module">
-    // Dynamically import gifuct-js with omggif fallback
     let parseGIF = null, decompressFrames = null;
     try {
       const gifuct = await import('https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/+esm');
@@ -1055,7 +1052,6 @@
       console.warn("Could not load gifuct-js via ESM, falling back to omggif", err);
     }
 
-    // Complete theme definitions (updates entire application palette)
     const themeConfigs = {
       'theme-cyber': {
         accent: '#00f0ff',
@@ -1129,7 +1125,6 @@
       }
     };
 
-    // State Variables
     let rawGifBuffer = null;
     let compositedFrames = [];
     let asciiFrames = [];
@@ -1141,7 +1136,6 @@
     let currentEmbedMode = 'iframe';
     let currentThemeKey = 'theme-cyber';
 
-    // DOM Elements
     const urlInput = document.getElementById('urlInput');
     const btnLoadUrl = document.getElementById('btnLoadUrl');
     const dropzone = document.getElementById('dropzone');
@@ -1174,6 +1168,13 @@
     const btnCopyFrame = document.getElementById('btnCopyFrame');
     const btnDownloadText = document.getElementById('btnDownloadText');
     const toast = document.getElementById('toast');
+    // Sidebar Toggle
+    const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+    const sidebar = document.querySelector('.sidebar');
+    btnToggleSidebar.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      btnToggleSidebar.classList.toggle('btn-accent', sidebar.classList.contains('collapsed'));
+    });
 
     // Embed Modal Elements
     const btnHeaderEmbed = document.getElementById('btnHeaderEmbed');
@@ -1188,20 +1189,17 @@
     const btnDownloadHtml = document.getElementById('btnDownloadHtml');
     const embedDesc = document.getElementById('embedDesc');
 
-    // UI Toast Helper
     function showToast(msg) {
       toast.textContent = msg;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 2400);
     }
 
-    // Apply Theme to the ENTIRE Webpage
     function applyGlobalTheme(themeKey) {
       const config = themeConfigs[themeKey] || themeConfigs['theme-cyber'];
       currentThemeKey = themeKey;
       const root = document.documentElement;
 
-      // Update Root CSS variables
       root.style.setProperty('--accent', config.accent);
       root.style.setProperty('--accent-contrast', config.accentContrast);
       root.style.setProperty('--accent-dim', config.accentDim);
@@ -1213,29 +1211,24 @@
       root.style.setProperty('--text', config.text);
       root.style.setProperty('--text-muted', config.textMuted);
 
-      // Update ASCII Output pre container
       asciiOutput.style.backgroundColor = config.preBg;
       asciiOutput.style.color = config.preFg;
 
-      // Refresh embed preview if modal is open
       if (embedModal.style.display === 'flex') {
         updateEmbedModal();
       }
     }
 
-    // Verify GIF Magic Bytes
     function isValidGif(buffer) {
       if (!buffer || buffer.byteLength < 6) return false;
       const h = new Uint8Array(buffer.slice(0, 3));
       return String.fromCharCode(h[0], h[1], h[2]) === 'GIF';
     }
 
-    // Multi-tier Online GIF Fetcher (Direct -> CORS Proxies)
     async function fetchOnlineGif(targetUrl) {
       targetUrl = targetUrl.trim();
       if (!targetUrl) throw new Error("Please enter a valid URL.");
 
-      // Strategy 1: Direct Fetch
       try {
         progressSub.textContent = "Attempting direct fetch...";
         const response = await fetch(targetUrl);
@@ -1247,7 +1240,6 @@
         console.warn("Direct fetch restricted, trying proxy 1...", err);
       }
 
-      // Strategy 2: AllOrigins Raw CORS Proxy
       try {
         progressSub.textContent = "Connecting via CORS fallback (allorigins)...";
         const proxyUrl1 = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
@@ -1260,7 +1252,6 @@
         console.warn("Proxy 1 failed, trying backup proxy...", err);
       }
 
-      // Strategy 3: CorsProxy.io Fallback
       try {
         progressSub.textContent = "Connecting via backup proxy (corsproxy.io)...";
         const proxyUrl2 = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
@@ -1276,7 +1267,6 @@
       throw new Error("Unable to retrieve valid GIF data from this link. Make sure the URL points directly to a .gif file.");
     }
 
-    // Main loader for URL links
     async function loadGifFromUrl(url) {
       try {
         progressOverlay.style.display = 'flex';
@@ -1296,7 +1286,6 @@
       }
     }
 
-    // Decode Animated GIF into Composited Canvases
     async function extractGifFrames(arrayBuffer) {
       if (parseGIF && decompressFrames) {
         try {
@@ -1411,13 +1400,12 @@
       return result;
     }
 
-    // Convert All Frames using Victor Ribeiro's imgToAscii
     async function convertAllFrames() {
       if (!compositedFrames || compositedFrames.length === 0) return;
 
       stopAnimation();
       progressOverlay.style.display = 'flex';
-      progressSub.textContent = "Running Victor Ribeiro's imgToAscii algorithm across frames...";
+      progressSub.textContent = "Running imgToAscii algorithm across frames...";
       progressBarFill.style.width = '0%';
       progressStatus.textContent = `0 / ${compositedFrames.length} frames`;
 
@@ -1429,7 +1417,6 @@
         const item = compositedFrames[i];
         const frameDataUrl = item.canvas.toDataURL('image/png');
         
-        // INSTANTIATING VICTOR RIBEIRO'S imgToAscii
         const converter = new imgToAscii(frameDataUrl, size, charType);
         await converter.loadImage;
 
@@ -1539,7 +1526,6 @@
       }
     }
 
-    // Generate Animated Sample GIFs (Offline fallback)
     function generateDemoGif(type = 'heart') {
       if (!window.GifWriter) {
         alert("GIF encoder not yet loaded. Please try again in a moment.");
@@ -1654,7 +1640,6 @@
       return buf.subarray(0, end).buffer;
     }
 
-    // Embed Code Generator
     function generateStandaloneHtml() {
       if (!asciiFrames.length) return "";
 
@@ -1716,7 +1701,7 @@
       }
       step();
     })();
-  <` + `/script>
+  ${'<' + '/script>'}
 </body>
 </html>`;
     }
@@ -1733,7 +1718,7 @@
       embedPreviewIframe.srcdoc = standaloneHtml;
 
       if (currentEmbedMode === 'iframe') {
-        embedDesc.innerHTML = 'Copy and paste this self-contained <code>&lt;iframe&gt;</code> into any website (WordPress, Webflow, Notion, or custom HTML). It runs completely client-side.';
+        embedDesc.innerHTML = 'Copy and paste this self-contained <code>&lt;iframe&gt;</code> into any website. It runs completely client-side.';
         
         const escapedHtml = standaloneHtml
           .replace(/&/g, '&amp;')
@@ -1753,10 +1738,6 @@
 
       embedModal.style.display = 'flex';
     }
-
-    // =========================================================================
-    // EVENT LISTENERS & UI WIRING
-    // =========================================================================
 
     btnHeaderEmbed.addEventListener('click', updateEmbedModal);
     btnSidebarEmbed.addEventListener('click', updateEmbedModal);
@@ -1814,7 +1795,6 @@
       }
     });
 
-    // Preset Sample URL Buttons
     document.querySelectorAll('.sample-url-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const url = btn.getAttribute('data-url');
@@ -1903,7 +1883,6 @@
       showFrame(currentFrameIndex);
     });
 
-    // Theme selector: updates entire page palette
     themeSelect.addEventListener('change', e => {
       applyGlobalTheme(e.target.value);
     });
