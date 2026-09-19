@@ -10,14 +10,16 @@
 
   <style>
     :root {
-      --bg-dark: #0f1117;
-      --bg-card: #161b26;
-      --bg-card-border: #232a3b;
       --accent: #00f0ff;
+      --accent-contrast: #000000;
       --accent-dim: rgba(0, 240, 255, 0.15);
-      --accent-glow: rgba(0, 240, 255, 0.4);
+      --accent-glow: rgba(0, 240, 255, 0.45);
+      --bg-dark: #0a0c13;
+      --bg-card: #131824;
+      --bg-card-border: #1e2638;
+      --viewport-bg: #06080e;
       --text: #e2e8f0;
-      --text-muted: #8892b0;
+      --text-muted: #7e8ba6;
       --panel-width: 370px;
     }
 
@@ -31,24 +33,24 @@
       background-color: var(--bg-dark);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
+      overflow: hidden;
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     /* Header */
     header {
-      background: rgba(22, 27, 38, 0.85);
-      backdrop-filter: blur(12px);
+      background: var(--bg-card);
       border-bottom: 1px solid var(--bg-card-border);
       padding: 12px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      top: 0;
+      flex-shrink: 0;
       z-index: 100;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
     .brand {
@@ -75,6 +77,7 @@
       border-radius: 4px;
       text-transform: uppercase;
       letter-spacing: 1px;
+      transition: all 0.25s ease;
     }
 
     .header-actions {
@@ -83,26 +86,11 @@
       gap: 14px;
     }
 
-    .attribution {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-    }
-
-    .attribution a {
-      color: var(--accent);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .attribution a:hover {
-      text-decoration: underline;
-    }
-
     /* Layout */
     .app-container {
       display: flex;
       flex: 1;
-      height: calc(100vh - 58px);
+      min-height: 0;
       overflow: hidden;
     }
 
@@ -117,6 +105,7 @@
       overflow-y: auto;
       padding: 18px;
       gap: 18px;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
     .section-title {
@@ -129,13 +118,15 @@
       align-items: center;
       gap: 6px;
       font-weight: 700;
+      transition: color 0.25s ease;
     }
 
     .card {
-      background: rgba(15, 17, 23, 0.55);
+      background: rgba(0, 0, 0, 0.25);
       border: 1px solid var(--bg-card-border);
       border-radius: 8px;
       padding: 14px;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
     /* URL input group */
@@ -147,14 +138,14 @@
 
     .url-input {
       flex: 1;
-      background: #0f121a;
+      background: var(--bg-dark);
       border: 1px solid var(--bg-card-border);
-      color: #fff;
+      color: var(--text);
       padding: 7px 10px;
       border-radius: 6px;
       font-size: 0.78rem;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, background-color 0.25s ease;
     }
 
     .url-input:focus {
@@ -180,6 +171,7 @@
       flex: 1;
       height: 1px;
       background: var(--bg-card-border);
+      transition: background-color 0.25s ease;
     }
 
     .divider-text {
@@ -191,13 +183,13 @@
 
     /* Drop Zone */
     .dropzone {
-      border: 2px dashed #2f384e;
+      border: 2px dashed var(--bg-card-border);
       border-radius: 8px;
       padding: 16px 12px;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s ease;
-      background: rgba(15, 17, 23, 0.4);
+      background: rgba(0, 0, 0, 0.15);
     }
 
     .dropzone.dragover {
@@ -227,7 +219,7 @@
       display: none;
     }
 
-    /* Demo buttons */
+    /* Buttons */
     .demo-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -236,7 +228,7 @@
     }
 
     .btn {
-      background: #202636;
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--bg-card-border);
       color: var(--text);
       padding: 7px 10px;
@@ -248,14 +240,14 @@
       align-items: center;
       justify-content: center;
       gap: 5px;
-      transition: all 0.15s;
+      transition: all 0.2s ease;
       user-select: none;
       white-space: nowrap;
     }
 
     .btn:hover:not(:disabled) {
-      background: #2a3348;
-      border-color: #3b4662;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--accent);
       color: #fff;
     }
 
@@ -271,20 +263,23 @@
 
     .btn-accent:hover:not(:disabled) {
       background: var(--accent);
-      color: #000;
+      color: var(--accent-contrast);
     }
 
+    /* The glowing Embed Button adapts fully to the active theme */
     .btn-glow {
-      background: #00f0ff;
-      color: #000;
-      border-color: #00f0ff;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      border-color: var(--accent);
       font-weight: 600;
-      box-shadow: 0 0 12px var(--accent-glow);
+      box-shadow: 0 0 14px var(--accent-glow);
+      transition: all 0.25s ease;
     }
 
     .btn-glow:hover {
-      background: #38f4ff;
-      box-shadow: 0 0 18px rgba(0, 240, 255, 0.7);
+      filter: brightness(1.15);
+      box-shadow: 0 0 20px var(--accent-glow);
+      color: var(--accent-contrast);
     }
 
     .btn-sm {
@@ -321,20 +316,22 @@
       font-family: monospace;
       color: var(--accent);
       font-weight: 600;
+      transition: color 0.25s ease;
     }
 
     input[type="range"] {
       width: 100%;
       height: 4px;
-      background: #232a3b;
+      background: var(--bg-card-border);
       border-radius: 2px;
       outline: none;
       accent-color: var(--accent);
       margin-top: 6px;
+      transition: accent-color 0.25s ease;
     }
 
     select {
-      background: #202636;
+      background: var(--bg-dark);
       border: 1px solid var(--bg-card-border);
       color: var(--text);
       padding: 5px 8px;
@@ -343,6 +340,11 @@
       outline: none;
       width: 100%;
       cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    select:focus {
+      border-color: var(--accent);
     }
 
     /* Main Viewport Stage */
@@ -351,19 +353,21 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      background: #090a0f;
+      background: var(--viewport-bg);
       overflow: hidden;
+      transition: background-color 0.25s ease;
     }
 
     .viewport-toolbar {
       padding: 10px 18px;
-      background: rgba(22, 27, 38, 0.6);
+      background: var(--bg-card);
       border-bottom: 1px solid var(--bg-card-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       z-index: 10;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
     .player-controls {
@@ -387,11 +391,12 @@
     .frame-badge {
       font-family: monospace;
       font-size: 0.78rem;
-      background: #11151f;
+      background: var(--bg-dark);
       padding: 4px 8px;
       border-radius: 4px;
       border: 1px solid var(--bg-card-border);
       white-space: nowrap;
+      transition: all 0.25s ease;
     }
 
     /* Ascii Canvas Area */
@@ -403,9 +408,10 @@
       align-items: center;
       padding: 24px;
       position: relative;
+      background: var(--viewport-bg);
+      transition: background-color 0.25s ease;
     }
 
-    /* PRE element styling matches Victor Ribeiro's getPreElement() */
     #asciiOutput {
       font-family: "Courier New", Courier, monospace !important;
       line-height: 6px;
@@ -415,7 +421,7 @@
       white-space: pre;
       user-select: text;
       letter-spacing: 0;
-      transition: background-color 0.2s;
+      transition: background-color 0.25s, color 0.25s;
     }
 
     /* Original GIF preview overlay */
@@ -423,14 +429,14 @@
       position: absolute;
       bottom: 20px;
       right: 20px;
-      background: rgba(22, 27, 38, 0.92);
+      background: var(--bg-card);
       border: 1px solid var(--bg-card-border);
       border-radius: 8px;
       padding: 8px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(8px);
       z-index: 20;
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
       max-width: 180px;
     }
 
@@ -454,17 +460,43 @@
       align-items: center;
     }
 
+    /* Footer Attribution */
+    footer {
+      flex-shrink: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--bg-card-border);
+      padding: 9px 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      z-index: 50;
+      transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+    }
+
+    footer .attribution a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.25s;
+    }
+
+    footer .attribution a:hover {
+      text-decoration: underline;
+    }
+
     /* Progress Modal / Overlay */
     .progress-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(9, 10, 15, 0.85);
+      background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(6px);
       display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      z-index: 50;
+      z-index: 150;
     }
 
     .progress-card {
@@ -480,7 +512,7 @@
     .progress-bar-bg {
       width: 100%;
       height: 8px;
-      background: #232a3b;
+      background: var(--bg-dark);
       border-radius: 4px;
       margin: 16px 0 10px 0;
       overflow: hidden;
@@ -491,7 +523,7 @@
       width: 0%;
       background: var(--accent);
       box-shadow: 0 0 10px var(--accent-glow);
-      transition: width 0.1s ease;
+      transition: width 0.1s ease, background-color 0.25s;
     }
 
     .progress-status {
@@ -499,33 +531,11 @@
       color: var(--text-muted);
     }
 
-    /* Themes */
-    .theme-cyber {
-      background-color: #0b0d14 !important;
-      color: #00f0ff !important;
-    }
-    .theme-matrix {
-      background-color: #030804 !important;
-      color: #00ff66 !important;
-    }
-    .theme-amber {
-      background-color: #0d0803 !important;
-      color: #ffb000 !important;
-    }
-    .theme-paper {
-      background-color: #ffffff !important;
-      color: #111111 !important;
-    }
-    .theme-dark {
-      background-color: #000000 !important;
-      color: #ffffff !important;
-    }
-
     /* Modal for Embed Code */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(4, 6, 10, 0.85);
+      background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(8px);
       display: none;
       justify-content: center;
@@ -545,6 +555,7 @@
       flex-direction: column;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
       overflow: hidden;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
 
     .modal-header {
@@ -573,7 +584,7 @@
     }
 
     .modal-close:hover {
-      color: #fff;
+      color: var(--text);
     }
 
     .modal-body {
@@ -611,22 +622,23 @@
     .code-box {
       width: 100%;
       height: 140px;
-      background: #0a0d14;
+      background: var(--bg-dark);
       border: 1px solid var(--bg-card-border);
       border-radius: 8px;
-      color: #79c0ff;
+      color: var(--accent);
       font-family: monospace;
       font-size: 0.78rem;
       padding: 12px;
       resize: vertical;
       outline: none;
       white-space: pre;
+      transition: border-color 0.2s, background-color 0.25s, color 0.25s;
     }
 
     .embed-preview-wrapper {
       border: 1px solid var(--bg-card-border);
       border-radius: 8px;
-      background: #090a0f;
+      background: var(--viewport-bg);
       height: 220px;
       overflow: hidden;
       position: relative;
@@ -644,25 +656,25 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(15, 17, 23, 0.4);
+      background: rgba(0, 0, 0, 0.2);
     }
 
     /* Toast Notification */
     .toast {
       position: fixed;
-      bottom: 24px;
+      bottom: 48px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background: rgba(0, 240, 255, 0.95);
-      color: #000;
-      padding: 8px 16px;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      padding: 8px 18px;
       border-radius: 20px;
       font-size: 0.82rem;
       font-weight: 600;
       pointer-events: none;
       transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       z-index: 1000;
-      box-shadow: 0 4px 16px rgba(0, 240, 255, 0.4);
+      box-shadow: 0 4px 16px var(--accent-glow);
     }
 
     .toast.show {
@@ -679,9 +691,6 @@
     </div>
     <div class="header-actions">
       <button class="btn btn-glow btn-sm" id="btnHeaderEmbed">⚡ Get Embed Code</button>
-      <div class="attribution">
-        Powered by <a href="https://github.com/victorqribeiro/imgtoascii" target="_blank" rel="noopener">victorqribeiro/imgToAscii</a>
-      </div>
     </div>
   </header>
 
@@ -701,11 +710,13 @@
           <button class="btn btn-accent btn-sm" id="btnLoadUrl">Load</button>
         </div>
 
+        <!-- Verified, stable online sample animations -->
         <div class="quick-links">
           <span style="font-size: 0.7rem; color: var(--text-muted);">Web Presets:</span>
           <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif">🌍 Globe</button>
-          <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/7/78/Anim-rainbow.gif">🌈 Wave</button>
-          <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/d/d3/Cheetah_running_animation.gif">🐆 Cheetah</button>
+          <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/4/4a/Color_changing_gradient_rainbow.gif">🌈 Rainbow</button>
+          <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/d/dd/Muybridge_race_horse_animated.gif">🐎 Gallop</button>
+          <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/4/4b/Walking_cat.gif">🐱 Cat</button>
         </div>
 
         <div class="divider">
@@ -731,7 +742,7 @@
         </div>
       </section>
 
-      <!-- Algorithm Settings (Directly maps to victorqribeiro/imgToAscii constructor) -->
+      <!-- Algorithm Settings -->
       <section>
         <div class="section-title">2. imgToAscii Parameters</div>
         <div class="card">
@@ -764,7 +775,7 @@
 
       <!-- Render & Display Styling -->
       <section>
-        <div class="section-title">3. Viewport & Appearance</div>
+        <div class="section-title">3. Viewport & Color Theme</div>
         <div class="card">
           
           <div class="control-row">
@@ -775,6 +786,7 @@
             </div>
           </div>
 
+          <!-- Color theme changes entire page styling dynamically -->
           <div class="control-row">
             <span class="control-label">Color Theme</span>
             <select id="themeSelect" style="width: 140px;">
@@ -846,7 +858,7 @@
 
       <!-- ASCII Rendering Viewport -->
       <div class="ascii-wrapper" id="asciiWrapper">
-        <pre id="asciiOutput" class="theme-cyber"></pre>
+        <pre id="asciiOutput"></pre>
       </div>
 
       <!-- Original GIF PIP overlay preview -->
@@ -874,6 +886,13 @@
 
   </div>
 
+  <!-- Footer Attribution -->
+  <footer>
+    <div class="attribution">
+      Powered by <a href="https://github.com/victorqribeiro/imgtoascii" target="_blank" rel="noopener">victorqribeiro/imgToAscii</a>
+    </div>
+  </footer>
+
   <!-- Embed Modal -->
   <div class="modal-overlay" id="embedModal">
     <div class="modal-container">
@@ -889,7 +908,7 @@
         </div>
 
         <div style="font-size: 0.78rem; color: var(--text-muted);" id="embedDesc">
-          Copy and paste this self-contained <code>&lt;iframe&gt;</code> into any website (WordPress, Webflow, Notion, or custom HTML). It runs completely client-side without external dependencies.
+          Copy and paste this self-contained <code>&lt;iframe&gt;</code> into any website. It runs completely client-side without external dependencies.
         </div>
 
         <textarea class="code-box" id="embedCodeText" readonly></textarea>
@@ -1036,25 +1055,91 @@
       console.warn("Could not load gifuct-js via ESM, falling back to omggif", err);
     }
 
+    // Complete theme definitions (updates entire application palette)
+    const themeConfigs = {
+      'theme-cyber': {
+        accent: '#00f0ff',
+        accentContrast: '#000000',
+        accentDim: 'rgba(0, 240, 255, 0.15)',
+        accentGlow: 'rgba(0, 240, 255, 0.45)',
+        bgDark: '#0a0c13',
+        bgCard: '#131824',
+        bgCardBorder: '#1e2638',
+        viewportBg: '#06080e',
+        text: '#e2e8f0',
+        textMuted: '#7e8ba6',
+        preBg: '#0b0d14',
+        preFg: '#00f0ff'
+      },
+      'theme-matrix': {
+        accent: '#00ff66',
+        accentContrast: '#000000',
+        accentDim: 'rgba(0, 255, 102, 0.15)',
+        accentGlow: 'rgba(0, 255, 102, 0.45)',
+        bgDark: '#030804',
+        bgCard: '#09140b',
+        bgCardBorder: '#122617',
+        viewportBg: '#020503',
+        text: '#d1fae5',
+        textMuted: '#6ee7b7',
+        preBg: '#030804',
+        preFg: '#00ff66'
+      },
+      'theme-amber': {
+        accent: '#ffb000',
+        accentContrast: '#000000',
+        accentDim: 'rgba(255, 176, 0, 0.18)',
+        accentGlow: 'rgba(255, 176, 0, 0.45)',
+        bgDark: '#0e0a05',
+        bgCard: '#1a1309',
+        bgCardBorder: '#2e210f',
+        viewportBg: '#080502',
+        text: '#fef3c7',
+        textMuted: '#d97706',
+        preBg: '#0d0803',
+        preFg: '#ffb000'
+      },
+      'theme-dark': {
+        accent: '#ffffff',
+        accentContrast: '#000000',
+        accentDim: 'rgba(255, 255, 255, 0.15)',
+        accentGlow: 'rgba(255, 255, 255, 0.35)',
+        bgDark: '#000000',
+        bgCard: '#111111',
+        bgCardBorder: '#262626',
+        viewportBg: '#000000',
+        text: '#ffffff',
+        textMuted: '#999999',
+        preBg: '#000000',
+        preFg: '#ffffff'
+      },
+      'theme-paper': {
+        accent: '#111827',
+        accentContrast: '#ffffff',
+        accentDim: 'rgba(17, 24, 39, 0.1)',
+        accentGlow: 'rgba(17, 24, 39, 0.2)',
+        bgDark: '#e5e7eb',
+        bgCard: '#f3f4f6',
+        bgCardBorder: '#d1d5db',
+        viewportBg: '#f9fafb',
+        text: '#111827',
+        textMuted: '#6b7280',
+        preBg: '#ffffff',
+        preFg: '#111111'
+      }
+    };
+
     // State Variables
     let rawGifBuffer = null;
-    let compositedFrames = [];   // { canvas, delay }
-    let asciiFrames = [];        // { ascii, text, html, delay }
+    let compositedFrames = [];
+    let asciiFrames = [];
     let currentFrameIndex = 0;
     let isPlaying = true;
     let playbackSpeed = 1.0;
     let isColorMode = true;
     let timerId = null;
-    let currentEmbedMode = 'iframe'; // 'iframe' or 'inline'
-
-    // Theme definitions for embeds
-    const themeStyles = {
-      'theme-cyber':  { bg: '#0b0d14', fg: '#00f0ff' },
-      'theme-matrix': { bg: '#030804', fg: '#00ff66' },
-      'theme-amber':  { bg: '#0d0803', fg: '#ffb000' },
-      'theme-dark':   { bg: '#000000', fg: '#ffffff' },
-      'theme-paper':  { bg: '#ffffff', fg: '#111111' }
-    };
+    let currentEmbedMode = 'iframe';
+    let currentThemeKey = 'theme-cyber';
 
     // DOM Elements
     const urlInput = document.getElementById('urlInput');
@@ -1080,7 +1165,6 @@
     const speedSelect = document.getElementById('speedSelect');
     const btnFullscreen = document.getElementById('btnFullscreen');
     const asciiOutput = document.getElementById('asciiOutput');
-    const asciiWrapper = document.getElementById('asciiWrapper');
     const gifPreview = document.getElementById('gifPreview');
     const gifDimBadge = document.getElementById('gifDimBadge');
     const progressOverlay = document.getElementById('progressOverlay');
@@ -1111,7 +1195,35 @@
       setTimeout(() => toast.classList.remove('show'), 2400);
     }
 
-    // Verify GIF Magic Bytes (GIF87a or GIF89a)
+    // Apply Theme to the ENTIRE Webpage
+    function applyGlobalTheme(themeKey) {
+      const config = themeConfigs[themeKey] || themeConfigs['theme-cyber'];
+      currentThemeKey = themeKey;
+      const root = document.documentElement;
+
+      // Update Root CSS variables
+      root.style.setProperty('--accent', config.accent);
+      root.style.setProperty('--accent-contrast', config.accentContrast);
+      root.style.setProperty('--accent-dim', config.accentDim);
+      root.style.setProperty('--accent-glow', config.accentGlow);
+      root.style.setProperty('--bg-dark', config.bgDark);
+      root.style.setProperty('--bg-card', config.bgCard);
+      root.style.setProperty('--bg-card-border', config.bgCardBorder);
+      root.style.setProperty('--viewport-bg', config.viewportBg);
+      root.style.setProperty('--text', config.text);
+      root.style.setProperty('--text-muted', config.textMuted);
+
+      // Update ASCII Output pre container
+      asciiOutput.style.backgroundColor = config.preBg;
+      asciiOutput.style.color = config.preFg;
+
+      // Refresh embed preview if modal is open
+      if (embedModal.style.display === 'flex') {
+        updateEmbedModal();
+      }
+    }
+
+    // Verify GIF Magic Bytes
     function isValidGif(buffer) {
       if (!buffer || buffer.byteLength < 6) return false;
       const h = new Uint8Array(buffer.slice(0, 3));
@@ -1132,12 +1244,12 @@
           if (isValidGif(buffer)) return buffer;
         }
       } catch (err) {
-        console.warn("Direct fetch restricted by CORS or network, trying CORS proxy 1...", err);
+        console.warn("Direct fetch restricted, trying proxy 1...", err);
       }
 
       // Strategy 2: AllOrigins Raw CORS Proxy
       try {
-        progressSub.textContent = "Using CORS proxy fallback (allorigins)...";
+        progressSub.textContent = "Connecting via CORS fallback (allorigins)...";
         const proxyUrl1 = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
         const response = await fetch(proxyUrl1);
         if (response.ok) {
@@ -1145,12 +1257,12 @@
           if (isValidGif(buffer)) return buffer;
         }
       } catch (err) {
-        console.warn("CORS proxy 1 failed, trying proxy 2...", err);
+        console.warn("Proxy 1 failed, trying backup proxy...", err);
       }
 
       // Strategy 3: CorsProxy.io Fallback
       try {
-        progressSub.textContent = "Using backup CORS proxy (corsproxy.io)...";
+        progressSub.textContent = "Connecting via backup proxy (corsproxy.io)...";
         const proxyUrl2 = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
         const response = await fetch(proxyUrl2);
         if (response.ok) {
@@ -1158,7 +1270,7 @@
           if (isValidGif(buffer)) return buffer;
         }
       } catch (err) {
-        console.warn("CORS proxy 2 failed.", err);
+        console.warn("Proxy 2 failed.", err);
       }
 
       throw new Error("Unable to retrieve valid GIF data from this link. Make sure the URL points directly to a .gif file.");
@@ -1208,7 +1320,6 @@
       throw new Error("Unable to parse GIF: no decoder library available.");
     }
 
-    // Compositing for gifuct-js frames
     function compositeGifuctFrames(frames, width, height) {
       const fullCanvas = document.createElement('canvas');
       fullCanvas.width = width;
@@ -1270,7 +1381,6 @@
       return result;
     }
 
-    // Compositing for omggif frames
     function compositeOmggifFrames(reader) {
       const width = reader.width;
       const height = reader.height;
@@ -1319,9 +1429,7 @@
         const item = compositedFrames[i];
         const frameDataUrl = item.canvas.toDataURL('image/png');
         
-        // ---------------------------------------------------------------------
-        // INSTANTIATING VICTOR RIBEIRO'S imgToAscii TOOL & ALGORITHM
-        // ---------------------------------------------------------------------
+        // INSTANTIATING VICTOR RIBEIRO'S imgToAscii
         const converter = new imgToAscii(frameDataUrl, size, charType);
         await converter.loadImage;
 
@@ -1353,7 +1461,6 @@
       showToast(`Ready! Rendered ${asciiFrames.length} ASCII frames.`);
     }
 
-    // Render Current Frame
     function showFrame(index) {
       if (!asciiFrames.length) return;
       currentFrameIndex = Math.max(0, Math.min(index, asciiFrames.length - 1));
@@ -1369,7 +1476,6 @@
       scrubber.value = currentFrameIndex;
     }
 
-    // Animation Playback Loop
     function scheduleNextFrame() {
       if (!isPlaying || asciiFrames.length <= 1) return;
 
@@ -1397,7 +1503,6 @@
       btnPlayPause.innerHTML = "▶ Play";
     }
 
-    // Load and Process GIF File
     async function loadGifData(buffer, objectUrl) {
       try {
         rawGifBuffer = buffer;
@@ -1549,22 +1654,17 @@
       return buf.subarray(0, end).buffer;
     }
 
-    // =========================================================================
-    // EMBED CODE GENERATION (IFRAME & STANDALONE SNIPPETS)
-    // =========================================================================
-
+    // Embed Code Generator
     function generateStandaloneHtml() {
       if (!asciiFrames.length) return "";
 
-      const themeKey = themeSelect.value || 'theme-cyber';
-      const theme = themeStyles[themeKey] || themeStyles['theme-cyber'];
+      const theme = themeConfigs[currentThemeKey] || themeConfigs['theme-cyber'];
       const fontSize = `${fontSizeInput.value}px`;
       const lineHeight = `${lineHeightInput.value}px`;
 
       const framesData = asciiFrames.map(f => isColorMode ? f.html : f.text);
       const delaysData = asciiFrames.map(f => Math.round(f.delay / playbackSpeed));
 
-      // Build pure, self-contained standalone HTML player
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1575,7 +1675,7 @@
     html, body {
       width: 100%;
       height: 100%;
-      background-color: ${theme.bg};
+      background-color: ${theme.preBg};
       overflow: hidden;
       display: flex;
       justify-content: center;
@@ -1585,8 +1685,8 @@
       font-family: "Courier New", Courier, monospace !important;
       font-size: ${fontSize};
       line-height: ${lineHeight};
-      color: ${theme.fg};
-      background-color: ${theme.bg};
+      color: ${theme.preFg};
+      background-color: ${theme.preBg};
       white-space: pre;
       margin: 0;
       user-select: text;
@@ -1628,16 +1728,13 @@
       }
 
       const standaloneHtml = generateStandaloneHtml();
-      const themeKey = themeSelect.value || 'theme-cyber';
-      const theme = themeStyles[themeKey] || themeStyles['theme-cyber'];
+      const theme = themeConfigs[currentThemeKey] || themeConfigs['theme-cyber'];
 
-      // Live update modal iframe preview
       embedPreviewIframe.srcdoc = standaloneHtml;
 
       if (currentEmbedMode === 'iframe') {
-        embedDesc.innerHTML = 'Copy and paste this self-contained <code>&lt;iframe&gt;</code> into your website (WordPress, Webflow, Notion, or custom HTML). It runs completely client-side without hosting requirements.';
+        embedDesc.innerHTML = 'Copy and paste this self-contained <code>&lt;iframe&gt;</code> into any website (WordPress, Webflow, Notion, or custom HTML). It runs completely client-side.';
         
-        // Escape HTML for srcdoc attribute
         const escapedHtml = standaloneHtml
           .replace(/&/g, '&amp;')
           .replace(/"/g, '&quot;');
@@ -1645,7 +1742,7 @@
         const iframeCode = `<iframe 
   width="100%" 
   height="450" 
-  style="border: none; border-radius: 8px; overflow: hidden; background-color: ${theme.bg};" 
+  style="border: none; border-radius: 8px; overflow: hidden; background-color: ${theme.preBg};" 
   srcdoc="${escapedHtml}">
 </iframe>`;
         embedCodeText.value = iframeCode;
@@ -1661,7 +1758,6 @@
     // EVENT LISTENERS & UI WIRING
     // =========================================================================
 
-    // Embed Modal Triggers
     btnHeaderEmbed.addEventListener('click', updateEmbedModal);
     btnSidebarEmbed.addEventListener('click', updateEmbedModal);
 
@@ -1706,7 +1802,6 @@
       showToast("Downloaded standalone HTML player!");
     });
 
-    // Online URL Button
     btnLoadUrl.addEventListener('click', () => {
       const url = urlInput.value.trim();
       if (url) loadGifFromUrl(url);
@@ -1728,7 +1823,6 @@
       });
     });
 
-    // Drag and Drop
     dropzone.addEventListener('click', () => fileInput.click());
     dropzone.addEventListener('dragover', e => {
       e.preventDefault();
@@ -1747,7 +1841,6 @@
       }
     });
 
-    // File Input
     fileInput.addEventListener('change', async e => {
       const file = e.target.files[0];
       if (file) {
@@ -1756,7 +1849,6 @@
       }
     });
 
-    // Clipboard Paste
     window.addEventListener('paste', async e => {
       const items = (e.clipboardData || e.originalEvent.clipboardData).items;
       for (const item of items) {
@@ -1776,7 +1868,6 @@
       }
     });
 
-    // Offline Demo Preset Buttons
     document.getElementById('btnSampleHeart').addEventListener('click', () => {
       const buf = generateDemoGif('heart');
       if (buf) loadGifData(buf);
@@ -1790,17 +1881,14 @@
       if (buf) loadGifData(buf);
     });
 
-    // Size Slider
     sizeInput.addEventListener('input', e => {
       sizeValue.textContent = parseFloat(e.target.value).toFixed(2);
     });
 
-    // Reconvert Button
     btnReconvert.addEventListener('click', () => {
       convertAllFrames();
     });
 
-    // Render Mode Toggles
     btnColorMode.addEventListener('click', () => {
       isColorMode = true;
       btnColorMode.classList.add('btn-accent');
@@ -1815,17 +1903,11 @@
       showFrame(currentFrameIndex);
     });
 
-    // Theme Selector
+    // Theme selector: updates entire page palette
     themeSelect.addEventListener('change', e => {
-      asciiOutput.className = e.target.value;
-      if (e.target.value === 'theme-paper') {
-        asciiWrapper.style.background = "#e2e8f0";
-      } else {
-        asciiWrapper.style.background = "#090a0f";
-      }
+      applyGlobalTheme(e.target.value);
     });
 
-    // Font Size & Line Height Sliders
     fontSizeInput.addEventListener('input', e => {
       const val = `${e.target.value}px`;
       fontSizeValue.textContent = val;
@@ -1838,7 +1920,6 @@
       asciiOutput.style.lineHeight = val;
     });
 
-    // Playback Controls
     btnPlayPause.addEventListener('click', () => {
       if (isPlaying) stopAnimation();
       else startAnimation();
@@ -1866,14 +1947,14 @@
     });
 
     btnFullscreen.addEventListener('click', () => {
+      const wrapper = document.getElementById('asciiWrapper');
       if (!document.fullscreenElement) {
-        asciiWrapper.requestFullscreen().catch(err => alert(err.message));
+        wrapper.requestFullscreen().catch(err => alert(err.message));
       } else {
         document.exitFullscreen();
       }
     });
 
-    // Keyboard Shortcuts
     window.addEventListener('keydown', e => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
       if (e.code === 'Space') {
@@ -1891,7 +1972,6 @@
       }
     });
 
-    // Copy Current Frame as Text
     btnCopyFrame.addEventListener('click', () => {
       if (!asciiFrames.length) return;
       const text = asciiFrames[currentFrameIndex].text;
@@ -1900,7 +1980,6 @@
       });
     });
 
-    // Download All Frames as Text File
     btnDownloadText.addEventListener('click', () => {
       if (!asciiFrames.length) return;
       let output = `ASCII ANIMATION (${asciiFrames.length} frames)\n`;
@@ -1923,6 +2002,8 @@
 
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
+      applyGlobalTheme('theme-cyber');
+
       const params = new URLSearchParams(window.location.search);
       const urlParam = params.get('url') || params.get('gif');
       if (urlParam) {
