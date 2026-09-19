@@ -1,128 +1,1940 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>GIF to ASCII Generator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GIF to ASCII Animation Player & Embedder</title>
+  
+  <!-- omggif decoder & encoder fallback -->
+  <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.min.js"></script>
+
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; line-height: 1.5; }
-    textarea { width: 100%; height: 280px; font-family: monospace; font-size: 11px; margin-top: 15px; }
-    button { background: #222; color: #fff; border: none; padding: 10px 20px; font-size: 15px; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #b4532a; }
-    .status { margin: 15px 0; font-weight: bold; color: #b4532a; }
-  </style>
-  <script type="module">
-    import { parseGIF, decompressFrames } from 'https://cdn.jsdelivr.net/npm/gifuct-js/+esm';
-
-    const CHARS = "@%#*+=-:. ";
-    const WIDTH = 55;
-
-    async function processBuffer(buffer) {
-      const status = document.getElementById('status');
-      status.textContent = 'Parsing GIF frames...';
-
-      const gif = parseGIF(buffer);
-      const frames = decompressFrames(gif, true);
-      status.textContent = `Converting ${frames.length} frames to ASCII...`;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = gif.lsd.width;
-      canvas.height = gif.lsd.height;
-      const ctx = canvas.getContext('2d');
-
-      const patchCanvas = document.createElement('canvas');
-      const patchCtx = patchCanvas.getContext('2d');
-
-      const sampleCanvas = document.createElement('canvas');
-      const sampleCtx = sampleCanvas.getContext('2d');
-      const aspect = gif.lsd.height / gif.lsd.width;
-      const targetHeight = Math.round(WIDTH * aspect * 0.52);
-      sampleCanvas.width = WIDTH;
-      sampleCanvas.height = targetHeight;
-
-      const asciiFrames = [];
-      let totalDelay = 0;
-
-      for (const frame of frames) {
-        totalDelay += frame.delay || 100;
-
-        patchCanvas.width = frame.dims.width;
-        patchCanvas.height = frame.dims.height;
-        const patchData = patchCtx.createImageData(frame.dims.width, frame.dims.height);
-        patchData.data.set(frame.patch);
-        patchCtx.putImageData(patchData, 0, 0);
-
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(patchCanvas, frame.dims.left, frame.dims.top);
-
-        sampleCtx.drawImage(canvas, 0, 0, WIDTH, targetHeight);
-        const data = sampleCtx.getImageData(0, 0, WIDTH, targetHeight).data;
-
-        let frameText = "";
-        for (let y = 0; y < targetHeight; y++) {
-          let line = "";
-          for (let x = 0; x < WIDTH; x++) {
-            const idx = (y * WIDTH + x) * 4;
-            const brightness = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
-            const charIdx = Math.floor((brightness / 255) * (CHARS.length - 1));
-            line += CHARS[charIdx];
-          }
-          frameText += line + (y < targetHeight - 1 ? "\n" : "");
-        }
-        asciiFrames.push(frameText);
-      }
-
-      const avgDelay = Math.round(totalDelay / frames.length) || 100;
-      const outputCode = `const gifFrames = ${JSON.stringify(asciiFrames, null, 2)};\nconst gifDelay = ${avgDelay};`;
-
-      document.getElementById('output').value = outputCode;
-      status.textContent = `Done! Converted ${frames.length} frames.`;
-      document.getElementById('copyBtn').style.display = 'inline-block';
+    :root {
+      --bg-dark: #0f1117;
+      --bg-card: #161b26;
+      --bg-card-border: #232a3b;
+      --accent: #00f0ff;
+      --accent-dim: rgba(0, 240, 255, 0.15);
+      --accent-glow: rgba(0, 240, 255, 0.4);
+      --text: #e2e8f0;
+      --text-muted: #8892b0;
+      --panel-width: 370px;
     }
 
-    document.getElementById('convertBtn').addEventListener('click', async () => {
-      const status = document.getElementById('status');
-      const file = document.getElementById('fileInput').files[0];
-      const url = document.getElementById('gifUrl').value;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: rgba(22, 27, 38, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--bg-card-border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand h1 span.badge {
+      font-size: 0.68rem;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .attribution {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .attribution a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .attribution a:hover {
+      text-decoration: underline;
+    }
+
+    /* Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 58px);
+      overflow: hidden;
+    }
+
+    /* Sidebar controls */
+    .sidebar {
+      width: var(--panel-width);
+      min-width: var(--panel-width);
+      background: var(--bg-card);
+      border-right: 1px solid var(--bg-card-border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 18px;
+      gap: 18px;
+    }
+
+    .section-title {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+    }
+
+    .card {
+      background: rgba(15, 17, 23, 0.55);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    /* URL input group */
+    .url-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .url-input {
+      flex: 1;
+      background: #0f121a;
+      border: 1px solid var(--bg-card-border);
+      color: #fff;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .url-input:focus {
+      border-color: var(--accent);
+    }
+
+    .quick-links {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      gap: 8px;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--bg-card-border);
+    }
+
+    .divider-text {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Drop Zone */
+    .dropzone {
+      border: 2px dashed #2f384e;
+      border-radius: 8px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(15, 17, 23, 0.4);
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .dropzone-icon {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+
+    .dropzone-text {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .dropzone-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* Demo buttons */
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      background: #202636;
+      border: 1px solid var(--bg-card-border);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #2a3348;
+      border-color: #3b4662;
+      color: #fff;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn-accent {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-accent:hover:not(:disabled) {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .btn-glow {
+      background: #00f0ff;
+      color: #000;
+      border-color: #00f0ff;
+      font-weight: 600;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .btn-glow:hover {
+      background: #38f4ff;
+      box-shadow: 0 0 18px rgba(0, 240, 255, 0.7);
+    }
+
+    .btn-sm {
+      padding: 5px 8px;
+      font-size: 0.75rem;
+    }
+
+    .btn-xs {
+      padding: 3px 6px;
+      font-size: 0.7rem;
+    }
+
+    /* Controls Grid */
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.82rem;
+    }
+
+    .control-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label {
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .control-value {
+      font-family: monospace;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      background: #232a3b;
+      border-radius: 2px;
+      outline: none;
+      accent-color: var(--accent);
+      margin-top: 6px;
+    }
+
+    select {
+      background: #202636;
+      border: 1px solid var(--bg-card-border);
+      color: var(--text);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      outline: none;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    /* Main Viewport Stage */
+    .viewport-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: #090a0f;
+      overflow: hidden;
+    }
+
+    .viewport-toolbar {
+      padding: 10px 18px;
+      background: rgba(22, 27, 38, 0.6);
+      border-bottom: 1px solid var(--bg-card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .timeline-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      max-width: 420px;
+    }
+
+    .timeline-slider {
+      flex: 1;
+    }
+
+    .frame-badge {
+      font-family: monospace;
+      font-size: 0.78rem;
+      background: #11151f;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--bg-card-border);
+      white-space: nowrap;
+    }
+
+    /* Ascii Canvas Area */
+    .ascii-wrapper {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      position: relative;
+    }
+
+    /* PRE element styling matches Victor Ribeiro's getPreElement() */
+    #asciiOutput {
+      font-family: "Courier New", Courier, monospace !important;
+      line-height: 6px;
+      font-size: 11px;
+      display: inline-block;
+      margin: 0 auto;
+      white-space: pre;
+      user-select: text;
+      letter-spacing: 0;
+      transition: background-color 0.2s;
+    }
+
+    /* Original GIF preview overlay */
+    .preview-box {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(22, 27, 38, 0.92);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 20;
+      transition: all 0.2s ease;
+      max-width: 180px;
+    }
+
+    .preview-box img {
+      max-width: 100%;
+      max-height: 120px;
+      border-radius: 4px;
+      display: block;
+      margin: 0 auto;
+      object-fit: contain;
+    }
+
+    .preview-header {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Progress Modal / Overlay */
+    .progress-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 10, 15, 0.85);
+      backdrop-filter: blur(6px);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+
+    .progress-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 10px;
+      padding: 24px;
+      width: 320px;
+      text-align: center;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.7);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: #232a3b;
+      border-radius: 4px;
+      margin: 16px 0 10px 0;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+      transition: width 0.1s ease;
+    }
+
+    .progress-status {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Themes */
+    .theme-cyber {
+      background-color: #0b0d14 !important;
+      color: #00f0ff !important;
+    }
+    .theme-matrix {
+      background-color: #030804 !important;
+      color: #00ff66 !important;
+    }
+    .theme-amber {
+      background-color: #0d0803 !important;
+      color: #ffb000 !important;
+    }
+    .theme-paper {
+      background-color: #ffffff !important;
+      color: #111111 !important;
+    }
+    .theme-dark {
+      background-color: #000000 !important;
+      color: #ffffff !important;
+    }
+
+    /* Modal for Embed Code */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 6, 10, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      padding: 20px;
+    }
+
+    .modal-container {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.3rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .embed-tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--bg-card-border);
+      padding-bottom: 8px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .code-box {
+      width: 100%;
+      height: 140px;
+      background: #0a0d14;
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      color: #79c0ff;
+      font-family: monospace;
+      font-size: 0.78rem;
+      padding: 12px;
+      resize: vertical;
+      outline: none;
+      white-space: pre;
+    }
+
+    .embed-preview-wrapper {
+      border: 1px solid var(--bg-card-border);
+      border-radius: 8px;
+      background: #090a0f;
+      height: 220px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .embed-preview-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--bg-card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 17, 23, 0.4);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(0, 240, 255, 0.95);
+      color: #000;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      pointer-events: none;
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 1000;
+      box-shadow: 0 4px 16px rgba(0, 240, 255, 0.4);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <h1>GIF to ASCII <span class="badge">Animator</span></h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-glow btn-sm" id="btnHeaderEmbed">⚡ Get Embed Code</button>
+      <div class="attribution">
+        Powered by <a href="https://github.com/victorqribeiro/imgtoascii" target="_blank" rel="noopener">victorqribeiro/imgToAscii</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    
+    <!-- Sidebar Controls -->
+    <aside class="sidebar">
+      
+      <!-- Source Section -->
+      <section>
+        <div class="section-title">1. Input GIF (URL or Local)</div>
+        
+        <!-- Online URL Fetching -->
+        <div class="url-group">
+          <input type="url" id="urlInput" class="url-input" placeholder="Paste image link (https://.../anim.gif)" spellcheck="false" />
+          <button class="btn btn-accent btn-sm" id="btnLoadUrl">Load</button>
+        </div>
+
+        <div class="quick-links">
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Web Presets:</span>
+          <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif">🌍 Globe</button>
+          <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/7/78/Anim-rainbow.gif">🌈 Wave</button>
+          <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/d/d3/Cheetah_running_animation.gif">🐆 Cheetah</button>
+        </div>
+
+        <div class="divider">
+          <div class="divider-line"></div>
+          <div class="divider-text">OR LOCAL FILE / OFFLINE</div>
+          <div class="divider-line"></div>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">🎞️</div>
+          <div class="dropzone-text">Drop GIF file here</div>
+          <div class="dropzone-sub">or click to browse local files</div>
+          <input type="file" id="fileInput" accept="image/gif" />
+        </div>
+
+        <div style="margin-top: 8px;">
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Built-in offline demos:</span>
+          <div class="demo-grid">
+            <button class="btn btn-sm" id="btnSampleHeart">💖 Heart</button>
+            <button class="btn btn-sm" id="btnSampleCube">🎲 3D Cube</button>
+            <button class="btn btn-sm" id="btnSampleOrb">⚡ Orb</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Algorithm Settings (Directly maps to victorqribeiro/imgToAscii constructor) -->
+      <section>
+        <div class="section-title">2. imgToAscii Parameters</div>
+        <div class="card">
+          
+          <div class="control-row">
+            <span class="control-label">Scale (<code>size</code>)</span>
+            <span class="control-value" id="sizeValue">0.25</span>
+          </div>
+          <input type="range" id="sizeInput" min="0.05" max="0.80" step="0.01" value="0.25" />
+          <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+            Adjusts resolution before mapping pixels to ASCII characters.
+          </div>
+
+          <div style="margin-top: 12px;">
+            <div class="control-row">
+              <span class="control-label">Alphabet (<code>charType</code>)</span>
+            </div>
+            <select id="charTypeSelect">
+              <option value="0" selected>Type 0 (10 chars: @%#*+=-:. )</option>
+              <option value="1">Type 1 (70 chars: Full detailed set)</option>
+            </select>
+          </div>
+
+          <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+            <button class="btn btn-accent btn-sm" id="btnReconvert">🔄 Re-apply Algorithm</button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Render & Display Styling -->
+      <section>
+        <div class="section-title">3. Viewport & Appearance</div>
+        <div class="card">
+          
+          <div class="control-row">
+            <span class="control-label">Render Mode</span>
+            <div>
+              <button class="btn btn-sm btn-accent" id="btnColorMode">Color Spans</button>
+              <button class="btn btn-sm" id="btnMonoMode">Monochrome</button>
+            </div>
+          </div>
+
+          <div class="control-row">
+            <span class="control-label">Color Theme</span>
+            <select id="themeSelect" style="width: 140px;">
+              <option value="theme-cyber">Cyberpunk Blue</option>
+              <option value="theme-matrix">Matrix Green</option>
+              <option value="theme-amber">Amber CRT</option>
+              <option value="theme-dark">Pure Dark</option>
+              <option value="theme-paper">Light Paper</option>
+            </select>
+          </div>
+
+          <div class="control-row">
+            <span class="control-label">Font Size</span>
+            <span class="control-value" id="fontSizeValue">11px</span>
+          </div>
+          <input type="range" id="fontSizeInput" min="4" max="22" step="1" value="11" />
+
+          <div class="control-row" style="margin-top: 10px;">
+            <span class="control-label">Line Height (Aspect Ratio)</span>
+            <span class="control-value" id="lineHeightValue">6px</span>
+          </div>
+          <input type="range" id="lineHeightInput" min="3" max="16" step="1" value="6" />
+
+        </div>
+      </section>
+
+      <!-- Export & Embed Tools -->
+      <section>
+        <div class="section-title">4. Export & Embedding</div>
+        <div style="display: flex; gap: 8px; flex-direction: column;">
+          <button class="btn btn-accent" id="btnSidebarEmbed">⚡ Get Embed Code (iframe)</button>
+          <button class="btn" id="btnCopyFrame">📋 Copy Current Frame ASCII</button>
+          <button class="btn" id="btnDownloadText">💾 Download Frames as .txt</button>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- Main Viewport Stage -->
+    <main class="viewport-stage">
+      
+      <!-- Toolbar with Playback controls -->
+      <div class="viewport-toolbar">
+        
+        <div class="player-controls">
+          <button class="btn btn-sm" id="btnPrevFrame" title="Previous Frame (Left Arrow)">⏮</button>
+          <button class="btn btn-sm btn-accent" id="btnPlayPause" title="Play / Pause (Spacebar)">⏸ Pause</button>
+          <button class="btn btn-sm" id="btnNextFrame" title="Next Frame (Right Arrow)">⏭</button>
+        </div>
+
+        <div class="timeline-container">
+          <input type="range" id="scrubber" class="timeline-slider" min="0" max="0" value="0" />
+          <span class="frame-badge" id="frameDisplay">Frame 0 / 0</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 0.74rem; color: var(--text-muted);">Speed:</span>
+          <select id="speedSelect" style="width: 74px; padding: 3px 6px; font-size: 0.74rem;">
+            <option value="0.25">0.25x</option>
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2.0x</option>
+          </select>
+          <button class="btn btn-sm" id="btnFullscreen" title="Toggle Fullscreen">⛶</button>
+        </div>
+
+      </div>
+
+      <!-- ASCII Rendering Viewport -->
+      <div class="ascii-wrapper" id="asciiWrapper">
+        <pre id="asciiOutput" class="theme-cyber"></pre>
+      </div>
+
+      <!-- Original GIF PIP overlay preview -->
+      <div class="preview-box" id="previewBox">
+        <div class="preview-header">
+          <span>Source GIF</span>
+          <span id="gifDimBadge" style="color: var(--accent);">--×--</span>
+        </div>
+        <img id="gifPreview" alt="GIF Preview" />
+      </div>
+
+      <!-- Loading / Conversion Progress Overlay -->
+      <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-card">
+          <h3 style="font-size: 1rem; margin-bottom: 6px;">Processing GIF</h3>
+          <p style="font-size: 0.78rem; color: var(--text-muted);" id="progressSub">Running Victor Ribeiro's imgToAscii algorithm across frames...</p>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+          </div>
+          <div class="progress-status" id="progressStatus">0%</div>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Embed Modal -->
+  <div class="modal-overlay" id="embedModal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2>⚡ Embed ASCII Animation</h2>
+        <button class="modal-close" id="btnCloseModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="embed-tabs">
+          <button class="tab-btn active" id="tabIframe">Standalone &lt;iframe&gt;</button>
+          <button class="tab-btn" id="tabInline">HTML + Script Snippet</button>
+        </div>
+
+        <div style="font-size: 0.78rem; color: var(--text-muted);" id="embedDesc">
+          Copy and paste this self-contained <code>&lt;iframe&gt;</code> into any website (WordPress, Webflow, Notion, or custom HTML). It runs completely client-side without external dependencies.
+        </div>
+
+        <textarea class="code-box" id="embedCodeText" readonly></textarea>
+
+        <div style="font-size: 0.76rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent);">
+          Live Embed Preview
+        </div>
+        <div class="embed-preview-wrapper" id="embedPreviewWrapper">
+          <iframe id="embedPreviewIframe" sandbox="allow-scripts"></iframe>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm" id="btnDownloadHtml">💾 Download Standalone .html</button>
+        <button class="btn btn-accent btn-sm" id="btnCopyEmbedCode">📋 Copy Embed Code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">Notification</div>
+
+  <!-- ========================================================================= -->
+  <!-- EXACT IMPLEMENTATION FROM: victorqribeiro/imgToAscii/src/imgToAscii.js   -->
+  <!-- ========================================================================= -->
+  <script>
+    /*
+    Copyright (c) 2018 Victor Ribeiro - victorqribeiro@gmail.com
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+    https://github.com/victorqribeiro/imgToAscii
+    */
+    class imgToAscii {
+      constructor(image, size, charType) {
+        this.size = (size <= 0 || size > 1 ? 1 : size) || 1;
+        this.charType = charType || 0;
+        this.alphabet = {
+          0: ["@", "%", "#", "*", "+", "=", "-", ":", ".", " "],
+          1: ["$", "@", "B", "%", "8", "&", "W", "M", "#", "*", "o", "a", "h", "k", "b", "d", "p", "q", "w", "m", "Z", "O",
+              "0", "Q", "L", "C", "J", "U", "Y", "X", "z", "c", "v", "u", "n", "x", "r", "j", "f", "t", "/", "\\", "|", "(",
+              ")", "1", "{", "}", "[", "]", "?", "-", "_", "+", "~", "<", ">", "i", "!", "l", "I", ";", ":", ",", "\"", "^",
+              "`", "'", ".", " "]
+        };
+        this.string = "";
+        this.stringColor = "";
+        this.imageSrc = image;
+        this.loadImage = new Promise((resolve, reject) => {
+          this.image = new Image();
+          this.image.src = this.imageSrc;
+          this.image.onload = () => {
+            this.canvas = document.createElement('canvas');
+            this.canvas.width = this.image.width * this.size;
+            this.canvas.height = this.image.height * this.size;
+            this.context = this.canvas.getContext('2d');
+            this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
+            this.imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+            let grayStep = Math.ceil(255 / this.alphabet[this.charType].length);
+            for (let i = 0; i < this.imageData.data.length; i += 4) {
+              for (let j = 0; j < this.alphabet[this.charType].length; j++) {
+                let r = this.imageData.data[i];
+                let g = this.imageData.data[i + 1];
+                let b = this.imageData.data[i + 2];
+                if ((r * 0.2126) + (g * 0.7152) + (b * 0.0722) < (j + 1) * grayStep) {
+                  const char = this.alphabet[this.charType][j];
+                  this.string += char;
+                  this.stringColor += "<span style=\"color: rgb(" + r + "," + g + "," + b + "); \">"
+                    + (char.replace(' ', '&nbsp;'))
+                    + "</span>";
+                  break;
+                }
+              }
+              if (!((i / 4 + 1) % this.canvas.width)) {
+                this.string += "\n";
+                this.stringColor += "<br>";
+              }
+            }
+            resolve();
+          };
+          this.image.onerror = reject;
+          this.image.error = reject;
+        }).catch(e => console.error(e));
+      }
+
+      getPreElement() {
+        const pre = document.createElement('pre');
+        pre.style.fontFamily = "Courier, monospace";
+        pre.style.lineHeight = "6px";
+        pre.style.fontSize = "11px";
+        pre.style.display = "inline-block";
+        return pre;
+      }
+
+      async display(appendToBody = true) {
+        const pre = this.getPreElement();
+        if (appendToBody)
+          document.body.appendChild(pre);
+        await this.loadImage;
+        pre.innerText = this.string;
+        if (!appendToBody)
+          return pre;
+      }
+
+      async displayColor(bg, appendToBody = true) {
+        const pre = this.getPreElement();
+        pre.style.backgroundColor = bg;
+        if (appendToBody)
+          document.body.appendChild(pre);
+        await this.loadImage;
+        pre.innerHTML = this.stringColor;
+        if (!appendToBody)
+          return pre;
+      }
+    }
+  </script>
+
+  <!-- ========================================================================= -->
+  <!-- APPLICATION ORCHESTRATION & GIF ANIMATION ENGINE                          -->
+  <!-- ========================================================================= -->
+  <script type="module">
+    // Dynamically import gifuct-js with omggif fallback
+    let parseGIF = null, decompressFrames = null;
+    try {
+      const gifuct = await import('https://cdn.jsdelivr.net/npm/gifuct-js@2.1.2/+esm');
+      parseGIF = gifuct.parseGIF;
+      decompressFrames = gifuct.decompressFrames;
+    } catch (err) {
+      console.warn("Could not load gifuct-js via ESM, falling back to omggif", err);
+    }
+
+    // State Variables
+    let rawGifBuffer = null;
+    let compositedFrames = [];   // { canvas, delay }
+    let asciiFrames = [];        // { ascii, text, html, delay }
+    let currentFrameIndex = 0;
+    let isPlaying = true;
+    let playbackSpeed = 1.0;
+    let isColorMode = true;
+    let timerId = null;
+    let currentEmbedMode = 'iframe'; // 'iframe' or 'inline'
+
+    // Theme definitions for embeds
+    const themeStyles = {
+      'theme-cyber':  { bg: '#0b0d14', fg: '#00f0ff' },
+      'theme-matrix': { bg: '#030804', fg: '#00ff66' },
+      'theme-amber':  { bg: '#0d0803', fg: '#ffb000' },
+      'theme-dark':   { bg: '#000000', fg: '#ffffff' },
+      'theme-paper':  { bg: '#ffffff', fg: '#111111' }
+    };
+
+    // DOM Elements
+    const urlInput = document.getElementById('urlInput');
+    const btnLoadUrl = document.getElementById('btnLoadUrl');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const sizeInput = document.getElementById('sizeInput');
+    const sizeValue = document.getElementById('sizeValue');
+    const charTypeSelect = document.getElementById('charTypeSelect');
+    const btnReconvert = document.getElementById('btnReconvert');
+    const btnColorMode = document.getElementById('btnColorMode');
+    const btnMonoMode = document.getElementById('btnMonoMode');
+    const themeSelect = document.getElementById('themeSelect');
+    const fontSizeInput = document.getElementById('fontSizeInput');
+    const fontSizeValue = document.getElementById('fontSizeValue');
+    const lineHeightInput = document.getElementById('lineHeightInput');
+    const lineHeightValue = document.getElementById('lineHeightValue');
+    const btnPlayPause = document.getElementById('btnPlayPause');
+    const btnPrevFrame = document.getElementById('btnPrevFrame');
+    const btnNextFrame = document.getElementById('btnNextFrame');
+    const scrubber = document.getElementById('scrubber');
+    const frameDisplay = document.getElementById('frameDisplay');
+    const speedSelect = document.getElementById('speedSelect');
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    const asciiOutput = document.getElementById('asciiOutput');
+    const asciiWrapper = document.getElementById('asciiWrapper');
+    const gifPreview = document.getElementById('gifPreview');
+    const gifDimBadge = document.getElementById('gifDimBadge');
+    const progressOverlay = document.getElementById('progressOverlay');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const progressStatus = document.getElementById('progressStatus');
+    const progressSub = document.getElementById('progressSub');
+    const btnCopyFrame = document.getElementById('btnCopyFrame');
+    const btnDownloadText = document.getElementById('btnDownloadText');
+    const toast = document.getElementById('toast');
+
+    // Embed Modal Elements
+    const btnHeaderEmbed = document.getElementById('btnHeaderEmbed');
+    const btnSidebarEmbed = document.getElementById('btnSidebarEmbed');
+    const embedModal = document.getElementById('embedModal');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const tabIframe = document.getElementById('tabIframe');
+    const tabInline = document.getElementById('tabInline');
+    const embedCodeText = document.getElementById('embedCodeText');
+    const embedPreviewIframe = document.getElementById('embedPreviewIframe');
+    const btnCopyEmbedCode = document.getElementById('btnCopyEmbedCode');
+    const btnDownloadHtml = document.getElementById('btnDownloadHtml');
+    const embedDesc = document.getElementById('embedDesc');
+
+    // UI Toast Helper
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    // Verify GIF Magic Bytes (GIF87a or GIF89a)
+    function isValidGif(buffer) {
+      if (!buffer || buffer.byteLength < 6) return false;
+      const h = new Uint8Array(buffer.slice(0, 3));
+      return String.fromCharCode(h[0], h[1], h[2]) === 'GIF';
+    }
+
+    // Multi-tier Online GIF Fetcher (Direct -> CORS Proxies)
+    async function fetchOnlineGif(targetUrl) {
+      targetUrl = targetUrl.trim();
+      if (!targetUrl) throw new Error("Please enter a valid URL.");
+
+      // Strategy 1: Direct Fetch
       try {
-        if (file) {
-          status.textContent = 'Reading local file...';
-          const buffer = await file.arrayBuffer();
-          await processBuffer(buffer);
-        } else {
-          status.textContent = 'Downloading GIF from Giphy...';
-          const res = await fetch(url);
-          const buffer = await res.arrayBuffer();
-          await processBuffer(buffer);
+        progressSub.textContent = "Attempting direct fetch...";
+        const response = await fetch(targetUrl);
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          if (isValidGif(buffer)) return buffer;
         }
       } catch (err) {
-        status.textContent = 'Notice: Browser blocked direct URL fetch. Please right-click save the GIF to your computer, then select it with "Choose File" above.';
+        console.warn("Direct fetch restricted by CORS or network, trying CORS proxy 1...", err);
+      }
+
+      // Strategy 2: AllOrigins Raw CORS Proxy
+      try {
+        progressSub.textContent = "Using CORS proxy fallback (allorigins)...";
+        const proxyUrl1 = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+        const response = await fetch(proxyUrl1);
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          if (isValidGif(buffer)) return buffer;
+        }
+      } catch (err) {
+        console.warn("CORS proxy 1 failed, trying proxy 2...", err);
+      }
+
+      // Strategy 3: CorsProxy.io Fallback
+      try {
+        progressSub.textContent = "Using backup CORS proxy (corsproxy.io)...";
+        const proxyUrl2 = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
+        const response = await fetch(proxyUrl2);
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          if (isValidGif(buffer)) return buffer;
+        }
+      } catch (err) {
+        console.warn("CORS proxy 2 failed.", err);
+      }
+
+      throw new Error("Unable to retrieve valid GIF data from this link. Make sure the URL points directly to a .gif file.");
+    }
+
+    // Main loader for URL links
+    async function loadGifFromUrl(url) {
+      try {
+        progressOverlay.style.display = 'flex';
+        progressBarFill.style.width = '10%';
+        progressStatus.textContent = "Connecting...";
+
+        const buffer = await fetchOnlineGif(url);
+        progressBarFill.style.width = '40%';
+        progressStatus.textContent = "Decoded bytes successfully!";
+
+        const blobUrl = URL.createObjectURL(new Blob([buffer], { type: 'image/gif' }));
+        await loadGifData(buffer, blobUrl);
+      } catch (err) {
+        progressOverlay.style.display = 'none';
+        console.error(err);
+        alert(err.message || "Failed to load GIF from URL.");
+      }
+    }
+
+    // Decode Animated GIF into Composited Canvases
+    async function extractGifFrames(arrayBuffer) {
+      if (parseGIF && decompressFrames) {
+        try {
+          const parsed = parseGIF(arrayBuffer);
+          const rawFrames = decompressFrames(parsed, true);
+          if (rawFrames && rawFrames.length > 0) {
+            const width = (parsed.lsd && parsed.lsd.width) || rawFrames[0].dims.width;
+            const height = (parsed.lsd && parsed.lsd.height) || rawFrames[0].dims.height;
+            return compositeGifuctFrames(rawFrames, width, height);
+          }
+        } catch (e) {
+          console.warn("gifuct-js parse failed, falling back to omggif:", e);
+        }
+      }
+
+      if (window.GifReader) {
+        const reader = new window.GifReader(new Uint8Array(arrayBuffer));
+        return compositeOmggifFrames(reader);
+      }
+
+      throw new Error("Unable to parse GIF: no decoder library available.");
+    }
+
+    // Compositing for gifuct-js frames
+    function compositeGifuctFrames(frames, width, height) {
+      const fullCanvas = document.createElement('canvas');
+      fullCanvas.width = width;
+      fullCanvas.height = height;
+      const fullCtx = fullCanvas.getContext('2d', { willReadFrequently: true });
+
+      const patchCanvas = document.createElement('canvas');
+      const patchCtx = patchCanvas.getContext('2d', { willReadFrequently: true });
+
+      let backupCanvas = null;
+      let backupCtx = null;
+      const result = [];
+
+      for (let i = 0; i < frames.length; i++) {
+        const frame = frames[i];
+
+        if (i > 0) {
+          const prev = frames[i - 1];
+          if (prev.disposalType === 2) {
+            fullCtx.clearRect(prev.dims.left, prev.dims.top, prev.dims.width, prev.dims.height);
+          } else if (prev.disposalType === 3 && backupCanvas) {
+            fullCtx.clearRect(0, 0, width, height);
+            fullCtx.drawImage(backupCanvas, 0, 0);
+          }
+        }
+
+        if (frame.disposalType === 3) {
+          if (!backupCanvas) {
+            backupCanvas = document.createElement('canvas');
+            backupCanvas.width = width;
+            backupCanvas.height = height;
+            backupCtx = backupCanvas.getContext('2d');
+          }
+          backupCtx.clearRect(0, 0, width, height);
+          backupCtx.drawImage(fullCanvas, 0, 0);
+        }
+
+        if (frame.dims.width > 0 && frame.dims.height > 0 && frame.patch) {
+          patchCanvas.width = frame.dims.width;
+          patchCanvas.height = frame.dims.height;
+          const patchData = new ImageData(
+            new Uint8ClampedArray(frame.patch),
+            frame.dims.width,
+            frame.dims.height
+          );
+          patchCtx.putImageData(patchData, 0, 0);
+          fullCtx.drawImage(patchCanvas, frame.dims.left, frame.dims.top);
+        }
+
+        const snapshot = document.createElement('canvas');
+        snapshot.width = width;
+        snapshot.height = height;
+        snapshot.getContext('2d').drawImage(fullCanvas, 0, 0);
+
+        const delay = (frame.delay && frame.delay >= 20) ? frame.delay : 100;
+        result.push({ canvas: snapshot, delay });
+      }
+
+      return result;
+    }
+
+    // Compositing for omggif frames
+    function compositeOmggifFrames(reader) {
+      const width = reader.width;
+      const height = reader.height;
+      const numFrames = reader.numFrames();
+      const result = [];
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const rgba = new Uint8ClampedArray(width * height * 4);
+
+      for (let i = 0; i < numFrames; i++) {
+        const info = reader.frameInfo(i);
+        reader.decodeAndBlitFrameRGBA(i, rgba);
+        const imgData = new ImageData(new Uint8ClampedArray(rgba), width, height);
+        ctx.putImageData(imgData, 0, 0);
+
+        const snapshot = document.createElement('canvas');
+        snapshot.width = width;
+        snapshot.height = height;
+        snapshot.getContext('2d').drawImage(canvas, 0, 0);
+
+        const delay = (info.delay && info.delay >= 2) ? info.delay * 10 : 100;
+        result.push({ canvas: snapshot, delay });
+      }
+
+      return result;
+    }
+
+    // Convert All Frames using Victor Ribeiro's imgToAscii
+    async function convertAllFrames() {
+      if (!compositedFrames || compositedFrames.length === 0) return;
+
+      stopAnimation();
+      progressOverlay.style.display = 'flex';
+      progressSub.textContent = "Running Victor Ribeiro's imgToAscii algorithm across frames...";
+      progressBarFill.style.width = '0%';
+      progressStatus.textContent = `0 / ${compositedFrames.length} frames`;
+
+      const size = parseFloat(sizeInput.value);
+      const charType = parseInt(charTypeSelect.value, 10);
+      asciiFrames = [];
+
+      for (let i = 0; i < compositedFrames.length; i++) {
+        const item = compositedFrames[i];
+        const frameDataUrl = item.canvas.toDataURL('image/png');
+        
+        // ---------------------------------------------------------------------
+        // INSTANTIATING VICTOR RIBEIRO'S imgToAscii TOOL & ALGORITHM
+        // ---------------------------------------------------------------------
+        const converter = new imgToAscii(frameDataUrl, size, charType);
+        await converter.loadImage;
+
+        asciiFrames.push({
+          ascii: converter,
+          text: converter.string,
+          html: converter.stringColor,
+          delay: item.delay
+        });
+
+        const percent = Math.round(((i + 1) / compositedFrames.length) * 100);
+        progressBarFill.style.width = `${percent}%`;
+        progressStatus.textContent = `Converted frame ${i + 1} of ${compositedFrames.length} (${percent}%)`;
+
+        if (i % 2 === 0) {
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+
+      progressOverlay.style.display = 'none';
+
+      scrubber.min = 0;
+      scrubber.max = asciiFrames.length - 1;
+      currentFrameIndex = 0;
+      scrubber.value = 0;
+
+      showFrame(0);
+      startAnimation();
+      showToast(`Ready! Rendered ${asciiFrames.length} ASCII frames.`);
+    }
+
+    // Render Current Frame
+    function showFrame(index) {
+      if (!asciiFrames.length) return;
+      currentFrameIndex = Math.max(0, Math.min(index, asciiFrames.length - 1));
+      const frame = asciiFrames[currentFrameIndex];
+
+      if (isColorMode) {
+        asciiOutput.innerHTML = frame.html;
+      } else {
+        asciiOutput.textContent = frame.text;
+      }
+
+      frameDisplay.textContent = `Frame ${currentFrameIndex + 1} / ${asciiFrames.length} (${frame.delay}ms)`;
+      scrubber.value = currentFrameIndex;
+    }
+
+    // Animation Playback Loop
+    function scheduleNextFrame() {
+      if (!isPlaying || asciiFrames.length <= 1) return;
+
+      const frame = asciiFrames[currentFrameIndex];
+      const baseDelay = (frame && frame.delay) ? frame.delay : 100;
+      const delay = Math.max(20, baseDelay / playbackSpeed);
+
+      timerId = setTimeout(() => {
+        currentFrameIndex = (currentFrameIndex + 1) % asciiFrames.length;
+        showFrame(currentFrameIndex);
+        scheduleNextFrame();
+      }, delay);
+    }
+
+    function startAnimation() {
+      if (timerId) clearTimeout(timerId);
+      isPlaying = true;
+      btnPlayPause.innerHTML = "⏸ Pause";
+      scheduleNextFrame();
+    }
+
+    function stopAnimation() {
+      isPlaying = false;
+      if (timerId) clearTimeout(timerId);
+      btnPlayPause.innerHTML = "▶ Play";
+    }
+
+    // Load and Process GIF File
+    async function loadGifData(buffer, objectUrl) {
+      try {
+        rawGifBuffer = buffer;
+        if (objectUrl) {
+          gifPreview.src = objectUrl;
+        } else {
+          const blob = new Blob([buffer], { type: 'image/gif' });
+          gifPreview.src = URL.createObjectURL(blob);
+        }
+
+        progressOverlay.style.display = 'flex';
+        progressSub.textContent = "Decompressing and compositing GIF frames...";
+        progressStatus.textContent = "Analyzing GIF structure...";
+
+        compositedFrames = await extractGifFrames(buffer);
+
+        if (!compositedFrames.length) {
+          throw new Error("No readable frames found in GIF.");
+        }
+
+        const width = compositedFrames[0].canvas.width;
+        const height = compositedFrames[0].canvas.height;
+        gifDimBadge.textContent = `${width}×${height}px`;
+
+        const optimalSize = Math.min(0.6, Math.max(0.12, +(80 / width).toFixed(2)));
+        sizeInput.value = optimalSize;
+        sizeValue.textContent = optimalSize.toFixed(2);
+
+        await convertAllFrames();
+      } catch (err) {
+        progressOverlay.style.display = 'none';
+        console.error("Error processing GIF:", err);
+        alert("Could not process this GIF: " + err.message);
+      }
+    }
+
+    // Generate Animated Sample GIFs (Offline fallback)
+    function generateDemoGif(type = 'heart') {
+      if (!window.GifWriter) {
+        alert("GIF encoder not yet loaded. Please try again in a moment.");
+        return;
+      }
+      const width = 64;
+      const height = 64;
+      const numFrames = 12;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      const palette = [];
+      for (let r = 0; r < 6; r++) {
+        for (let g = 0; g < 6; g++) {
+          for (let b = 0; b < 6; b++) {
+            palette.push(((r * 51) << 16) | ((g * 51) << 8) | (b * 51));
+          }
+        }
+      }
+      while (palette.length < 256) palette.push(0);
+
+      const buf = new Uint8Array(width * height * numFrames * 4 + 1024);
+      const writer = new window.GifWriter(buf, width, height, { loop: 0, palette });
+
+      for (let f = 0; f < numFrames; f++) {
+        ctx.fillStyle = '#080a12';
+        ctx.fillRect(0, 0, width, height);
+
+        const t = f / numFrames;
+
+        if (type === 'heart') {
+          const scale = 1.0 + 0.22 * Math.sin(t * Math.PI * 2);
+          ctx.save();
+          ctx.translate(width / 2, height / 2 - 2);
+          ctx.scale(scale, scale);
+          ctx.fillStyle = '#ff2a6d';
+          ctx.beginPath();
+          ctx.moveTo(0, 6);
+          ctx.bezierCurveTo(0, -6, -18, -6, -18, 6);
+          ctx.bezierCurveTo(-18, 16, -6, 22, 0, 30);
+          ctx.bezierCurveTo(6, 22, 18, 16, 18, 6);
+          ctx.bezierCurveTo(18, -6, 0, -6, 0, 6);
+          ctx.fill();
+          ctx.restore();
+        } else if (type === 'cube') {
+          const angle = t * Math.PI * 2;
+          ctx.save();
+          ctx.translate(width / 2, height / 2);
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 2.4;
+          const sz = 15;
+          const cosA = Math.cos(angle);
+          const sinA = Math.sin(angle);
+          const nodes = [
+            [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+            [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]
+          ].map(([x, y, z]) => {
+            const rx = x * cosA - z * sinA;
+            const rz = x * sinA + z * cosA;
+            const ry = y * 0.86 - rz * 0.5;
+            return [rx * sz, ry * sz];
+          });
+          const edges = [
+            [0,1],[1,2],[2,3],[3,0],
+            [4,5],[5,6],[6,7],[7,4],
+            [0,4],[1,5],[2,6],[3,7]
+          ];
+          edges.forEach(([i, j]) => {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i][0], nodes[i][1]);
+            ctx.lineTo(nodes[j][0], nodes[j][1]);
+            ctx.stroke();
+          });
+          ctx.restore();
+        } else {
+          const y = height / 2 - 14 + Math.abs(Math.sin(t * Math.PI * 2)) * -16;
+          const x = width / 2;
+          const sWidth = 14 + (height / 2 - y);
+          ctx.fillStyle = '#1c2035';
+          ctx.beginPath();
+          ctx.ellipse(width / 2, height - 10, sWidth, 3.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          const grad = ctx.createRadialGradient(x - 3, y - 3, 2, x, y, 14);
+          grad.addColorStop(0, '#ffff55');
+          grad.addColorStop(0.7, '#ff6600');
+          grad.addColorStop(1, '#990000');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(x, y, 14, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        const imgData = ctx.getImageData(0, 0, width, height).data;
+        const indexed = new Uint8Array(width * height);
+        for (let p = 0; p < indexed.length; p++) {
+          const pr = imgData[p * 4];
+          const pg = imgData[p * 4 + 1];
+          const pb = imgData[p * 4 + 2];
+          const ri = Math.min(5, Math.round(pr / 51));
+          const gi = Math.min(5, Math.round(pg / 51));
+          const bi = Math.min(5, Math.round(pb / 51));
+          indexed[p] = ri * 36 + gi * 6 + bi;
+        }
+
+        writer.addFrame(0, 0, width, height, indexed, { delay: 9 });
+      }
+
+      const end = writer.end();
+      return buf.subarray(0, end).buffer;
+    }
+
+    // =========================================================================
+    // EMBED CODE GENERATION (IFRAME & STANDALONE SNIPPETS)
+    // =========================================================================
+
+    function generateStandaloneHtml() {
+      if (!asciiFrames.length) return "";
+
+      const themeKey = themeSelect.value || 'theme-cyber';
+      const theme = themeStyles[themeKey] || themeStyles['theme-cyber'];
+      const fontSize = `${fontSizeInput.value}px`;
+      const lineHeight = `${lineHeightInput.value}px`;
+
+      const framesData = asciiFrames.map(f => isColorMode ? f.html : f.text);
+      const delaysData = asciiFrames.map(f => Math.round(f.delay / playbackSpeed));
+
+      // Build pure, self-contained standalone HTML player
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ASCII Animation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: ${theme.bg};
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    pre#ascii-anim-output {
+      font-family: "Courier New", Courier, monospace !important;
+      font-size: ${fontSize};
+      line-height: ${lineHeight};
+      color: ${theme.fg};
+      background-color: ${theme.bg};
+      white-space: pre;
+      margin: 0;
+      user-select: text;
+      letter-spacing: 0;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <pre id="ascii-anim-output"></pre>
+  <script>
+    (function() {
+      const frames = ${JSON.stringify(framesData)};
+      const delays = ${JSON.stringify(delaysData)};
+      const isColor = ${isColorMode};
+      const pre = document.getElementById('ascii-anim-output');
+      let i = 0;
+      function step() {
+        if (isColor) {
+          pre.innerHTML = frames[i];
+        } else {
+          pre.textContent = frames[i];
+        }
+        const delay = delays[i] || 100;
+        i = (i + 1) % frames.length;
+        setTimeout(step, delay);
+      }
+      step();
+    })();
+  <` + `/script>
+</body>
+</html>`;
+    }
+
+    function updateEmbedModal() {
+      if (!asciiFrames.length) {
+        alert("Please load or convert a GIF first!");
+        return;
+      }
+
+      const standaloneHtml = generateStandaloneHtml();
+      const themeKey = themeSelect.value || 'theme-cyber';
+      const theme = themeStyles[themeKey] || themeStyles['theme-cyber'];
+
+      // Live update modal iframe preview
+      embedPreviewIframe.srcdoc = standaloneHtml;
+
+      if (currentEmbedMode === 'iframe') {
+        embedDesc.innerHTML = 'Copy and paste this self-contained <code>&lt;iframe&gt;</code> into your website (WordPress, Webflow, Notion, or custom HTML). It runs completely client-side without hosting requirements.';
+        
+        // Escape HTML for srcdoc attribute
+        const escapedHtml = standaloneHtml
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;');
+
+        const iframeCode = `<iframe 
+  width="100%" 
+  height="450" 
+  style="border: none; border-radius: 8px; overflow: hidden; background-color: ${theme.bg};" 
+  srcdoc="${escapedHtml}">
+</iframe>`;
+        embedCodeText.value = iframeCode;
+      } else {
+        embedDesc.innerHTML = 'Direct HTML snippet for embedding directly into the <code>&lt;body&gt;</code> of your web page:';
+        embedCodeText.value = standaloneHtml;
+      }
+
+      embedModal.style.display = 'flex';
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS & UI WIRING
+    // =========================================================================
+
+    // Embed Modal Triggers
+    btnHeaderEmbed.addEventListener('click', updateEmbedModal);
+    btnSidebarEmbed.addEventListener('click', updateEmbedModal);
+
+    btnCloseModal.addEventListener('click', () => {
+      embedModal.style.display = 'none';
+    });
+
+    embedModal.addEventListener('click', e => {
+      if (e.target === embedModal) embedModal.style.display = 'none';
+    });
+
+    tabIframe.addEventListener('click', () => {
+      currentEmbedMode = 'iframe';
+      tabIframe.classList.add('active');
+      tabInline.classList.remove('active');
+      updateEmbedModal();
+    });
+
+    tabInline.addEventListener('click', () => {
+      currentEmbedMode = 'inline';
+      tabInline.classList.add('active');
+      tabIframe.classList.remove('active');
+      updateEmbedModal();
+    });
+
+    btnCopyEmbedCode.addEventListener('click', () => {
+      embedCodeText.select();
+      navigator.clipboard.writeText(embedCodeText.value).then(() => {
+        showToast("Embed code copied to clipboard!");
+      });
+    });
+
+    btnDownloadHtml.addEventListener('click', () => {
+      const htmlContent = generateStandaloneHtml();
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ascii-animation-player-${Date.now()}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Downloaded standalone HTML player!");
+    });
+
+    // Online URL Button
+    btnLoadUrl.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (url) loadGifFromUrl(url);
+    });
+
+    urlInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnLoadUrl.click();
       }
     });
 
-    document.getElementById('copyBtn').addEventListener('click', () => {
-      const output = document.getElementById('output');
-      output.select();
-      navigator.clipboard.writeText(output.value);
-      alert('Copied to clipboard!');
+    // Preset Sample URL Buttons
+    document.querySelectorAll('.sample-url-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const url = btn.getAttribute('data-url');
+        urlInput.value = url;
+        loadGifFromUrl(url);
+      });
+    });
+
+    // Drag and Drop
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', async e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type === 'image/gif') {
+        const buffer = await file.arrayBuffer();
+        loadGifData(buffer, URL.createObjectURL(file));
+      } else {
+        alert("Please drop a valid .gif image file.");
+      }
+    });
+
+    // File Input
+    fileInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (file) {
+        const buffer = await file.arrayBuffer();
+        loadGifData(buffer, URL.createObjectURL(file));
+      }
+    });
+
+    // Clipboard Paste
+    window.addEventListener('paste', async e => {
+      const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+      for (const item of items) {
+        if (item.type === 'image/gif') {
+          const blob = item.getAsFile();
+          const buffer = await blob.arrayBuffer();
+          loadGifData(buffer, URL.createObjectURL(blob));
+          showToast("Loaded GIF from clipboard!");
+          return;
+        }
+      }
+
+      const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+      if (pastedText && (pastedText.startsWith('http://') || pastedText.startsWith('https://')) && pastedText.includes('.gif')) {
+        urlInput.value = pastedText.trim();
+        loadGifFromUrl(pastedText.trim());
+      }
+    });
+
+    // Offline Demo Preset Buttons
+    document.getElementById('btnSampleHeart').addEventListener('click', () => {
+      const buf = generateDemoGif('heart');
+      if (buf) loadGifData(buf);
+    });
+    document.getElementById('btnSampleCube').addEventListener('click', () => {
+      const buf = generateDemoGif('cube');
+      if (buf) loadGifData(buf);
+    });
+    document.getElementById('btnSampleOrb').addEventListener('click', () => {
+      const buf = generateDemoGif('orb');
+      if (buf) loadGifData(buf);
+    });
+
+    // Size Slider
+    sizeInput.addEventListener('input', e => {
+      sizeValue.textContent = parseFloat(e.target.value).toFixed(2);
+    });
+
+    // Reconvert Button
+    btnReconvert.addEventListener('click', () => {
+      convertAllFrames();
+    });
+
+    // Render Mode Toggles
+    btnColorMode.addEventListener('click', () => {
+      isColorMode = true;
+      btnColorMode.classList.add('btn-accent');
+      btnMonoMode.classList.remove('btn-accent');
+      showFrame(currentFrameIndex);
+    });
+
+    btnMonoMode.addEventListener('click', () => {
+      isColorMode = false;
+      btnMonoMode.classList.add('btn-accent');
+      btnColorMode.classList.remove('btn-accent');
+      showFrame(currentFrameIndex);
+    });
+
+    // Theme Selector
+    themeSelect.addEventListener('change', e => {
+      asciiOutput.className = e.target.value;
+      if (e.target.value === 'theme-paper') {
+        asciiWrapper.style.background = "#e2e8f0";
+      } else {
+        asciiWrapper.style.background = "#090a0f";
+      }
+    });
+
+    // Font Size & Line Height Sliders
+    fontSizeInput.addEventListener('input', e => {
+      const val = `${e.target.value}px`;
+      fontSizeValue.textContent = val;
+      asciiOutput.style.fontSize = val;
+    });
+
+    lineHeightInput.addEventListener('input', e => {
+      const val = `${e.target.value}px`;
+      lineHeightValue.textContent = val;
+      asciiOutput.style.lineHeight = val;
+    });
+
+    // Playback Controls
+    btnPlayPause.addEventListener('click', () => {
+      if (isPlaying) stopAnimation();
+      else startAnimation();
+    });
+
+    btnPrevFrame.addEventListener('click', () => {
+      stopAnimation();
+      const prev = (currentFrameIndex - 1 + asciiFrames.length) % asciiFrames.length;
+      showFrame(prev);
+    });
+
+    btnNextFrame.addEventListener('click', () => {
+      stopAnimation();
+      const next = (currentFrameIndex + 1) % asciiFrames.length;
+      showFrame(next);
+    });
+
+    scrubber.addEventListener('input', e => {
+      stopAnimation();
+      showFrame(parseInt(e.target.value, 10));
+    });
+
+    speedSelect.addEventListener('change', e => {
+      playbackSpeed = parseFloat(e.target.value);
+    });
+
+    btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        asciiWrapper.requestFullscreen().catch(err => alert(err.message));
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        btnPlayPause.click();
+      } else if (e.code === 'ArrowLeft') {
+        btnPrevFrame.click();
+      } else if (e.code === 'ArrowRight') {
+        btnNextFrame.click();
+      } else if (e.key === 'c' || e.key === 'C') {
+        if (isColorMode) btnMonoMode.click();
+        else btnColorMode.click();
+      } else if (e.key === 'Escape') {
+        embedModal.style.display = 'none';
+      }
+    });
+
+    // Copy Current Frame as Text
+    btnCopyFrame.addEventListener('click', () => {
+      if (!asciiFrames.length) return;
+      const text = asciiFrames[currentFrameIndex].text;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Copied frame ASCII to clipboard!");
+      });
+    });
+
+    // Download All Frames as Text File
+    btnDownloadText.addEventListener('click', () => {
+      if (!asciiFrames.length) return;
+      let output = `ASCII ANIMATION (${asciiFrames.length} frames)\n`;
+      output += `Generated using victorqribeiro/imgToAscii\n\n`;
+
+      asciiFrames.forEach((frame, idx) => {
+        output += `=== FRAME ${idx + 1} (Delay: ${frame.delay}ms) ===\n`;
+        output += frame.text + "\n\n";
+      });
+
+      const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ascii-animation-${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Download started!");
+    });
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlParam = params.get('url') || params.get('gif');
+      if (urlParam) {
+        urlInput.value = urlParam;
+        loadGifFromUrl(urlParam);
+      } else {
+        setTimeout(() => {
+          const defaultBuf = generateDemoGif('heart');
+          if (defaultBuf) loadGifData(defaultBuf);
+        }, 50);
+      }
     });
   </script>
-</head>
-<body>
-  <h2>GIF to ASCII Web Converter</h2>
-  <p>Run this directly in your browser without installing anything.</p>
-
-  <label><strong>GIF URL:</strong></label><br>
-  <input id="gifUrl" type="text" style="width: 100%; padding: 8px; margin: 8px 0 15px;" value="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjZzM3dleDZlNW9mMHEyZmRlb3BiOWNmejcwYW00am50YmRkOXhuOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3OBaasSmMPfxAkasWc/giphy.gif" />
-
-  <label><strong>Or upload saved GIF file (bypasses browser URL blocks):</strong></label><br>
-  <input id="fileInput" type="file" accept="image/gif" style="margin: 8px 0 20px;" /><br>
-
-  <button id="convertBtn">Convert GIF</button>
-  <div class="status" id="status"></div>
-
-  <textarea id="output" placeholder="Generated JavaScript code will appear here..."></textarea><br>
-  <button id="copyBtn" style="display:none; margin-top: 10px;">📋 Copy Code</button>
 </body>
 </html>
