@@ -92,6 +92,45 @@
       flex: 1;
       min-height: 0;
       overflow: hidden;
+      position: relative;
+    }
+
+    /* Edge toggle button */
+    .sidebar-toggle-btn {
+      position: absolute;
+      top: 15px;
+      left: calc(var(--panel-width) - 40px);
+      z-index: 50;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 4px;
+      color: var(--accent);
+      cursor: pointer;
+      font-family: monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      line-height: 1;
+      user-select: none;
+      transition: left 0.25s ease, top 0.25s ease, background-color 0.2s, color 0.2s, border-color 0.2s;
+    }
+
+    .sidebar-toggle-btn:hover {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      border-color: var(--accent);
+    }
+
+    /* Standalone floating '>' moved down past the toolbar to prevent overlap */
+    .sidebar.collapsed + .sidebar-toggle-btn {
+      left: 12px;
+      top: 60px;
+      background: var(--bg-card);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
     }
 
     /* Sidebar controls */
@@ -696,7 +735,6 @@
   <!-- Header -->
   <header>
     <div class="brand">
-      <button class="btn btn-sm" id="btnToggleSidebar" title="Toggle Sidebar (Collapse/Expand)" style="font-size: 0.95rem; padding: 4px 9px;">☰</button>
       <h1>GIF to ASCII <span class="badge">Animator</span></h1>
     </div>
     <div class="header-actions">
@@ -833,6 +871,9 @@
       </section>
 
     </aside>
+
+    <!-- Sidebar Edge Toggle Button -->
+    <button class="sidebar-toggle-btn" id="btnToggleSidebar" title="Collapse Sidebar">&lt;</button>
 
     <!-- Main Viewport Stage -->
     <main class="viewport-stage">
@@ -1173,7 +1214,9 @@
     const sidebar = document.querySelector('.sidebar');
     btnToggleSidebar.addEventListener('click', () => {
       sidebar.classList.toggle('collapsed');
-      btnToggleSidebar.classList.toggle('btn-accent', sidebar.classList.contains('collapsed'));
+      const isCollapsed = sidebar.classList.contains('collapsed');
+      btnToggleSidebar.textContent = isCollapsed ? '>' : '<';
+      btnToggleSidebar.title = isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar';
     });
 
     // Embed Modal Elements
