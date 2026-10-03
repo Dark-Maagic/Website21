@@ -148,7 +148,7 @@
       z-index: 1;
     }
 
-    /* Hero Datum Line (without SYS // 0.1) */
+    /* Hero Datum Line */
     .hero-datum-line {
       display: flex;
       align-items: center;
@@ -234,7 +234,7 @@
       filter: drop-shadow(0 0 16px rgba(194, 94, 56, 0.25));
     }
 
-    /* Philosophy / Philosophy */
+    /* Philosophy / Perspectives */
     .philosophy-grid {
       display: grid;
       grid-template-columns: 1fr 60px 1.4fr;
@@ -404,7 +404,6 @@
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
     }
 
-    /* Enhanced Simulator Accents */
     .vault-scale-y {
       position: absolute;
       left: 14px;
@@ -657,7 +656,7 @@
         Big problems. Algorithmically compressed.
       </h1>
 
-      <!-- Hero Datum Line (without SYS // 0.1) -->
+      <!-- Hero Datum Line -->
       <div class="hero-datum-line">
         <div class="datum-bar"></div>
         <svg width="24" height="8" viewBox="0 0 24 8" fill="none" style="opacity: 0.7;">
@@ -746,7 +745,7 @@
         <path fill="none" stroke="rgba(194,94,56,0.1)" stroke-width="1" d="M-100,200 C300,550 650,150 1100,500 C1300,650 1500,300 1600,250" />
       </svg>
 
-      <span class="section-label">01 / Philosophy</span>
+      <span class="section-label">01 / Perspectives</span>
       <div class="philosophy-grid">
         <div class="philosophy-quote">
           “A master musician, must also conduct.”
@@ -812,20 +811,24 @@
           <span class="work-tag">Ceramic Vault</span>
         </div>
 
+        <!-- Replaced Montevideo Shopping with .GIF to ASCII Conversion Tool -->
         <div class="work-item" 
-             data-title="Montevideo Shopping Center" 
-             data-desc="A commercial space crowned with wide-span ceramic brick domes and undulating facades."
-             data-img="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80">
-          <img class="work-thumb" src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=200&q=70" alt="Montevideo Shopping thumbnail" />
-          <span class="work-name">Montevideo Shopping</span>
-          <span class="work-tag">Free-form Shell</span>
+             data-title=".GIF to ASCII Conversion Tool" 
+             data-desc="Dynamic raster frame decomposition and terminal-targeted ASCII art rendering engine. Converts animated GIF sequences into real-time character matrices."
+             data-img="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1000&q=80"
+             data-link="/converter"
+             data-btn-text="Launch Converter →">
+          <img class="work-thumb" src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=200&q=70" alt=".GIF to ASCII Conversion Tool thumbnail" />
+          <span class="work-name">.GIF to ASCII Conversion Tool</span>
+          <span class="work-tag">Raster Processing</span>
         </div>
 
         <div class="work-item" 
              data-title="Cloudflare Workers Demonstration" 
              data-desc="Serverless AI and backend function pipeline connected via Cloudflare Pages and GitHub. Features real-time ASCII cat streaming and vision-to-SVG conversion."
              data-img="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1000&q=80"
-             data-link="/demo.html">
+             data-link="/demo.html"
+             data-btn-text="Open Demo Page →">
           <img class="work-thumb" src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=200&q=70" alt="Cloudflare Workers Demonstration thumbnail" />
           <span class="work-name">Cloudflare Workers Demonstration</span>
           <span class="work-tag">Serverless &amp; Edge AI</span>
@@ -961,6 +964,7 @@
       // Click to open detail modal or navigate
       item.addEventListener('click', () => {
         const link = item.getAttribute('data-link');
+        const btnText = item.getAttribute('data-btn-text') || 'Open Tool →';
         document.getElementById('modal-title').textContent = item.getAttribute('data-title');
         document.getElementById('modal-desc').textContent = item.getAttribute('data-desc');
         document.getElementById('modal-tag').textContent = item.querySelector('.work-tag').textContent;
@@ -972,7 +976,7 @@
           const actionBtn = document.createElement('a');
           actionBtn.href = link;
           actionBtn.className = 'modal-link-btn';
-          actionBtn.textContent = 'Open Demo Page →';
+          actionBtn.textContent = btnText;
           actionContainer.appendChild(actionBtn);
         }
 
@@ -1054,7 +1058,7 @@
       }
 
       // Render ruled transversal generators connecting adjacent layers (Vault Mesh)
-      const ribStep = 10; // Connect every 40px
+      const ribStep = 10;
       if (pointsPerLayer.length > 1 && pointsPerLayer[0].length > 0) {
         ctx.strokeStyle = 'rgba(214, 140, 104, 0.12)';
         ctx.lineWidth = 0.8;
