@@ -10,16 +10,16 @@
 
   <style>
     :root {
-      --accent: #00f0ff;
+      --accent: #ffffff;
       --accent-contrast: #000000;
-      --accent-dim: rgba(0, 240, 255, 0.15);
-      --accent-glow: rgba(0, 240, 255, 0.45);
-      --bg-dark: #0a0c13;
-      --bg-card: #131824;
-      --bg-card-border: #1e2638;
-      --viewport-bg: #06080e;
-      --text: #e2e8f0;
-      --text-muted: #7e8ba6;
+      --accent-dim: rgba(255, 255, 255, 0.15);
+      --accent-glow: rgba(255, 255, 255, 0.35);
+      --bg-dark: #000000;
+      --bg-card: #111111;
+      --bg-card-border: #262626;
+      --viewport-bg: #000000;
+      --text: #ffffff;
+      --text-muted: #999999;
       --panel-width: 370px;
     }
 
@@ -840,7 +840,7 @@
               <option value="theme-cyber">Cyberpunk Blue</option>
               <option value="theme-matrix">Matrix Green</option>
               <option value="theme-amber">Amber CRT</option>
-              <option value="theme-dark">Pure Dark</option>
+              <option value="theme-dark" selected>Pure Dark</option>
               <option value="theme-paper">Light Paper</option>
             </select>
           </div>
@@ -1175,7 +1175,7 @@
     let isColorMode = true;
     let timerId = null;
     let currentEmbedMode = 'iframe';
-    let currentThemeKey = 'theme-cyber';
+    let currentThemeKey = 'theme-dark';
 
     const urlInput = document.getElementById('urlInput');
     const btnLoadUrl = document.getElementById('btnLoadUrl');
@@ -2022,9 +2022,9 @@
       showToast("Download started!");
     });
 
-    // Initialize
+   // Initialize
     window.addEventListener('DOMContentLoaded', () => {
-      applyGlobalTheme('theme-cyber');
+      applyGlobalTheme('theme-dark');
 
       const params = new URLSearchParams(window.location.search);
       const urlParam = params.get('url') || params.get('gif');
