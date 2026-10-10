@@ -149,7 +149,7 @@
   <div class="button-group">
     <button id="fetch-cat-btn">Get ASCII Cat</button>
     <button id="fetch-gemini-btn">Convert Random Cat Photo to HTML Art</button>
-    <button id="toggle-embed-btn">Play Embed</button>
+    <button id="toggle-embed-btn">Sample From My Ascii Animation Generator</button>
   </div>
 
   <!-- Dynamic Iframe Display Area -->
@@ -425,17 +425,17 @@
         // State 1: Load and play Frame 1
         embedContainer.innerHTML = templateOne.innerHTML.trim() || '<p style="color:#888;">No iframe added to template-frame-one yet.</p>';
         embedContainer.style.display = 'flex';
-        toggleEmbedBtn.textContent = 'Next Embed →';
+        toggleEmbedBtn.textContent = 'Next Animation →';
       } else if (embedClickCount === 2) {
         // State 2: Load and play Frame 2
         embedContainer.innerHTML = templateTwo.innerHTML.trim() || '<p style="color:#888;">No iframe added to template-frame-two yet.</p>';
         embedContainer.style.display = 'flex';
-        toggleEmbedBtn.textContent = 'Close Embed ✕';
+        toggleEmbedBtn.textContent = 'Close ✕';
       } else {
         // State 3: Reset (stops animation loops & restores layout)
         embedContainer.innerHTML = '';
         embedContainer.style.display = 'none';
-        toggleEmbedBtn.textContent = 'Play Embed';
+        toggleEmbedBtn.textContent = 'Sample From My Ascii Animation Generator';
       }
     });
   </script>
