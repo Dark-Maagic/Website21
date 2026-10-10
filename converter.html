@@ -1696,46 +1696,72 @@
       const fontSize = `${fontSizeInput.value}px`;
       const lineHeight = `${lineHeightInput.value}px`;
 
-      // 1. Store frame data strictly as plain text strings (removes millions of HTML span tokens)
       const framesText = asciiFrames.map(f => f.text);
       const delaysData = asciiFrames.map(f => Math.round(f.delay / playbackSpeed));
 
-      // 2. In color mode, store colors as a compact palette + run-length array instead of verbose HTML tags
+      // Lossless color encoder: Preserves 100% of the exact sampled RGB values
       let colorPayload = null;
+
       if (isColorMode) {
-        const palette = [];
-        const colorMap = new Map();
-        const framesRuns = [];
+        function bytesToBase64(bytes) {
+          let binary = '';
+          const len = bytes.length;
+          for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          return btoa(binary);
+        }
 
-        asciiFrames.forEach(frame => {
-          const imgData = frame.ascii.imageData.data;
-          const runs = [];
-          let currentIdx = -1;
-          let count = 0;
+        // 1. Gather all exact unique colors
+        const exactColorMap = new Map();
+        const exactPalette = [];
+        let fitsIn8Bit = true;
 
-          for (let i = 0; i < imgData.length; i += 4) {
-            const r = imgData[i], g = imgData[i + 1], b = imgData[i + 2];
-            const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-            let pIdx = colorMap.get(hex);
-            if (pIdx === undefined) {
-              pIdx = palette.length;
-              palette.push(hex);
-              colorMap.set(hex, pIdx);
-            }
-
-            if (pIdx === currentIdx) {
-              count++;
-            } else {
-              if (count > 0) runs.push([count, currentIdx]);
-              currentIdx = pIdx;
-              count = 1;
+        for (let f = 0; f < asciiFrames.length; f++) {
+          const d = asciiFrames[f].ascii.imageData.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const hex = '#' + ((1 << 24) + (d[i] << 16) + (d[i + 1] << 8) + d[i + 2]).toString(16).slice(1);
+            if (!exactColorMap.has(hex)) {
+              if (exactPalette.length >= 256) {
+                fitsIn8Bit = false;
+                break;
+              }
+              exactColorMap.set(hex, exactPalette.length);
+              exactPalette.push(hex);
             }
           }
-          if (count > 0) runs.push([count, currentIdx]);
-          framesRuns.push(runs);
-        });
+          if (!fitsIn8Bit) break;
+        }
 
-        colorPayload = { palette, runs: framesRuns };
+        // 2. Encode without any color loss
+        if (fitsIn8Bit) {
+          // Exact 8-bit indexed palette (1 byte per pixel in Base64)
+          const encoded = asciiFrames.map(frame => {
+            const d = frame.ascii.imageData.data;
+            const indices = new Uint8Array(d.length / 4);
+            let ptr = 0;
+            for (let i = 0; i < d.length; i += 4) {
+              const hex = '#' + ((1 << 24) + (d[i] << 16) + (d[i + 1] << 8) + d[i + 2]).toString(16).slice(1);
+              indices[ptr++] = exactColorMap.get(hex);
+            }
+            return bytesToBase64(indices);
+          });
+          colorPayload = { mode: 'pal', pal: exactPalette, data: encoded };
+        } else {
+          // Exact 24-bit raw RGB stream (3 bytes per pixel in Base64)
+          const encoded = asciiFrames.map(frame => {
+            const d = frame.ascii.imageData.data;
+            const rgb = new Uint8Array((d.length / 4) * 3);
+            let ptr = 0;
+            for (let i = 0; i < d.length; i += 4) {
+              rgb[ptr++] = d[i];
+              rgb[ptr++] = d[i + 1];
+              rgb[ptr++] = d[i + 2];
+            }
+            return bytesToBase64(rgb);
+          });
+          colorPayload = { mode: 'rgb', data: encoded };
+        }
       }
 
       return `<!DOCTYPE html>
@@ -1785,28 +1811,49 @@
           return;
         }
 
-        // Dynamically compute character styles in a single <pre> layout at runtime
-        const palette = colorData.palette;
-        const runs = colorData.runs[idx];
+        const raw = atob(colorData.data[idx]);
+        const isPal = colorData.mode === 'pal';
+        const pal = colorData.pal;
+
         let html = '';
-        let runIdx = 0;
-        let runRemaining = runs[0] ? runs[0][0] : 0;
-        let currentHex = runs[0] ? palette[runs[0][1]] : '#fff';
+        let p = 0;
+        let currentColor = '';
+        let currentRun = '';
 
         for (let j = 0; j < text.length; j++) {
           const ch = text[j];
           if (ch === '\\n') {
+            if (currentRun) {
+              html += '<span style="color:' + currentColor + '">' + currentRun + '</span>';
+              currentRun = '';
+            }
             html += '<br>';
             continue;
           }
-          while (runRemaining <= 0 && runIdx < runs.length - 1) {
-            runIdx++;
-            runRemaining = runs[runIdx][0];
-            currentHex = palette[runs[runIdx][1]];
+
+          let col;
+          if (isPal) {
+            col = pal[raw.charCodeAt(p++)];
+          } else {
+            const off = p * 3;
+            col = 'rgb(' + raw.charCodeAt(off) + ',' + raw.charCodeAt(off + 1) + ',' + raw.charCodeAt(off + 2) + ')';
+            p++;
           }
+
           const charDisplay = ch === ' ' ? '&nbsp;' : (ch === '<' ? '&lt;' : (ch === '>' ? '&gt;' : (ch === '&' ? '&amp;' : ch)));
-          html += '<span style="color:' + currentHex + '">' + charDisplay + '</span>';
-          runRemaining--;
+
+          if (col === currentColor) {
+            currentRun += charDisplay;
+          } else {
+            if (currentRun) {
+              html += '<span style="color:' + currentColor + '">' + currentRun + '</span>';
+            }
+            currentColor = col;
+            currentRun = charDisplay;
+          }
+        }
+        if (currentRun) {
+          html += '<span style="color:' + currentColor + '">' + currentRun + '</span>';
         }
         pre.innerHTML = html;
       }
