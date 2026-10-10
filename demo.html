@@ -65,7 +65,7 @@
       border-color: var(--accent);
     }
 
-    /* Dynamic embed stage */
+    /* Dynamic embed stage with smooth scale/blur transition */
     .embed-container {
       margin: 25px auto 0;
       display: none;
@@ -74,6 +74,17 @@
       width: 100%;
       max-width: 780px;
       box-sizing: border-box;
+      opacity: 0;
+      transform: translateY(-8px) scale(0.97);
+      filter: blur(4px);
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 0.3s ease;
+    }
+    .embed-container.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
     }
     .embed-container iframe {
       width: 100%;
@@ -459,25 +470,41 @@
       }
     });
 
-    // 3. Three-State Embed Toggle
+    // Helper to cross-fade between frame 1 and frame 2
+    function transitionSwap(newHtml) {
+      embedContainer.classList.remove('active');
+      setTimeout(() => {
+        embedContainer.innerHTML = newHtml;
+        void embedContainer.offsetWidth; // Forces reflow to trigger transition
+        embedContainer.classList.add('active');
+      }, 180); // Quick fade-out before fading into next frame
+    }
+
+    // 3. Three-State Embed Toggle with Transitions
     toggleEmbedBtn.addEventListener('click', () => {
       embedClickCount = (embedClickCount + 1) % 3;
 
+      const contentOne = templateOne.innerHTML.trim() || '<p style="color:#888;">No iframe added to template-frame-one yet.</p>';
+      const contentTwo = templateTwo.innerHTML.trim() || '<p style="color:#888;">No iframe added to template-frame-two yet.</p>';
+
       if (embedClickCount === 1) {
-        // State 1: Load and play Frame 1
-        embedContainer.innerHTML = templateOne.innerHTML.trim() || '<p style="color:#888;">No iframe added to template-frame-one yet.</p>';
+        // Click 1: Smooth power-on zoom/fade in
+        embedContainer.innerHTML = contentOne;
         embedContainer.style.display = 'flex';
+        requestAnimationFrame(() => embedContainer.classList.add('active'));
         toggleEmbedBtn.textContent = 'Next Animation →';
       } else if (embedClickCount === 2) {
-        // State 2: Load and play Frame 2
-        embedContainer.innerHTML = templateTwo.innerHTML.trim() || '<p style="color:#888;">No iframe added to template-frame-two yet.</p>';
-        embedContainer.style.display = 'flex';
+        // Click 2: Seamless cross-fade/morph into Frame 2
+        transitionSwap(contentTwo);
         toggleEmbedBtn.textContent = 'Close ✕';
       } else {
-        // State 3: Reset (stops animation loops & restores layout)
-        embedContainer.innerHTML = '';
-        embedContainer.style.display = 'none';
+        // Click 3: Smooth fade-out before unmounting
+        embedContainer.classList.remove('active');
         toggleEmbedBtn.textContent = 'Sample From My Ascii Animation Generator';
+        setTimeout(() => {
+          embedContainer.style.display = 'none';
+          embedContainer.innerHTML = '';
+        }, 300); // Waits for the 0.3s CSS transition to finish
       }
     });
   </script>
