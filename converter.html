@@ -1696,8 +1696,47 @@
       const fontSize = `${fontSizeInput.value}px`;
       const lineHeight = `${lineHeightInput.value}px`;
 
-      const framesData = asciiFrames.map(f => isColorMode ? f.html : f.text);
+      // 1. Store frame data strictly as plain text strings (removes millions of HTML span tokens)
+      const framesText = asciiFrames.map(f => f.text);
       const delaysData = asciiFrames.map(f => Math.round(f.delay / playbackSpeed));
+
+      // 2. In color mode, store colors as a compact palette + run-length array instead of verbose HTML tags
+      let colorPayload = null;
+      if (isColorMode) {
+        const palette = [];
+        const colorMap = new Map();
+        const framesRuns = [];
+
+        asciiFrames.forEach(frame => {
+          const imgData = frame.ascii.imageData.data;
+          const runs = [];
+          let currentIdx = -1;
+          let count = 0;
+
+          for (let i = 0; i < imgData.length; i += 4) {
+            const r = imgData[i], g = imgData[i + 1], b = imgData[i + 2];
+            const hex = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            let pIdx = colorMap.get(hex);
+            if (pIdx === undefined) {
+              pIdx = palette.length;
+              palette.push(hex);
+              colorMap.set(hex, pIdx);
+            }
+
+            if (pIdx === currentIdx) {
+              count++;
+            } else {
+              if (count > 0) runs.push([count, currentIdx]);
+              currentIdx = pIdx;
+              count = 1;
+            }
+          }
+          if (count > 0) runs.push([count, currentIdx]);
+          framesRuns.push(runs);
+        });
+
+        colorPayload = { palette, runs: framesRuns };
+      }
 
       return `<!DOCTYPE html>
 <html lang="en">
@@ -1733,17 +1772,47 @@
   <pre id="ascii-anim-output"></pre>
   <script>
     (function() {
-      const frames = ${JSON.stringify(framesData)};
+      const frames = ${JSON.stringify(framesText)};
       const delays = ${JSON.stringify(delaysData)};
-      const isColor = ${isColorMode};
+      const colorData = ${JSON.stringify(colorPayload)};
       const pre = document.getElementById('ascii-anim-output');
       let i = 0;
-      function step() {
-        if (isColor) {
-          pre.innerHTML = frames[i];
-        } else {
-          pre.textContent = frames[i];
+
+      function renderFrame(idx) {
+        const text = frames[idx];
+        if (!colorData) {
+          pre.textContent = text;
+          return;
         }
+
+        // Dynamically compute character styles in a single <pre> layout at runtime
+        const palette = colorData.palette;
+        const runs = colorData.runs[idx];
+        let html = '';
+        let runIdx = 0;
+        let runRemaining = runs[0] ? runs[0][0] : 0;
+        let currentHex = runs[0] ? palette[runs[0][1]] : '#fff';
+
+        for (let j = 0; j < text.length; j++) {
+          const ch = text[j];
+          if (ch === '\\n') {
+            html += '<br>';
+            continue;
+          }
+          while (runRemaining <= 0 && runIdx < runs.length - 1) {
+            runIdx++;
+            runRemaining = runs[runIdx][0];
+            currentHex = palette[runs[runIdx][1]];
+          }
+          const charDisplay = ch === ' ' ? '&nbsp;' : (ch === '<' ? '&lt;' : (ch === '>' ? '&gt;' : (ch === '&' ? '&amp;' : ch)));
+          html += '<span style="color:' + currentHex + '">' + charDisplay + '</span>';
+          runRemaining--;
+        }
+        pre.innerHTML = html;
+      }
+
+      function step() {
+        renderFrame(i);
         const delay = delays[i] || 100;
         i = (i + 1) % frames.length;
         setTimeout(step, delay);
