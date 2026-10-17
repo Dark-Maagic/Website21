@@ -451,17 +451,17 @@
     /* ============================================================== */
     /* QUANTIZER INSTRUMENTATION DECK (IDEA 1)                        */
     /* ============================================================== */
-    .quantizer-deck {
+   .quantizer-deck {
       width: 100%;
-      max-width: 960px;
+      max-width: 1100px;
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 20px 24px;
       margin-bottom: 24px;
       display: none;
-      grid-template-columns: auto 1fr auto;
-      gap: 24px;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 20px;
       align-items: center;
       text-align: left;
       box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
@@ -481,7 +481,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      padding-right: 20px;
+      padding-right: 18px;
       border-right: 1px solid var(--border);
     }
 
@@ -546,14 +546,16 @@
 
     .quant-controls-col {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px 20px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 16px;
+      min-width: 0;
     }
 
     .control-field {
       display: flex;
       flex-direction: column;
       gap: 5px;
+      min-width: 0;
     }
 
     .control-field label {
@@ -572,6 +574,9 @@
 
     .control-field select,
     .control-field input[type="range"] {
+      width: 100%;
+      min-width: 0;
+      text-overflow: ellipsis;
       background: var(--surface);
       color: var(--text);
       border: 1px solid var(--border);
@@ -606,13 +611,15 @@
     }
 
     .quant-telemetry-col {
-      padding-left: 20px;
+      padding-left: 18px;
       border-left: 1px solid var(--border);
       font-family: var(--font-mono);
       font-size: 0.72rem;
       line-height: 1.75;
       color: var(--text-muted);
-      min-width: 215px;
+      min-width: 235px;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .telemetry-row {
@@ -1921,10 +1928,58 @@
       }
     }
 
-    document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
-      highlightExplainerCard(0);
+   const terminalCard = document.querySelector('.terminal-card');
+    const fetchCatBtn = document.getElementById('fetch-cat-btn');
+    const fetchGeminiBtn = document.getElementById('fetch-gemini-btn');
+
+    function switchActiveCapability(mode) {
+      // 1. Stop ASCII sandbox & clear overlay
+      sandboxActive = false;
+      shockwaves = [];
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      quantizerDeck.classList.remove('visible');
+
+      // 2. Hide Gemini comparison area
       displayArea.style.display = 'none';
-      quantizerDeck.classList.add('visible');
+      htmlArtContainer.innerHTML = '';
+
+      // 3. Reset Embed state if switching away from embed mode
+      if (mode !== 'embed') {
+        embedClickCount = 0;
+        embedContainer.classList.remove('active');
+        embedContainer.style.display = 'none';
+        embedContainer.innerHTML = '';
+        toggleEmbedBtn.textContent = 'Sample From My Ascii Animation Generator';
+      }
+
+      // 4. Update active button visual state
+      fetchCatBtn.classList.toggle('active-mode', mode === 'cat');
+      fetchGeminiBtn.classList.toggle('active-mode', mode === 'gemini');
+      toggleEmbedBtn.classList.toggle('active-mode', mode === 'embed');
+
+      // 5. Show only the relevant stage
+      if (mode === 'cat') {
+        highlightExplainerCard(0);
+        quantizerDeck.classList.add('visible');
+        terminalCard.style.display = 'block';
+      } else if (mode === 'gemini') {
+        highlightExplainerCard(1);
+        terminalCard.style.display = 'block';
+      } else if (mode === 'embed') {
+        highlightExplainerCard(2);
+        terminalCard.style.display = 'none';
+      } else {
+        // Idle state (e.g., when closing the animation generator)
+        highlightExplainerCard(-1);
+        terminalCard.style.display = 'block';
+        terminalStatus.textContent = 'IDLE // READY';
+        terminalHint.textContent = 'Telemetry & Output Console';
+        output.textContent = 'Click a button above to execute edge telemetry...';
+      }
+    }
+
+    fetchCatBtn.addEventListener('click', async () => {
+      switchActiveCapability('cat');
       prefetchWorkerCat();
 
       const nextUrl = CAT_RASTER_POOL[catSourceIndex % CAT_RASTER_POOL.length];
@@ -1967,13 +2022,8 @@
     // ============================================================================
     // 7. BUTTON 2: GEMINI PHOTO-TO-HTML/SVG PIPELINE
     // ============================================================================
-    document.getElementById('fetch-gemini-btn').addEventListener('click', async () => {
-      highlightExplainerCard(1);
-      sandboxActive = false;
-      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-      quantizerDeck.classList.remove('visible');
-      displayArea.style.display = 'none';
-      htmlArtContainer.innerHTML = '';
+    fetchGeminiBtn.addEventListener('click', async () => {
+      switchActiveCapability('gemini');
 
       terminalStatus.textContent = 'EXECUTING // /API/GEMINI';
       terminalHint.textContent = 'Telemetry & Output Console';
@@ -2014,26 +2064,30 @@
     }
 
     toggleEmbedBtn.addEventListener('click', () => {
-      highlightExplainerCard(2);
       embedClickCount = (embedClickCount + 1) % 3;
 
       const contentOne = templateOne.innerHTML.trim() || '<p style="color:var(--text-muted); padding: 40px;">No iframe template detected in template-frame-one.</p>';
       const contentTwo = templateTwo.innerHTML.trim() || '<p style="color:var(--text-muted); padding: 40px;">No iframe template detected in template-frame-two.</p>';
 
       if (embedClickCount === 1) {
+        switchActiveCapability('embed');
         embedContainer.innerHTML = contentOne;
         embedContainer.style.display = 'flex';
         requestAnimationFrame(() => embedContainer.classList.add('active'));
         toggleEmbedBtn.textContent = 'Next Animation →';
       } else if (embedClickCount === 2) {
+        switchActiveCapability('embed');
         transitionSwap(contentTwo);
         toggleEmbedBtn.textContent = 'Close ✕';
       } else {
         embedContainer.classList.remove('active');
         toggleEmbedBtn.textContent = 'Sample From My Ascii Animation Generator';
         setTimeout(() => {
-          embedContainer.style.display = 'none';
-          embedContainer.innerHTML = '';
+          if (embedClickCount === 0) {
+            embedContainer.style.display = 'none';
+            embedContainer.innerHTML = '';
+            switchActiveCapability('idle');
+          }
         }, 300);
       }
     });
