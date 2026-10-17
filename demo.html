@@ -1,185 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cloudflare Pages Function Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloudflare Functions Demonstration — Gabriel Forman</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #f8f6f2;
-      --card-bg: #ffffff;
-      --text: #1a1a1a;
-      --accent: #b4532a;
-      --border: #e2ded5;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 40px 20px 80px;
-      background-color: var(--bg);
-      color: var(--text);
-    }
-    .nav-back {
-      display: inline-block;
-      margin-bottom: 30px;
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 14px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-    .nav-back:hover {
-      text-decoration: underline;
-    }
-    h1 {
-      font-family: Georgia, serif;
-      font-weight: normal;
-      font-size: 2.4rem;
-      margin-bottom: 8px;
-    }
-    p {
-      color: #666;
-      margin-top: 0;
-    }
-    .button-group {
-      margin: 24px 0;
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    button {
-      background: #222;
-      color: #fff;
-      border: 1px solid #222;
-      padding: 12px 24px;
-      font-size: 15px;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.2s ease;
-    }
-    button:hover {
-      background: var(--accent);
-      border-color: var(--accent);
+      --bg: #121110;
+      --surface: #1a1918;
+      --card-bg: #22201e;
+      --text: #e8e4df;
+      --text-muted: #9e9890;
+      --brick: #c25e38;
+      --brick-light: #e07a52;
+      --clay: #d68c68;
+      --border: rgba(232, 228, 223, 0.12);
+      --font-serif: "Playfair Display", Georgia, serif;
+      --font-display: "Cinzel", Georgia, serif;
+      --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     }
 
-    /* Dynamic embed stage with smooth scale/blur transition */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Custom Cursor */
+    .custom-cursor {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      background: var(--brick);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  height 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  background-color 0.3s ease;
+      z-index: 9999;
+      mix-blend-mode: difference;
+    }
+
+    .custom-cursor-follower {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(224, 122, 82, 0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease-out;
+      z-index: 9998;
+    }
+
+    /* Navigation */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 24px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(18,17,16,0.95) 0%, rgba(18,17,16,0) 100%);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--brick-light);
+    }
+
+    /* Background Decals */
+    .bg-decal {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.25;
+    }
+
+    .geo-accent {
+      position: absolute;
+      top: 130px;
+      right: 52px;
+      opacity: 0.35;
+      pointer-events: none;
+      user-select: none;
+      z-index: 1;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 150px 48px 100px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .nav-back-wrapper {
+      margin-bottom: 24px;
+    }
+
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--brick-light);
+      text-decoration: none;
+      font-size: 0.82rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: all 0.25s ease;
+    }
+
+    .nav-back:hover {
+      color: var(--text);
+      transform: translateX(-4px);
+    }
+
+    .section-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--brick);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2.4rem, 5vw, 4.2rem);
+      font-weight: 400;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin-bottom: 18px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      line-height: 1.6;
+      max-width: 680px;
+      margin-bottom: 24px;
+    }
+
+    /* Datum Bar Divider */
+    .datum-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 32px 0 44px;
+      opacity: 0.45;
+    }
+
+    .datum-bar {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--brick) 0%, rgba(224,122,82,0.1) 100%);
+    }
+
+    /* Interactive Pipeline Area */
+    .pipeline-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+
+    button {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 13px 24px;
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    button:hover {
+      background: var(--card-bg);
+      border-color: var(--brick);
+      color: var(--brick-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(194, 94, 56, 0.25);
+    }
+
+    /* Dynamic Embed Stage */
     .embed-container {
-      margin: 25px auto 0;
+      margin: 20px auto 35px;
       display: none;
       justify-content: center;
       align-items: center;
       width: 100%;
-      max-width: 780px;
+      max-width: 850px;
       box-sizing: border-box;
       opacity: 0;
-      transform: translateY(-8px) scale(0.97);
+      transform: translateY(-10px) scale(0.98);
       filter: blur(4px);
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                  filter 0.3s ease;
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  filter 0.35s ease;
     }
+
     .embed-container.active {
       opacity: 1;
       transform: translateY(0) scale(1);
       filter: blur(0);
     }
+
     .embed-container iframe {
       width: 100%;
       min-height: 480px;
       border-radius: 8px;
       border: 1px solid var(--border);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      background: var(--surface);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
     }
 
-    /* Terminal output */
-    pre {
-      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-      margin-top: 10px;
-      font-size: 14px;
-      display: inline-block;
-      text-align: left;
-      background-color: #eee9e0;
-      color: var(--text);
-      padding: 24px;
-      border-radius: 10px;
+    /* Terminal Console */
+    .terminal-card {
+      width: 100%;
       max-width: 850px;
-      width: fit-content;
-      min-width: min(100%, 550px);
-      box-sizing: border-box;
-      white-space: pre-wrap;
-      overflow-x: auto;
-      border: 2px solid transparent;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
-      transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+      margin: 0 auto;
+      text-align: left;
     }
 
+    .terminal-header {
+      background: rgba(18, 17, 16, 0.85);
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 7px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      border: 1px solid rgba(232, 228, 223, 0.15);
+      background: rgba(232, 228, 223, 0.08);
+    }
+
+    .dot:nth-child(1) { background: rgba(194, 94, 56, 0.45); }
+    .dot:nth-child(2) { background: rgba(224, 122, 82, 0.45); }
+    .dot:nth-child(3) { background: rgba(214, 140, 104, 0.45); }
+
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--clay);
+      opacity: 0.75;
+    }
+
+    pre#output-box {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: var(--text);
+      background: transparent;
+      padding: 24px;
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-x: auto;
+      min-height: 120px;
+      box-sizing: border-box;
+      transition: color 0.3s ease;
+    }
+
+    /* Comparison Area */
     .comparison-container {
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      gap: 25px;
-      margin-top: 30px;
+      align-items: stretch;
+      gap: 24px;
+      margin-top: 40px;
       flex-wrap: wrap;
+      width: 100%;
     }
+
     .box {
       border: 1px solid var(--border);
-      padding: 20px;
-      border-radius: 6px;
+      padding: 24px;
+      border-radius: 8px;
       background-color: var(--card-bg);
-      max-width: 400px;
+      max-width: 410px;
       width: 100%;
-      min-height: 250px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      min-height: 280px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
       text-align: left;
+      display: flex;
+      flex-direction: column;
     }
+
     .box h3 {
-      margin-top: 0;
-      font-size: 1rem;
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #555;
+      letter-spacing: 0.15em;
+      color: var(--brick-light);
+      margin-bottom: 18px;
     }
-    .box img, .box svg {
+
+    .box img, 
+    .box svg, 
+    .box div {
       max-width: 100%;
       height: auto;
-      border-radius: 4px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    /* Footer */
+    footer {
+      padding: 48px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      margin-top: auto;
+    }
+
+    @media (max-width: 860px) {
+      header {
+        padding: 20px 24px;
+      }
+      nav {
+        gap: 20px;
+      }
+      main {
+        padding: 120px 24px 60px;
+      }
+      .geo-accent, .custom-cursor, .custom-cursor-follower {
+        display: none;
+      }
+      .button-group {
+        flex-direction: column;
+        width: 100%;
+      }
+      button {
+        width: 100%;
+      }
+      .comparison-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .box {
+        max-width: 100%;
+      }
     }
   </style>
 </head>
 <body>
 
-  <a href="/" class="nav-back">← Back to Overview</a>
+  <!-- Custom Magnetic Cursor -->
+  <div class="custom-cursor" id="cursor"></div>
+  <div class="custom-cursor-follower" id="cursor-follower"></div>
 
-  <h1>Welcome to My Website!</h1>
-  <p>Deploys automatically via Cloudflare Pages Functions</p>
+  <!-- Header Navigation -->
+  <header>
+    <a href="/" class="brand">Gabriel Forman</a>
+    <nav>
+      <a href="/#about">About</a>
+      <a href="/#projects">Projects</a>
+      <a href="sports.html">Sports</a>
+    </nav>
+  </header>
 
-  <h2>Cloudflare Pages Functions Demo</h2>
-  <div class="button-group">
-    <button id="fetch-cat-btn">Get ASCII Cat</button>
-    <button id="fetch-gemini-btn">Convert Random Cat Photo to HTML Art</button>
-    <button id="toggle-embed-btn">Sample From My Ascii Animation Generator</button>
+  <!-- Background Geometry Decal -->
+  <svg class="bg-decal" viewBox="0 0 1440 600" preserveAspectRatio="none">
+    <path fill="none" stroke="rgba(224,122,82,0.2)" stroke-width="1.4" d="M0,450 C320,180 620,580 940,240 C1140,50 1320,380 1440,220" />
+    <path fill="none" stroke="rgba(214,140,104,0.14)" stroke-width="1.1" d="M0,500 C320,230 620,630 940,290 C1140,100 1320,430 1440,270" />
+    <path fill="none" stroke="rgba(194,94,56,0.08)" stroke-width="1" d="M0,550 C320,280 620,680 940,340 C1140,150 1320,480 1440,320" />
+  </svg>
+
+  <!-- Architectural Drafting Reticle -->
+  <div class="geo-accent">
+    <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
+      <circle cx="34" cy="34" r="28" stroke="var(--brick-light)" stroke-width="0.8" stroke-dasharray="3 3"/>
+      <circle cx="34" cy="34" r="14" stroke="var(--clay)" stroke-width="0.8"/>
+      <line x1="34" y1="0" x2="34" y2="68" stroke="var(--brick)" stroke-width="0.75"/>
+      <line x1="0" y1="34" x2="68" y2="34" stroke="var(--brick)" stroke-width="0.75"/>
+    </svg>
   </div>
 
-  <!-- Dynamic Iframe Display Area -->
-  <div class="embed-container" id="embed-container"></div>
-
-  <!-- Output & Comparison Areas -->
-  <pre id="output-box">Click a button to load data...</pre>
-
-  <div class="comparison-container" id="display-area" style="display: none;">
-    <div class="box">
-      <h3>Original Web Image</h3>
-      <img id="source-img" src="" alt="Source Cat" />
+  <main>
+    <div class="nav-back-wrapper">
+      <a href="/" class="nav-back">← Back to Overview</a>
     </div>
 
-    <div class="box">
-      <h3>Gemini-Rendered HTML/SVG</h3>
-      <div id="html-art-container"></div>
+    <span class="section-label">Edge Execution &amp; Serverless AI</span>
+    <h1>Cloudflare Pages Functions</h1>
+    <p class="subtitle">
+      Automated edge deployment pipeline combining generative model representations with dynamic ASCII raster compilation.
+    </p>
+
+    <!-- Datum Line -->
+    <div class="datum-divider">
+      <div class="datum-bar"></div>
+      <svg width="24" height="8" viewBox="0 0 24 8" fill="none" style="opacity: 0.7;">
+        <circle cx="4" cy="4" r="2" fill="var(--clay)"/>
+        <line x1="6" y1="4" x2="18" y2="4" stroke="var(--clay)" stroke-width="1"/>
+        <circle cx="20" cy="4" r="2" fill="var(--brick-light)"/>
+      </svg>
     </div>
-  </div>
+
+    <div class="pipeline-container">
+      <div class="button-group">
+        <button id="fetch-cat-btn">Get ASCII Cat</button>
+        <button id="fetch-gemini-btn">Convert Random Cat Photo to HTML Art</button>
+        <button id="toggle-embed-btn">Sample From My Ascii Animation Generator</button>
+      </div>
+
+      <!-- Dynamic Iframe Display Area -->
+      <div class="embed-container" id="embed-container"></div>
+
+      <!-- Terminal Output Frame -->
+      <div class="terminal-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+          <span class="terminal-title">Telemetry &amp; Output Console</span>
+        </div>
+        <pre id="output-box">Click a button above to execute edge telemetry...</pre>
+      </div>
+
+      <!-- Comparison Container -->
+      <div class="comparison-container" id="display-area" style="display: none;">
+        <div class="box">
+          <h3>Original Web Source</h3>
+          <img id="source-img" src="" alt="Source Cat" />
+        </div>
+
+        <div class="box">
+          <h3>Gemini-Rendered HTML/SVG</h3>
+          <div id="html-art-container"></div>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <!-- ============================================================== -->
   <!-- PASTE YOUR IFRAMES HERE DIRECTLY (NO JAVASCRIPT ESCAPING NEEDED) -->
@@ -188,7 +537,7 @@
   <!-- IFRAME ONE TEMPLATE -->
   <template id="template-frame-one">
     <!-- Paste your entire generated <iframe ...></iframe> for Frame 1 right below this line: -->
-   <iframe 
+  <iframe 
   width="100%" 
   height="450" 
   style="border: none; border-radius: 8px; overflow: hidden; background-color: #000000;" 
@@ -303,7 +652,7 @@
   <!-- IFRAME TWO TEMPLATE -->
   <template id="template-frame-two">
     <!-- Paste your entire generated <iframe ...></iframe> for Frame 2 right below this line: -->
-   <iframe 
+  <iframe 
   width="100%" 
   height="450" 
   style="border: none; border-radius: 8px; overflow: hidden; background-color: #000000;" 
@@ -417,7 +766,38 @@
 
   <!-- ============================================================== -->
 
+  <footer>
+    <p>Powered by Cloudflare Workers &amp; Pages</p>
+  </footer>
+
   <script>
+    // 1. Custom Magnetic Cursor
+    const cursor = document.getElementById('cursor');
+    const follower = document.getElementById('cursor-follower');
+    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+    let followerX = mouseX, followerY = mouseY;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (cursor) {
+        cursor.style.left = `${mouseX}px`;
+        cursor.style.top = `${mouseY}px`;
+      }
+    });
+
+    function animateCursor() {
+      if (follower) {
+        followerX += (mouseX - followerX) * 0.15;
+        followerY += (mouseY - followerY) * 0.15;
+        follower.style.left = `${followerX}px`;
+        follower.style.top = `${followerY}px`;
+      }
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // 2. Demo Operations
     const output = document.getElementById('output-box');
     const displayArea = document.getElementById('display-area');
     const sourceImg = document.getElementById('source-img');
@@ -430,26 +810,26 @@
 
     let embedClickCount = 0;
 
-    // 1. ASCII Cat button
+    // ASCII Cat button
     document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
       displayArea.style.display = 'none';
-      output.textContent = 'Loading ASCII cat...';
+      output.textContent = 'Streaming ASCII buffer...';
       try {
         const response = await fetch('/api/cat');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const asciiCat = await response.text();
         output.textContent = asciiCat;
       } catch (error) {
-        output.textContent = 'Error fetching cat: ' + error.message;
+        output.textContent = 'Error fetching cat buffer: ' + error.message;
         console.error(error);
       }
     });
 
-    // 2. Gemini HTML Art button
+    // Gemini HTML Art button
     document.getElementById('fetch-gemini-btn').addEventListener('click', async () => {
       displayArea.style.display = 'none';
       htmlArtContainer.innerHTML = '';
-      output.textContent = 'Selecting a random cat image and generating HTML/SVG artwork...';
+      output.textContent = 'Sampling remote image matrix and generating vector art representations...';
 
       try {
         const response = await fetch('/api/gemini');
@@ -460,51 +840,48 @@
           return;
         }
 
-        output.textContent = `Success! Rendered with model: ${data.modelUsed || 'Gemini'}`;
+        output.textContent = `Synthesis complete. Engine target: ${data.modelUsed || 'Gemini'}`;
         sourceImg.src = data.sourceImageUrl;
         htmlArtContainer.innerHTML = data.generatedHtml;
         displayArea.style.display = 'flex';
       } catch (error) {
-        output.textContent = 'Network/Fetch Error: ' + error.message;
+        output.textContent = 'Network/Fetch pipeline error: ' + error.message;
         console.error(error);
       }
     });
 
-    // Helper to cross-fade between frame 1 and frame 2
+    // Cross-fade helper between embed templates
     function transitionSwap(newHtml) {
       embedContainer.classList.remove('active');
       setTimeout(() => {
         embedContainer.innerHTML = newHtml;
-        void embedContainer.offsetWidth; // Forces reflow to trigger transition
+        void embedContainer.offsetWidth; // Force reflow
         embedContainer.classList.add('active');
-      }, 180); // Quick fade-out before fading into next frame
+      }, 180);
     }
 
-    // 3. Three-State Embed Toggle with Transitions
+    // Embed Toggle with Morphing State
     toggleEmbedBtn.addEventListener('click', () => {
       embedClickCount = (embedClickCount + 1) % 3;
 
-      const contentOne = templateOne.innerHTML.trim() || '<p style="color:#888;">No iframe added to template-frame-one yet.</p>';
-      const contentTwo = templateTwo.innerHTML.trim() || '<p style="color:#888;">No iframe added to template-frame-two yet.</p>';
+      const contentOne = templateOne.innerHTML.trim() || '<p style="color:var(--text-muted); padding: 40px;">No iframe template detected in template-frame-one.</p>';
+      const contentTwo = templateTwo.innerHTML.trim() || '<p style="color:var(--text-muted); padding: 40px;">No iframe template detected in template-frame-two.</p>';
 
       if (embedClickCount === 1) {
-        // Click 1: Smooth power-on zoom/fade in
         embedContainer.innerHTML = contentOne;
         embedContainer.style.display = 'flex';
         requestAnimationFrame(() => embedContainer.classList.add('active'));
         toggleEmbedBtn.textContent = 'Next Animation →';
       } else if (embedClickCount === 2) {
-        // Click 2: Seamless cross-fade/morph into Frame 2
         transitionSwap(contentTwo);
         toggleEmbedBtn.textContent = 'Close ✕';
       } else {
-        // Click 3: Smooth fade-out before unmounting
         embedContainer.classList.remove('active');
         toggleEmbedBtn.textContent = 'Sample From My Ascii Animation Generator';
         setTimeout(() => {
           embedContainer.style.display = 'none';
           embedContainer.innerHTML = '';
-        }, 300); // Waits for the 0.3s CSS transition to finish
+        }, 300);
       }
     });
   </script>
