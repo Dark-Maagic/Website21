@@ -1047,24 +1047,24 @@
             <div class="explainer-card" id="explainer-card-3">
               <div class="explainer-card-meta">
                 <span>03 / Button Three</span>
-                <span class="explainer-card-tag">Temporal Frame Compilation</span>
+                <span class="explainer-card-tag">Delta + RLE + Deflate Codec</span>
               </div>
-              <h3>ASCII Animation Generator</h3>
+              <h3>ASCII Animation Generator &amp; Embedder</h3>
               <div class="signal-flow">
-                <span>.GIF Binary</span> <span class="arrow">→</span>
-                <span>Frame Slicing</span> <span class="arrow">→</span>
-                <span>&lt;template&gt;</span> <span class="arrow">→</span>
-                <span>Sandboxed Iframe</span>
+                <span>GIF Patch Compositing</span> <span class="arrow">→</span>
+                <span>12-Bit imgToAscii</span> <span class="arrow">→</span>
+                <span>Inter-Frame Delta + RLE</span> <span class="arrow">→</span>
+                <span>Deflate-Raw srcdoc</span>
               </div>
               <ul class="explainer-steps">
                 <li>
-                  <strong>1. Temporal Frame-Buffer Slicing:</strong> An animated <code>.GIF</code> file is essentially a digital flipbook containing dozens of compressed image frames, each with a specific millisecond delay. My converter tool unpacks the binary GIF stream frame-by-frame, decomposing motion over time into a sequence of individual 2D character matrices.
+                  <strong>1. Binary GIF Patch Compositing &amp; 12-Bit Quantization:</strong> Most <code>.GIF</code> files don't store full images for every frame—they store only the rectangular sub-patch of pixels that changed alongside disposal rules for clearing or restoring previous frames. My converter unpacks the binary stream (via <code>gifuct-js</code> / <code>omggif</code>), composites each patch onto a master <code>&lt;canvas&gt;</code>, and downscales it with bilinear smoothing disabled (<code>imageSmoothingEnabled = false</code>) so the original palette stays crisp rather than blending colors. Each pixel's luminance (<code>Y = 0.21R + 0.72G + 0.07B</code>) maps to an ASCII glyph, while 24-bit RGB colors are bit-shifted (<code>r &gt;&gt; 4</code>) into a compact <strong>12-bit hex palette</strong> (<code>#rgb</code>).
                 </li>
                 <li>
-                  <strong>2. Self-Contained Runtime Compilation:</strong> Rather than requiring a video server to stream frames, the converter compiles the entire array of ASCII frames, timing loops, and color palettes into a single, standalone HTML snippet that plays back autonomously using JavaScript timers.
+                  <strong>2. Video-Style Inter-Frame Delta &amp; Base36 RLE Compression:</strong> Storing dozens of color ASCII frames as raw HTML would take hundreds of kilobytes. Instead, the converter acts like a custom video codec: first, <strong>Inter-Frame Delta Encoding</strong> compares each frame against the previous one and replaces every unchanged character or color cell with a backtick (<code>`</code>), storing only the pixels that moved. Next, <strong>Run-Length Encoding (RLE)</strong> collapses streaks of identical characters or colors into Base36 shorthand tokens (<code>$cN$</code> and <code>idx:N</code>) and merges adjacent same-color characters into single <code>&lt;span&gt;</code> runs.
                 </li>
                 <li>
-                  <strong>3. Inert <code>&lt;template&gt;</code> Virtualization:</strong> Because pre-compiled ASCII animations contain thousands of characters per frame, rendering them on page load would slow down the browser. Instead, they sit dormant inside inert HTML <code>&lt;template&gt;</code> tags. Clicking the button mounts them on-demand into an isolated <code>&lt;iframe&gt;</code> stage with hardware-accelerated CSS blur/scale transitions.
+                  <strong>3. Native <code>deflate-raw</code> Stream &amp; Self-Booting <code>&lt;iframe&gt;</code>:</strong> Finally, the delta-encoded JSON payload is piped through the browser's native <code>CompressionStream('deflate-raw')</code> into a compact Base64 string and wrapped in a single-quoted <code>&lt;iframe srcdoc&gt;</code> with a tiny minified <code>DecompressionStream</code> bootloader. On this page, those self-contained embeds sit dormant inside inert <code>&lt;template&gt;</code> tags and mount on-demand—decompressing and playing the full color animation client-side with zero external dependencies.
                 </li>
               </ul>
             </div>
@@ -1136,7 +1136,7 @@
             <span class="telemetry-val" id="tel-temp">T = 0.00 [LOCKED]</span>
           </div>
           <div style="margin-top: 6px;">
-            <button type="button" class="mini-btn" id="re-anneal-btn" style="width: 100%;">Re-Anneal Matrix ⚡</button>
+            <button type="button" class="mini-btn" id="re-anneal-btn" style="width: 100%;">Re-Anneal Matrix</button>
           </div>
         </div>
       </div>
@@ -1645,13 +1645,16 @@
               const dr = r - cursorGridPos.r;
               const dc = (c - cursorGridPos.c) * 0.52;
               const dist = Math.hypot(dr, dc);
-              const lensRadius = 6.5;
+              const lensRadius = 5.2;
               if (dist < lensRadius && dist > 0.01) {
-                // Smooth, non-flickering cosine bell curve
-                const falloff = Math.pow(Math.cos((dist / lensRadius) * (Math.PI / 2)), 1.5);
-                lumShift += 0.16 * falloff;
-                sampleR = Math.min(gridRows - 1, Math.max(0, Math.round(r - (dr / dist) * falloff * 0.75)));
-                sampleC = Math.min(gridCols - 1, Math.max(0, Math.round(c - (dc / dist) * falloff * 1.1)));
+                const falloff = Math.pow(Math.cos((dist / lensRadius) * (Math.PI / 2)), 1.25);
+               const harmonicShimmer = Math.sin(dist * 1.1 - phaseTime * 1.35) * 0.16 * falloff;
+                lumShift += (0.32 * falloff) + harmonicShimmer;
+
+                // Powerful gravitational lens magnification / radial pull
+                const gravPull = Math.sin((dist / lensRadius) * Math.PI) * falloff;
+                sampleR = Math.min(gridRows - 1, Math.max(0, Math.round(r - (dr / dist) * gravPull * 2.4)));
+                sampleC = Math.min(gridCols - 1, Math.max(0, Math.round(c - (dc / dist) * gravPull * 3.8)));
               }
             }
 
@@ -1708,25 +1711,41 @@
       }
       fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
 
-      // Calm, matte cursor lens halo (easy on the eyes)
+     // Compact, transparent-core gravitational lens with slow breathing pulse
       if (cursorGridPos.inside) {
-        const grad = fxCtx.createRadialGradient(
-          cursorGridPos.px, cursorGridPos.py, 2,
-          cursorGridPos.px, cursorGridPos.py, 72
-        );
-        grad.addColorStop(0, 'rgba(194, 94, 56, 0.11)');
-        grad.addColorStop(0.6, 'rgba(214, 140, 104, 0.05)');
+        const cx = cursorGridPos.px;
+        const cy = cursorGridPos.py;
+        const pulse = Math.sin(phaseTime * 1.35) * 3.5;
+
+        // Clear center (less opaque) with a compact luminous Einstein-ring rim
+        const grad = fxCtx.createRadialGradient(cx, cy, 10, cx, cy, 50);
+        grad.addColorStop(0, 'rgba(224, 122, 82, 0)');
+        grad.addColorStop(0.62, 'rgba(224, 122, 82, 0.14)');
+        grad.addColorStop(0.85, 'rgba(214, 140, 104, 0.06)');
         grad.addColorStop(1, 'rgba(18, 17, 16, 0)');
         fxCtx.fillStyle = grad;
         fxCtx.beginPath();
-        fxCtx.arc(cursorGridPos.px, cursorGridPos.py, 72, 0, Math.PI * 2);
+        fxCtx.arc(cx, cy, 50, 0, Math.PI * 2);
         fxCtx.fill();
 
-        fxCtx.strokeStyle = 'rgba(214, 140, 104, 0.18)';
-        fxCtx.lineWidth = 1;
+        // Slow-breathing inner wave ring
+        fxCtx.strokeStyle = 'rgba(224, 122, 82, 0.42)';
+        fxCtx.lineWidth = 1.1;
         fxCtx.beginPath();
-        fxCtx.arc(cursorGridPos.px, cursorGridPos.py, 44, 0, Math.PI * 2);
+        fxCtx.arc(cx, cy, 28 + pulse, 0, Math.PI * 2);
         fxCtx.stroke();
+
+        // Slow-rotating dashed outer orbital reticle
+        fxCtx.save();
+        fxCtx.translate(cx, cy);
+        fxCtx.rotate(phaseTime * 0.3);
+        fxCtx.strokeStyle = 'rgba(214, 140, 104, 0.32)';
+        fxCtx.lineWidth = 1;
+        fxCtx.setLineDash([5, 6]);
+        fxCtx.beginPath();
+        fxCtx.arc(0, 0, 40, 0, Math.PI * 2);
+        fxCtx.stroke();
+        fxCtx.restore();
       }
 
       // Dramatic multi-ring shockwave visual
