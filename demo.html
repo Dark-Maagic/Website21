@@ -117,7 +117,7 @@
       transition: color 0.3s ease;
     }
 
-    nav a:hover, nav a.active {
+    nav a:hover {
       color: var(--brick-light);
     }
 
@@ -230,7 +230,7 @@
       justify-content: center;
       gap: 16px;
       flex-wrap: wrap;
-      margin-bottom: 36px;
+      margin-bottom: 28px;
     }
 
     button {
@@ -249,7 +249,7 @@
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     }
 
-    button:hover {
+    button:hover, button.active-mode {
       background: var(--card-bg);
       border-color: var(--brick);
       color: var(--brick-light);
@@ -257,14 +257,195 @@
       box-shadow: 0 6px 20px rgba(194, 94, 56, 0.25);
     }
 
+    /* ============================================================== */
+    /* QUANTIZER INSTRUMENTATION DECK (IDEA 1)                        */
+    /* ============================================================== */
+    .quantizer-deck {
+      width: 100%;
+      max-width: 960px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: none;
+      grid-template-columns: auto 1fr auto;
+      gap: 24px;
+      align-items: center;
+      text-align: left;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+      animation: deckFadeIn 0.3s ease forwards;
+    }
+
+    .quantizer-deck.visible {
+      display: grid;
+    }
+
+    @keyframes deckFadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .quant-source-col {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-right: 20px;
+      border-right: 1px solid var(--border);
+    }
+
+    .quant-thumb-wrap {
+      width: 72px;
+      height: 72px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(224, 122, 82, 0.4);
+      background: var(--bg);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .quant-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .quant-thumb-reticle {
+      position: absolute;
+      inset: 0;
+      border: 1px dashed rgba(224, 122, 82, 0.35);
+      pointer-events: none;
+    }
+
+    .quant-source-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mini-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--clay);
+    }
+
+    .mini-btn {
+      padding: 6px 11px;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: none;
+      text-align: center;
+    }
+
+    .mini-btn:hover {
+      border-color: var(--brick-light);
+      color: var(--brick-light);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .quant-controls-col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px 20px;
+    }
+
+    .control-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .control-field label {
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .control-field label span {
+      color: var(--brick-light);
+      font-family: var(--font-mono);
+    }
+
+    .control-field select,
+    .control-field input[type="range"] {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-family: var(--font-sans);
+      font-size: 0.78rem;
+      outline: none;
+    }
+
+    .control-field select:focus {
+      border-color: var(--brick);
+    }
+
+    .control-field input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      padding: 0;
+      margin-top: 6px;
+      background: rgba(232, 228, 223, 0.12);
+      cursor: pointer;
+    }
+
+    .control-field input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--brick-light);
+      cursor: pointer;
+    }
+
+    .quant-telemetry-col {
+      padding-left: 20px;
+      border-left: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      line-height: 1.75;
+      color: var(--text-muted);
+      min-width: 215px;
+    }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .telemetry-val {
+      color: var(--text);
+    }
+
+    .telemetry-val.highlight {
+      color: var(--brick-light);
+    }
+
     /* Dynamic Embed Stage */
     .embed-container {
-      margin: 20px auto 35px;
+      margin: 10px auto 35px;
       display: none;
       justify-content: center;
       align-items: center;
       width: 100%;
-      max-width: 850px;
+      max-width: 960px;
       box-sizing: border-box;
       opacity: 0;
       transform: translateY(-10px) scale(0.98);
@@ -289,10 +470,12 @@
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
     }
 
-    /* Terminal Console */
+    /* ============================================================== */
+    /* TERMINAL CONSOLE & INTERACTIVE PHYSICS SANDBOX (IDEAS 3 & 4)   */
+    /* ============================================================== */
     .terminal-card {
       width: 100%;
-      max-width: 850px;
+      max-width: 960px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -300,19 +483,23 @@
       box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
       margin: 0 auto;
       text-align: left;
+      position: relative;
     }
 
     .terminal-header {
-      background: rgba(18, 17, 16, 0.85);
+      background: rgba(18, 17, 16, 0.9);
       padding: 10px 18px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .terminal-dots {
       display: flex;
+      align-items: center;
       gap: 7px;
     }
 
@@ -321,39 +508,70 @@
       height: 9px;
       border-radius: 50%;
       border: 1px solid rgba(232, 228, 223, 0.15);
-      background: rgba(232, 228, 223, 0.08);
     }
 
-    .dot:nth-child(1) { background: rgba(194, 94, 56, 0.45); }
-    .dot:nth-child(2) { background: rgba(224, 122, 82, 0.45); }
-    .dot:nth-child(3) { background: rgba(214, 140, 104, 0.45); }
+    .dot:nth-child(1) { background: rgba(194, 94, 56, 0.55); }
+    .dot:nth-child(2) { background: rgba(224, 122, 82, 0.55); }
+    .dot:nth-child(3) { background: rgba(214, 140, 104, 0.55); }
+
+    .terminal-status-badge {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--brick-light);
+      margin-left: 8px;
+    }
 
     .terminal-title {
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--clay);
-      opacity: 0.75;
+      opacity: 0.8;
+    }
+
+    .terminal-stage {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+      background: radial-gradient(circle at center, rgba(34, 32, 30, 0.5) 0%, rgba(26, 25, 24, 0.95) 100%);
     }
 
     pre#output-box {
       font-family: var(--font-mono);
-      font-size: 0.88rem;
-      line-height: 1.55;
+      font-size: 11.5px;
+      line-height: 1.15;
+      letter-spacing: 0.04em;
       color: var(--text);
       background: transparent;
       padding: 24px;
       margin: 0;
-      white-space: pre-wrap;
-      word-break: break-all;
+      white-space: pre;
       overflow-x: auto;
-      min-height: 120px;
+      min-height: 160px;
       box-sizing: border-box;
-      transition: color 0.3s ease;
+      user-select: none;
+      cursor: crosshair;
+      position: relative;
+      z-index: 2;
+      transition: color 0.2s ease;
     }
 
-    /* Comparison Area */
+    /* Interactive Wavefield Overlay Canvas */
+    #terminal-fx-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 3;
+      mix-blend-mode: screen;
+    }
+
+    /* Comparison Area (Gemini) */
     .comparison-container {
       display: flex;
       justify-content: center;
@@ -369,7 +587,7 @@
       padding: 24px;
       border-radius: 8px;
       background-color: var(--card-bg);
-      max-width: 410px;
+      max-width: 460px;
       width: 100%;
       min-height: 280px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
@@ -408,32 +626,32 @@
       margin-top: auto;
     }
 
-    @media (max-width: 860px) {
-      header {
-        padding: 20px 24px;
+    @media (max-width: 900px) {
+      header { padding: 20px 24px; }
+      nav { gap: 20px; }
+      main { padding: 120px 24px 60px; }
+      .geo-accent, .custom-cursor, .custom-cursor-follower { display: none; }
+      .button-group { flex-direction: column; width: 100%; }
+      button { width: 100%; }
+      .quantizer-deck {
+        grid-template-columns: 1fr;
+        gap: 18px;
       }
-      nav {
-        gap: 20px;
+      .quant-source-col {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding-right: 0;
+        padding-bottom: 14px;
       }
-      main {
-        padding: 120px 24px 60px;
+      .quant-telemetry-col {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        padding-left: 0;
+        padding-top: 14px;
       }
-      .geo-accent, .custom-cursor, .custom-cursor-follower {
-        display: none;
-      }
-      .button-group {
-        flex-direction: column;
-        width: 100%;
-      }
-      button {
-        width: 100%;
-      }
-      .comparison-container {
-        flex-direction: column;
-        align-items: center;
-      }
-      .box {
-        max-width: 100%;
+      pre#output-box {
+        font-size: 8.5px;
+        padding: 14px;
       }
     }
   </style>
@@ -479,7 +697,7 @@
     <span class="section-label">Edge Execution &amp; Serverless AI</span>
     <h1>Cloudflare Pages Functions</h1>
     <p class="subtitle">
-      Automated edge deployment pipeline combining generative model representations with dynamic ASCII raster compilation.
+      Automated edge deployment pipeline combining generative model representations with real-time spatial quantization, simulated annealing, and interactive wavefield physics.
     </p>
 
     <!-- Datum Line -->
@@ -494,28 +712,101 @@
 
     <div class="pipeline-container">
       <div class="button-group">
-        <button id="fetch-cat-btn">Get ASCII Cat</button>
+        <button id="fetch-cat-btn">Get ASCII Cat (Live Quantizer)</button>
         <button id="fetch-gemini-btn">Convert Random Cat Photo to HTML Art</button>
         <button id="toggle-embed-btn">Sample From My Ascii Animation Generator</button>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- LIVE RASTER-TO-ASCII QUANTIZER CONTROL DECK (IDEA 1)           -->
+      <!-- ============================================================== -->
+      <div class="quantizer-deck" id="quantizer-deck">
+        <!-- Left: Source Raster Thumbnail & Mode Switcher -->
+        <div class="quant-source-col">
+          <div class="quant-thumb-wrap">
+            <img id="quant-thumb-img" src="" alt="Raster Source" crossorigin="anonymous" />
+            <div class="quant-thumb-reticle"></div>
+          </div>
+          <div class="quant-source-actions">
+            <span class="mini-label">Input Signal</span>
+            <button type="button" class="mini-btn" id="next-cat-raster-btn">Sample New Cat ↻</button>
+            <button type="button" class="mini-btn" id="source-mode-btn" title="Switch between Live Photo Quantizer and /api/cat Worker">Mode: Live Raster</button>
+          </div>
+        </div>
+
+        <!-- Center: Algorithmic Parameters -->
+        <div class="quant-controls-col">
+          <div class="control-field">
+            <label for="quant-algo">Quantization Kernel</label>
+            <select id="quant-algo">
+              <option value="sobel" selected>Sobel Edge + Luminance</option>
+              <option value="dither">Floyd-Steinberg Error Diffusion</option>
+              <option value="luminance">Direct Perceptual Luminance</option>
+            </select>
+          </div>
+
+          <div class="control-field">
+            <label for="quant-ramp">Character Density Ramp</label>
+            <select id="quant-ramp">
+              <option value="standard" selected>Standard (@%#*+=-:.)</option>
+              <option value="blocks">Block Elements (█▓▒░)</option>
+              <option value="braille">Unicode Braille (⣿⣷⣯⣟)</option>
+              <option value="dense">High-Density ($@B%8&amp;W)</option>
+            </select>
+          </div>
+
+          <div class="control-field">
+            <label for="quant-cols">Spatial Resolution <span id="cols-val">82 cols</span></label>
+            <input type="range" id="quant-cols" min="48" max="106" value="82" />
+          </div>
+
+          <div class="control-field">
+            <label for="quant-contrast">Gamma Contrast <span id="contrast-val">1.35γ</span></label>
+            <input type="range" id="quant-contrast" min="60" max="240" value="135" />
+          </div>
+        </div>
+
+        <!-- Right: Live Compression & Annealing Telemetry -->
+        <div class="quant-telemetry-col">
+          <div class="telemetry-row">
+            <span>RATIO:</span>
+            <span class="telemetry-val highlight" id="tel-ratio">38.4x (2.9 KB)</span>
+          </div>
+          <div class="telemetry-row">
+            <span>ENTROPY H(X):</span>
+            <span class="telemetry-val" id="tel-entropy">3.91 bits/sym</span>
+          </div>
+          <div class="telemetry-row">
+            <span>ANNEAL TEMP:</span>
+            <span class="telemetry-val" id="tel-temp">T = 0.00 [LOCKED]</span>
+          </div>
+          <div style="margin-top: 6px;">
+            <button type="button" class="mini-btn" id="re-anneal-btn" style="width: 100%;">Re-Anneal Matrix ⚡</button>
+          </div>
+        </div>
       </div>
 
       <!-- Dynamic Iframe Display Area -->
       <div class="embed-container" id="embed-container"></div>
 
-      <!-- Terminal Output Frame -->
+      <!-- Terminal Output Frame + Interactive Wavefield Sandbox -->
       <div class="terminal-card">
         <div class="terminal-header">
           <div class="terminal-dots">
             <span class="dot"></span>
             <span class="dot"></span>
             <span class="dot"></span>
+            <span class="terminal-status-badge" id="terminal-status">IDLE // READY</span>
           </div>
-          <span class="terminal-title">Telemetry &amp; Output Console</span>
+          <span class="terminal-title" id="terminal-hint">Telemetry &amp; Output Console</span>
         </div>
-        <pre id="output-box">Click a button above to execute edge telemetry...</pre>
+        <div class="terminal-stage" id="terminal-stage">
+          <pre id="output-box">Click a button above to execute edge telemetry...</pre>
+          <canvas id="terminal-fx-canvas"></canvas>
+        </div>
       </div>
 
-      <!-- Comparison Container -->
+      <!-- Comparison Container (For Gemini Photo-to-HTML/SVG) -->
       <div class="comparison-container" id="display-area" style="display: none;">
         <div class="box">
           <h3>Original Web Source</h3>
@@ -553,7 +844,9 @@
   </footer>
 
   <script>
-    // 1. Custom Magnetic Cursor
+    // ============================================================================
+    // 1. CUSTOM MAGNETIC CURSOR
+    // ============================================================================
     const cursor = document.getElementById('cursor');
     const follower = document.getElementById('cursor-follower');
     let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
@@ -579,38 +872,575 @@
     }
     animateCursor();
 
-    // 2. Demo Operations
+    // ============================================================================
+    // 2. DOM REFERENCES & STATE
+    // ============================================================================
     const output = document.getElementById('output-box');
     const displayArea = document.getElementById('display-area');
     const sourceImg = document.getElementById('source-img');
     const htmlArtContainer = document.getElementById('html-art-container');
     const embedContainer = document.getElementById('embed-container');
     const toggleEmbedBtn = document.getElementById('toggle-embed-btn');
+    const quantizerDeck = document.getElementById('quantizer-deck');
+    const terminalStatus = document.getElementById('terminal-status');
+    const terminalHint = document.getElementById('terminal-hint');
+    const fxCanvas = document.getElementById('terminal-fx-canvas');
+    const fxCtx = fxCanvas.getContext('2d');
 
     const templateOne = document.getElementById('template-frame-one');
     const templateTwo = document.getElementById('template-frame-two');
 
     let embedClickCount = 0;
 
-    // ASCII Cat button
-    document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
-      displayArea.style.display = 'none';
-      output.textContent = 'Streaming ASCII buffer...';
-      try {
-        const response = await fetch('/api/cat');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const asciiCat = await response.text();
-        output.textContent = asciiCat;
-      } catch (error) {
-        output.textContent = 'Error fetching cat buffer: ' + error.message;
-        console.error(error);
+    // Curated high-contrast cat portraits with CORS enabled for instant <canvas> quantization
+    const CAT_RASTER_POOL = [
+      'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=500&q=80',
+      'https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=500&q=80',
+      'https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=500&q=80',
+      'https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=500&q=80',
+      'https://images.unsplash.com/photo-1529778873920-4da4926a72c2?auto=format&fit=crop&w=500&q=80',
+      'https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&w=500&q=80'
+    ];
+
+    const CHAR_RAMPS = {
+      standard: ' .:-=+*#%@',
+      blocks:   ' ░▒▓█',
+      braille:  ' ⡀⣀⣄⣤⣦⣶⣷⣿',
+      dense:    ' .\'`^",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'
+    };
+
+    // Quantizer & Sandbox State
+    let catSourceIndex = 0;
+    let sourceMode = 'raster'; // 'raster' | 'worker'
+    let currentSourceImage = null;
+    let cachedWorkerAscii = null;
+
+    let targetGrid = [];       // 2D array of ground-truth characters [r][c]
+    let targetLumGrid = [];    // 2D array of normalized luminance [r][c] in [0, 1]
+    let annealThreshold = [];  // 2D array of per-cell convergence thresholds
+    let gridRows = 0;
+    let gridCols = 0;
+
+    // Simulated Annealing State (Idea 3)
+    let annealTemp = 0;        // 1.0 (hot noise) -> 0.0 (converged)
+    let sandboxActive = false;
+
+    // Interactive Cursor Wavefield & Shockwaves (Idea 4)
+    let cursorGridPos = { r: -100, c: -100, px: 0, py: 0, inside: false };
+    let shockwaves = [];       // [{ r, c, px, py, radius, maxRadius, strength }]
+    let phaseTime = 0;
+
+    // Offscreen canvas for pixel sampling
+    const sampleCanvas = document.createElement('canvas');
+    const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+
+    // ============================================================================
+    // 3. IDEA 1: RASTER-TO-ASCII QUANTIZATION ENGINE (SOBEL, DITHER, LUMINANCE)
+    // ============================================================================
+    function computeShannonEntropy(charMatrix) {
+      const counts = {};
+      let total = 0;
+      for (let r = 0; r < charMatrix.length; r++) {
+        for (let c = 0; c < charMatrix[r].length; c++) {
+          const ch = charMatrix[r][c];
+          counts[ch] = (counts[ch] || 0) + 1;
+          total++;
+        }
       }
+      if (total === 0) return 0;
+      let entropy = 0;
+      for (const ch in counts) {
+        const p = counts[ch] / total;
+        entropy -= p * Math.log2(p);
+      }
+      return entropy;
+    }
+
+    // Fallback procedural cat portrait if offline or CORS blocked
+    function createProceduralCatCanvas() {
+      const c = document.createElement('canvas');
+      c.width = 320;
+      c.height = 280;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#0e0d0c';
+      ctx.fillRect(0, 0, 320, 280);
+
+      // Ears
+      ctx.fillStyle = '#d68c68';
+      ctx.beginPath();
+      ctx.moveTo(75, 130); ctx.lineTo(95, 35); ctx.lineTo(150, 95); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(245, 130); ctx.lineTo(225, 35); ctx.lineTo(170, 95); ctx.fill();
+
+      // Head
+      const grad = ctx.createRadialGradient(160, 155, 15, 160, 160, 95);
+      grad.addColorStop(0, '#f5efe6');
+      grad.addColorStop(0.7, '#c25e38');
+      grad.addColorStop(1, '#2a2421');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(160, 160, 85, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#121110';
+      ctx.beginPath(); ctx.ellipse(128, 145, 14, 18, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(192, 145, 14, 18, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(124, 140, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(188, 140, 5, 0, Math.PI * 2); ctx.fill();
+
+      // Nose & Whiskers
+      ctx.fillStyle = '#ffb499';
+      ctx.beginPath();
+      ctx.moveTo(152, 172); ctx.lineTo(168, 172); ctx.lineTo(160, 183); ctx.fill();
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      [[60, 165, 130, 175], [55, 182, 130, 182], [65, 198, 130, 189],
+       [260, 165, 190, 175], [265, 182, 190, 182], [255, 198, 190, 189]].forEach(([x1, y1, x2, y2]) => {
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      });
+      return c;
+    }
+
+    function quantizeCurrentSource(triggerAnneal = true) {
+      const rampKey = document.getElementById('quant-ramp').value;
+      const ramp = CHAR_RAMPS[rampKey] || CHAR_RAMPS.standard;
+      const algo = document.getElementById('quant-algo').value;
+      const cols = parseInt(document.getElementById('quant-cols').value, 10);
+      const contrast = parseInt(document.getElementById('quant-contrast').value, 10) / 100;
+
+      document.getElementById('cols-val').textContent = `${cols} cols`;
+      document.getElementById('contrast-val').textContent = `${contrast.toFixed(2)}γ`;
+
+      // Mode B: If user toggled to /api/cat Worker String
+      if (sourceMode === 'worker' && cachedWorkerAscii) {
+        const rawLines = cachedWorkerAscii.replace(/\r/g, '').split('\n');
+        gridRows = rawLines.length;
+        gridCols = Math.max(...rawLines.map(l => l.length), 1);
+        targetGrid = [];
+        targetLumGrid = [];
+
+        for (let r = 0; r < gridRows; r++) {
+          const rowChars = [];
+          const rowLum = [];
+          for (let c = 0; c < gridCols; c++) {
+            const ch = rawLines[r][c] || ' ';
+            rowChars.push(ch);
+            rowLum.push(ch === ' ' ? 0.05 : 0.85);
+          }
+          targetGrid.push(rowChars);
+          targetLumGrid.push(rowLum);
+        }
+        setupAnnealingSchedule(triggerAnneal);
+        updateTelemetryDisplay(gridCols * gridRows, 14200);
+        return;
+      }
+
+      // Mode A: Live Photo Raster Quantization
+      const src = currentSourceImage || createProceduralCatCanvas();
+      const imgW = src.naturalWidth || src.width || 320;
+      const imgH = src.naturalHeight || src.height || 280;
+
+      // Monospace character aspect ratio compensation (~0.48 width-to-height)
+      const rows = Math.max(18, Math.round(cols * (imgH / imgW) * 0.48));
+      gridCols = cols;
+      gridRows = rows;
+
+      sampleCanvas.width = cols;
+      sampleCanvas.height = rows;
+      sampleCtx.drawImage(src, 0, 0, cols, rows);
+
+      const imgData = sampleCtx.getImageData(0, 0, cols, rows).data;
+
+      // Build normalized perceptual luminance buffer
+      const lum = Array.from({ length: rows }, () => new Float32Array(cols));
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const idx = (r * cols + c) * 4;
+          const rawY = (0.2126 * imgData[idx] + 0.7152 * imgData[idx + 1] + 0.0722 * imgData[idx + 2]) / 255;
+          // Apply gamma/contrast around midpoint 0.5
+          const adjY = Math.max(0, Math.min(1, (rawY - 0.5) * contrast + 0.5));
+          lum[r][c] = adjY;
+        }
+      }
+
+      targetGrid = Array.from({ length: rows }, () => new Array(cols));
+      targetLumGrid = lum.map(row => Float32Array.from(row));
+
+      const N = ramp.length;
+
+      if (algo === 'dither') {
+        // Floyd-Steinberg Error Diffusion Dithering
+        const work = lum.map(row => Float32Array.from(row));
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const oldVal = Math.max(0, Math.min(1, work[r][c]));
+            const qIdx = Math.round(oldVal * (N - 1));
+            const newVal = qIdx / (N - 1);
+            targetGrid[r][c] = ramp[qIdx];
+            const err = oldVal - newVal;
+            if (c + 1 < cols) work[r][c + 1] += err * (7 / 16);
+            if (r + 1 < rows) {
+              if (c - 1 >= 0) work[r + 1][c - 1] += err * (3 / 16);
+              work[r + 1][c] += err * (5 / 16);
+              if (c + 1 < cols) work[r + 1][c + 1] += err * (1 / 16);
+            }
+          }
+        }
+      } else if (algo === 'sobel') {
+        // Sobel Edge-Guided Spatial Quantization
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (r > 0 && r < rows - 1 && c > 0 && c < cols - 1) {
+              const gx =
+                -lum[r - 1][c - 1] + lum[r - 1][c + 1] +
+                -2 * lum[r][c - 1] + 2 * lum[r][c + 1] +
+                -lum[r + 1][c - 1] + lum[r + 1][c + 1];
+              const gy =
+                -lum[r - 1][c - 1] - 2 * lum[r - 1][c] - lum[r - 1][c + 1] +
+                 lum[r + 1][c - 1] + 2 * lum[r + 1][c] + lum[r + 1][c + 1];
+
+              const mag = Math.hypot(gx, gy);
+              if (mag > 0.58) {
+                // Tangent angle perpendicular to gradient
+                const angle = (Math.atan2(gy, gx) * 180 / Math.PI + 180) % 180;
+                if (angle >= 22.5 && angle < 67.5) targetGrid[r][c] = '/';
+                else if (angle >= 67.5 && angle < 112.5) targetGrid[r][c] = '—';
+                else if (angle >= 112.5 && angle < 157.5) targetGrid[r][c] = '\\';
+                else targetGrid[r][c] = '|';
+                continue;
+              }
+            }
+            const qIdx = Math.min(N - 1, Math.floor(lum[r][c] * N));
+            targetGrid[r][c] = ramp[qIdx];
+          }
+        }
+      } else {
+        // Direct Perceptual Luminance
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const qIdx = Math.min(N - 1, Math.floor(lum[r][c] * N));
+            targetGrid[r][c] = ramp[qIdx];
+          }
+        }
+      }
+
+      const estimatedRawBytes = imgW * imgH * 3;
+      const asciiBytes = (cols + 1) * rows;
+      updateTelemetryDisplay(asciiBytes, estimatedRawBytes);
+      setupAnnealingSchedule(triggerAnneal);
+    }
+
+    function updateTelemetryDisplay(asciiBytes, rawBytes) {
+      const ratio = (rawBytes / Math.max(1, asciiBytes)).toFixed(1);
+      const kb = (asciiBytes / 1024).toFixed(1);
+      const entropy = computeShannonEntropy(targetGrid).toFixed(2);
+
+      document.getElementById('tel-ratio').textContent = `${ratio}x (${kb} KB)`;
+      document.getElementById('tel-entropy').textContent = `${entropy} bits/sym`;
+    }
+
+    // ============================================================================
+    // 4. IDEA 3: SIMULATED ANNEALING / DENOISING CONVERGENCE SCHEDULE
+    // ============================================================================
+    function setupAnnealingSchedule(triggerAnneal) {
+      annealThreshold = Array.from({ length: gridRows }, () => new Float32Array(gridCols));
+      const centerR = gridRows / 2;
+      const centerC = gridCols / 2;
+      const maxDist = Math.hypot(centerR, centerC) || 1;
+
+      for (let r = 0; r < gridRows; r++) {
+        for (let c = 0; c < gridCols; c++) {
+          const distNorm = Math.hypot(r - centerR, c - centerC) / maxDist;
+          // Radial wavefront + stochastic thermal jitter
+          annealThreshold[r][c] = Math.min(0.98, (1 - distNorm) * 0.65 + Math.random() * 0.35);
+        }
+      }
+
+      if (triggerAnneal) {
+        annealTemp = 1.0;
+      }
+      sandboxActive = true;
+      terminalHint.textContent = '[HOVER: WAVEFIELD LENS] • [CLICK: SHOCKWAVE IMPULSE]';
+    }
+
+    // ============================================================================
+    // 5. IDEA 4: INTERACTIVE 2D CURSOR WAVEFIELD & SHOCKWAVE SANDBOX LOOP
+    // ============================================================================
+    function renderSandboxFrame() {
+      if (sandboxActive && targetGrid.length > 0) {
+        phaseTime += 0.08;
+
+        // Cool down annealing temperature
+        if (annealTemp > 0.001) {
+          annealTemp = Math.max(0, annealTemp * 0.93 - 0.005);
+          document.getElementById('tel-temp').textContent = `T = ${annealTemp.toFixed(2)} [COOLING]`;
+          terminalStatus.textContent = `ANNEALING // T=${annealTemp.toFixed(2)}`;
+        } else {
+          annealTemp = 0;
+          document.getElementById('tel-temp').textContent = `T = 0.00 [LOCKED]`;
+          terminalStatus.textContent = `ACTIVE // WAVEFIELD READY`;
+        }
+
+        // Advance shockwaves
+        for (let i = shockwaves.length - 1; i >= 0; i--) {
+          const sw = shockwaves[i];
+          sw.radius += 1.35;
+          sw.strength *= 0.95;
+          if (sw.radius > sw.maxRadius || sw.strength < 0.04) {
+            shockwaves.splice(i, 1);
+          }
+        }
+
+        const rampKey = document.getElementById('quant-ramp').value;
+        const ramp = CHAR_RAMPS[rampKey] || CHAR_RAMPS.standard;
+        const N = ramp.length;
+        const noiseGlyphs = '@%#*+=-:.~^/\\|';
+
+        let outStr = '';
+        for (let r = 0; r < gridRows; r++) {
+          let rowStr = '';
+          for (let c = 0; c < gridCols; c++) {
+            // 1. Check Simulated Annealing Thermal State
+            if (annealTemp > 0 && annealTemp > annealThreshold[r][c]) {
+              if (annealTemp - annealThreshold[r][c] > 0.35) {
+                rowStr += ' ';
+              } else {
+                const randIdx = Math.floor(Math.random() * noiseGlyphs.length);
+                rowStr += noiseGlyphs[randIdx];
+              }
+              continue;
+            }
+
+            // 2. Calculate Cursor Wavefield & Shockwave Perturbations
+            let lumShift = 0;
+            let sampleR = r;
+            let sampleC = c;
+
+            if (cursorGridPos.inside) {
+              const dr = r - cursorGridPos.r;
+              const dc = (c - cursorGridPos.c) * 0.52; // aspect-corrected radial distance
+              const dist = Math.hypot(dr, dc);
+              const lensRadius = 7.5;
+              if (dist < lensRadius && dist > 0.01) {
+                const falloff = Math.cos((dist / lensRadius) * (Math.PI / 2));
+                const ripple = Math.sin(dist * 1.4 - phaseTime * 2.2) * 0.28 * falloff;
+                lumShift += (0.28 * falloff) + ripple;
+                // Subtle gravitational lens displacement
+                sampleR = Math.min(gridRows - 1, Math.max(0, Math.round(r - (dr / dist) * falloff * 1.2)));
+                sampleC = Math.min(gridCols - 1, Math.max(0, Math.round(c - (dc / dist) * falloff * 1.8)));
+              }
+            }
+
+            for (let s = 0; s < shockwaves.length; s++) {
+              const sw = shockwaves[s];
+              const dr = r - sw.r;
+              const dc = (c - sw.c) * 0.52;
+              const dist = Math.hypot(dr, dc);
+              const bandDist = Math.abs(dist - sw.radius);
+              if (bandDist < 2.8) {
+                const waveEnv = (1 - bandDist / 2.8) * sw.strength;
+                lumShift += Math.sin((dist - sw.radius) * 2.2) * 0.55 * waveEnv;
+                sampleR = Math.min(gridRows - 1, Math.max(0, Math.round(sampleR + (dr / (dist || 1)) * waveEnv * 1.6)));
+                sampleC = Math.min(gridCols - 1, Math.max(0, Math.round(sampleC + (dc / (dist || 1)) * waveEnv * 2.2)));
+              }
+            }
+
+            if (Math.abs(lumShift) > 0.06) {
+              const baseLum = targetLumGrid[sampleR][sampleC];
+              const modLum = Math.max(0, Math.min(1, baseLum + lumShift));
+              const qIdx = Math.min(N - 1, Math.floor(modLum * N));
+              rowStr += ramp[qIdx];
+            } else {
+              rowStr += targetGrid[sampleR][sampleC];
+            }
+          }
+          outStr += rowStr + (r < gridRows - 1 ? '\n' : '');
+        }
+
+        output.textContent = outStr;
+        drawTerminalFxOverlay();
+      }
+      requestAnimationFrame(renderSandboxFrame);
+    }
+
+    function drawTerminalFxOverlay() {
+      const stage = document.getElementById('terminal-stage');
+      if (fxCanvas.width !== stage.clientWidth || fxCanvas.height !== stage.clientHeight) {
+        fxCanvas.width = stage.clientWidth;
+        fxCanvas.height = stage.clientHeight;
+      }
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+      // Draw cursor lens glow
+      if (cursorGridPos.inside) {
+        const grad = fxCtx.createRadialGradient(
+          cursorGridPos.px, cursorGridPos.py, 4,
+          cursorGridPos.px, cursorGridPos.py, 85
+        );
+        grad.addColorStop(0, 'rgba(224, 122, 82, 0.22)');
+        grad.addColorStop(1, 'rgba(224, 122, 82, 0)');
+        fxCtx.fillStyle = grad;
+        fxCtx.beginPath();
+        fxCtx.arc(cursorGridPos.px, cursorGridPos.py, 85, 0, Math.PI * 2);
+        fxCtx.fill();
+      }
+
+      // Draw expanding shockwave rings
+      shockwaves.forEach(sw => {
+        const pxRadius = sw.radius * 12;
+        fxCtx.strokeStyle = `rgba(224, 122, 82, ${sw.strength * 0.45})`;
+        fxCtx.lineWidth = 1.5;
+        fxCtx.beginPath();
+        fxCtx.arc(sw.px, sw.py, pxRadius, 0, Math.PI * 2);
+        fxCtx.stroke();
+      });
+    }
+
+    // Pointer mapping onto the 2D character grid
+    output.addEventListener('mousemove', (e) => {
+      if (!sandboxActive || gridRows === 0) return;
+      const rect = output.getBoundingClientRect();
+      const stageRect = document.getElementById('terminal-stage').getBoundingClientRect();
+      const relX = e.clientX - rect.left - 24; // account for 24px padding
+      const relY = e.clientY - rect.top - 24;
+      const innerW = Math.max(1, rect.width - 48);
+      const innerH = Math.max(1, rect.height - 48);
+
+      cursorGridPos.c = Math.floor((relX / innerW) * gridCols);
+      cursorGridPos.r = Math.floor((relY / innerH) * gridRows);
+      cursorGridPos.px = e.clientX - stageRect.left;
+      cursorGridPos.py = e.clientY - stageRect.top;
+      cursorGridPos.inside = true;
     });
 
-    // Gemini HTML Art button
+    output.addEventListener('mouseleave', () => {
+      cursorGridPos.inside = false;
+    });
+
+    output.addEventListener('click', (e) => {
+      if (!sandboxActive || gridRows === 0) return;
+      const rect = output.getBoundingClientRect();
+      const stageRect = document.getElementById('terminal-stage').getBoundingClientRect();
+      const relX = e.clientX - rect.left - 24;
+      const relY = e.clientY - rect.top - 24;
+      const innerW = Math.max(1, rect.width - 48);
+      const innerH = Math.max(1, rect.height - 48);
+
+      shockwaves.push({
+        c: Math.floor((relX / innerW) * gridCols),
+        r: Math.floor((relY / innerH) * gridRows),
+        px: e.clientX - stageRect.left,
+        py: e.clientY - stageRect.top,
+        radius: 0.5,
+        maxRadius: Math.hypot(gridRows, gridCols * 0.52) * 0.85,
+        strength: 1.0
+      });
+    });
+
+    requestAnimationFrame(renderSandboxFrame);
+
+    // ============================================================================
+    // 6. BUTTON 1 & QUANTIZER CONTROLS WIRING
+    // ============================================================================
+    async function loadAndQuantizeCatPhoto(url) {
+      terminalStatus.textContent = 'SAMPLING RASTER // QUANTIZING...';
+      const thumbImg = document.getElementById('quant-thumb-img');
+
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          currentSourceImage = img;
+          thumbImg.src = url;
+          quantizeCurrentSource(true);
+          resolve();
+        };
+        img.onerror = () => {
+          // Automatic fallback to procedural cat canvas if offline
+          currentSourceImage = createProceduralCatCanvas();
+          thumbImg.src = currentSourceImage.toDataURL();
+          quantizeCurrentSource(true);
+          resolve();
+        };
+        img.src = url;
+      });
+    }
+
+    // Ping /api/cat in background so Worker endpoint is also cached & ready
+    async function prefetchWorkerCat() {
+      try {
+        const response = await fetch('/api/cat');
+        if (response.ok) {
+          cachedWorkerAscii = await response.text();
+        }
+      } catch (_) {
+        // Fallback ASCII cat if running locally without Worker
+        cachedWorkerAscii = [
+          "      |\\      _,,,---,,_",
+          "ZZZzz /,`.-\'`\'    -.  ;-;;,_",
+          "     |,4-  ) )-,_. ,\\ (  `\'-\'",
+          "    \'---\"(_/--\'  `-\'\\_)"
+        ].join('\n');
+      }
+    }
+
+    document.getElementById('fetch-cat-btn').addEventListener('click', async () => {
+      displayArea.style.display = 'none';
+      quantizerDeck.classList.add('visible');
+      prefetchWorkerCat();
+
+      const nextUrl = CAT_RASTER_POOL[catSourceIndex % CAT_RASTER_POOL.length];
+      catSourceIndex++;
+      await loadAndQuantizeCatPhoto(nextUrl);
+    });
+
+    document.getElementById('next-cat-raster-btn').addEventListener('click', async () => {
+      sourceMode = 'raster';
+      document.getElementById('source-mode-btn').textContent = 'Mode: Live Raster';
+      const nextUrl = CAT_RASTER_POOL[catSourceIndex % CAT_RASTER_POOL.length];
+      catSourceIndex++;
+      await loadAndQuantizeCatPhoto(nextUrl);
+    });
+
+    document.getElementById('source-mode-btn').addEventListener('click', async (e) => {
+      if (sourceMode === 'raster') {
+        sourceMode = 'worker';
+        e.target.textContent = 'Mode: /api/cat Worker';
+        if (!cachedWorkerAscii) await prefetchWorkerCat();
+      } else {
+        sourceMode = 'raster';
+        e.target.textContent = 'Mode: Live Raster';
+      }
+      quantizeCurrentSource(true);
+    });
+
+    document.getElementById('re-anneal-btn').addEventListener('click', () => {
+      setupAnnealingSchedule(true);
+    });
+
+    ['quant-algo', 'quant-ramp'].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => quantizeCurrentSource(true));
+    });
+
+    ['quant-cols', 'quant-contrast'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => quantizeCurrentSource(false));
+    });
+
+    // ============================================================================
+    // 7. BUTTON 2: GEMINI PHOTO-TO-HTML/SVG PIPELINE
+    // ============================================================================
     document.getElementById('fetch-gemini-btn').addEventListener('click', async () => {
+      sandboxActive = false;
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      quantizerDeck.classList.remove('visible');
       displayArea.style.display = 'none';
       htmlArtContainer.innerHTML = '';
+
+      terminalStatus.textContent = 'EXECUTING // /API/GEMINI';
+      terminalHint.textContent = 'Telemetry & Output Console';
       output.textContent = 'Sampling remote image matrix and generating vector art representations...';
 
       try {
@@ -618,21 +1448,26 @@
         const data = await response.json();
         
         if (!response.ok || data.error) {
+          terminalStatus.textContent = 'ERROR // PIPELINE HALTED';
           output.textContent = 'API Error:\n' + JSON.stringify(data, null, 2);
           return;
         }
 
+        terminalStatus.textContent = 'COMPLETE // 200 OK';
         output.textContent = `Synthesis complete. Engine target: ${data.modelUsed || 'Gemini'}`;
         sourceImg.src = data.sourceImageUrl;
         htmlArtContainer.innerHTML = data.generatedHtml;
         displayArea.style.display = 'flex';
       } catch (error) {
+        terminalStatus.textContent = 'NETWORK EXCEPTION';
         output.textContent = 'Network/Fetch pipeline error: ' + error.message;
         console.error(error);
       }
     });
 
-    // Cross-fade helper between embed templates
+    // ============================================================================
+    // 8. BUTTON 3: THREE-STATE EMBED TOGGLE WITH TRANSITIONS
+    // ============================================================================
     function transitionSwap(newHtml) {
       embedContainer.classList.remove('active');
       setTimeout(() => {
@@ -642,7 +1477,6 @@
       }, 180);
     }
 
-    // Embed Toggle with Morphing State
     toggleEmbedBtn.addEventListener('click', () => {
       embedClickCount = (embedClickCount + 1) % 3;
 
