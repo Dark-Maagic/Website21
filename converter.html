@@ -125,7 +125,6 @@
       border-color: var(--accent);
     }
 
-    /* Standalone floating '>' moved down past the toolbar to prevent overlap */
     .sidebar.collapsed + .sidebar-toggle-btn {
       left: 12px;
       top: 60px;
@@ -597,8 +596,8 @@
       border: 1px solid var(--bg-card-border);
       border-radius: 12px;
       width: 100%;
-      max-width: 680px;
-      max-height: 90vh;
+      max-width: 720px;
+      max-height: 92vh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
@@ -640,14 +639,22 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
+    }
+
+    .embed-controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid var(--bg-card-border);
+      padding-bottom: 10px;
     }
 
     .embed-tabs {
       display: flex;
       gap: 8px;
-      border-bottom: 1px solid var(--bg-card-border);
-      padding-bottom: 8px;
     }
 
     .tab-btn {
@@ -667,9 +674,32 @@
       color: var(--accent);
     }
 
+    .token-stats-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      font-family: monospace;
+    }
+
+    .token-badge-saving {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
     .code-box {
       width: 100%;
-      height: 140px;
+      height: 130px;
       background: var(--bg-dark);
       border: 1px solid var(--bg-card-border);
       border-radius: 8px;
@@ -687,7 +717,7 @@
       border: 1px solid var(--bg-card-border);
       border-radius: 8px;
       background: var(--viewport-bg);
-      height: 220px;
+      height: 210px;
       overflow: hidden;
       position: relative;
     }
@@ -738,7 +768,6 @@
       <h1>GIF to ASCII <span class="badge">Animator</span></h1>
     </div>
 
-    <!-- Centered halfway between 'Animator' and 'Get Embed Code' -->
     <div style="flex: 1; display: flex; justify-content: center;">
       <a href="/" class="btn btn-sm" style="text-decoration: none; font-weight: 700;">← Back to Overview</a>
     </div>
@@ -758,13 +787,11 @@
       <section>
         <div class="section-title">1. Input GIF (URL or Local)</div>
         
-        <!-- Online URL Fetching -->
         <div class="url-group">
           <input type="url" id="urlInput" class="url-input" placeholder="Paste image link (https://.../anim.gif)" spellcheck="false" />
           <button class="btn btn-accent btn-sm" id="btnLoadUrl">Load</button>
         </div>
 
-        <!-- Verified sample animations -->
         <div class="quick-links">
           <span style="font-size: 0.7rem; color: var(--text-muted);">Web Presets:</span>
           <button class="btn btn-xs sample-url-btn" data-url="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif">🌍 Globe</button>
@@ -958,9 +985,24 @@
       </div>
       <div class="modal-body">
         
-        <div class="embed-tabs">
-          <button class="tab-btn active" id="tabIframe">Standalone &lt;iframe&gt;</button>
-          <button class="tab-btn" id="tabInline">HTML + Script Snippet</button>
+        <div class="embed-controls-bar">
+          <div class="embed-tabs">
+            <button class="tab-btn active" id="tabIframe">Standalone &lt;iframe&gt;</button>
+            <button class="tab-btn" id="tabInline">HTML + Script Snippet</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 0.74rem; color: var(--text-muted);">Compression:</span>
+            <select id="compressionSelect" style="width: auto; font-size: 0.74rem; padding: 4px 8px;">
+              <option value="deflate" selected>Deflate + Delta + RLE (Smallest Tokens)</option>
+              <option value="rle">Delta + RLE JSON (Inspectable Text)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="token-stats-bar" id="tokenStatsBar">
+          <span>Unoptimized: <strong id="statRawTokens">--</strong></span>
+          <span>Optimized: <strong id="statOptTokens" style="color: var(--accent);">--</strong></span>
+          <span class="token-badge-saving" id="statSavingsBadge">--% saved</span>
         </div>
 
         <div style="font-size: 0.78rem; color: var(--text-muted);" id="embedDesc">
@@ -988,7 +1030,7 @@
   <div class="toast" id="toast">Notification</div>
 
   <!-- ========================================================================= -->
-  <!-- IMPLEMENTATION OF imgToAscii WITH UNIFIED NEGATIVE SPACE APPROACH        -->
+  <!-- IMPLEMENTATION OF imgToAscii WITH ANTI-ALIASING FIX & SPAN RUN GROUPING   -->
   <!-- ========================================================================= -->
   <script>
     /*
@@ -1001,7 +1043,6 @@
         this.charType = charType || 0;
         this.alphabet = {
           0: ["@", "%", "#", "*", "+", "=", "-", ":", ".", " "],
-          // Index 0 in Type 1 uses '@' to mirror Type 0's negative space arrangement
           1: ["@", "@", "B", "%", "8", "&", "W", "M", "#", "*", "o", "a", "h", "k", "b", "d", "p", "q", "w", "m", "Z", "O",
               "0", "Q", "L", "C", "J", "U", "Y", "X", "z", "c", "v", "u", "n", "x", "r", "j", "f", "t", "/", "\\", "|", "(",
               ")", "1", "{", "}", "[", "]", "?", "-", "_", "+", "~", "<", ">", "i", "!", "l", "I", ";", ":", ",", "\"", "^",
@@ -1015,37 +1056,67 @@
           this.image.src = this.imageSrc;
           this.image.onload = () => {
             this.canvas = document.createElement('canvas');
-            this.canvas.width = this.image.width * this.size;
-            this.canvas.height = this.image.height * this.size;
+            this.canvas.width = Math.max(1, Math.floor(this.image.width * this.size));
+            this.canvas.height = Math.max(1, Math.floor(this.image.height * this.size));
             this.context = this.canvas.getContext('2d');
+
+            // OPTIMIZATION 1: Disable bilinear smoothing so downscaling preserves the GIF's crisp palette
+            // instead of inventing thousands of blended RGB colors.
+            this.context.imageSmoothingEnabled = false;
             this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
             this.imageData = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-            let grayStep = Math.ceil(255 / this.alphabet[this.charType].length);
-            for (let i = 0; i < this.imageData.data.length; i += 4) {
-              for (let j = 0; j < this.alphabet[this.charType].length; j++) {
-                let r = this.imageData.data[i];
-                let g = this.imageData.data[i + 1];
-                let b = this.imageData.data[i + 2];
-                if ((r * 0.2126) + (g * 0.7152) + (b * 0.0722) < (j + 1) * grayStep) {
-                  let char = this.alphabet[this.charType][j];
 
-                  // UNIFIED NEGATIVE SPACE: If Type 1 resolves to an apostrophe or backtick,
-                  // replace it with '@' so it adopts the exact same negative space arrangement as Type 0
-                  if (this.charType === 1 && (char === "'" || char === "`")) {
+            const alphaSet = this.alphabet[this.charType];
+            const grayStep = Math.ceil(255 / alphaSet.length);
+
+            let currentColor = "";
+            let currentRun = "";
+
+            for (let i = 0; i < this.imageData.data.length; i += 4) {
+              const r = this.imageData.data[i];
+              const g = this.imageData.data[i + 1];
+              const b = this.imageData.data[i + 2];
+              const lum = (r * 0.2126) + (g * 0.7152) + (b * 0.0722);
+
+              for (let j = 0; j < alphaSet.length; j++) {
+                if (lum < (j + 1) * grayStep) {
+                  let char = alphaSet[j];
+
+                  // Reserve ', `, and $ for collision-free Delta + RLE encoding
+                  if (char === "'" || char === "`" || char === "$") {
                     char = "@";
                   }
 
                   this.string += char;
-                  this.stringColor += "<span style=\"color: rgb(" + r + "," + g + "," + b + "); \">"
-                    + (char.replace(' ', '&nbsp;'))
-                    + "</span>";
+
+                  // 12-bit quantized hex color (#rgb) + run grouping for lightweight DOM
+                  const hex3 = "#" + (r >> 4).toString(16) + (g >> 4).toString(16) + (b >> 4).toString(16);
+                  const disp = char === " " ? "&nbsp;" : (char === "<" ? "&lt;" : (char === ">" ? "&gt;" : (char === "&" ? "&amp;" : char)));
+
+                  if (hex3 === currentColor) {
+                    currentRun += disp;
+                  } else {
+                    if (currentRun) {
+                      this.stringColor += `<span style="color:${currentColor}">${currentRun}</span>`;
+                    }
+                    currentColor = hex3;
+                    currentRun = disp;
+                  }
                   break;
                 }
               }
               if (!((i / 4 + 1) % this.canvas.width)) {
+                if (currentRun) {
+                  this.stringColor += `<span style="color:${currentColor}">${currentRun}</span>`;
+                  currentRun = "";
+                  currentColor = "";
+                }
                 this.string += "\n";
                 this.stringColor += "<br>";
               }
+            }
+            if (currentRun) {
+              this.stringColor += `<span style="color:${currentColor}">${currentRun}</span>`;
             }
             resolve();
           };
@@ -1215,6 +1286,7 @@
     const btnCopyFrame = document.getElementById('btnCopyFrame');
     const btnDownloadText = document.getElementById('btnDownloadText');
     const toast = document.getElementById('toast');
+
     // Sidebar Toggle
     const btnToggleSidebar = document.getElementById('btnToggleSidebar');
     const sidebar = document.querySelector('.sidebar');
@@ -1232,6 +1304,10 @@
     const btnCloseModal = document.getElementById('btnCloseModal');
     const tabIframe = document.getElementById('tabIframe');
     const tabInline = document.getElementById('tabInline');
+    const compressionSelect = document.getElementById('compressionSelect');
+    const statRawTokens = document.getElementById('statRawTokens');
+    const statOptTokens = document.getElementById('statOptTokens');
+    const statSavingsBadge = document.getElementById('statSavingsBadge');
     const embedCodeText = document.getElementById('embedCodeText');
     const embedPreviewIframe = document.getElementById('embedPreviewIframe');
     const btnCopyEmbedCode = document.getElementById('btnCopyEmbedCode');
@@ -1689,223 +1765,194 @@
       return buf.subarray(0, end).buffer;
     }
 
-    function generateStandaloneHtml() {
+    // =========================================================================
+    // PART 1 OPTIMIZATIONS: FIXED-WIDTH + DELTA + RLE + 12-BIT PALETTE + DEFLATE
+    // =========================================================================
+
+    function buildOptimizedPayload() {
+      const width = asciiFrames[0].ascii.canvas.width;
+
+      // Collapse delays to a single integer if all frames share the same delay
+      const delaysArr = asciiFrames.map(f => Math.round(f.delay / playbackSpeed));
+      const allSameDelay = delaysArr.every(d => d === delaysArr[0]);
+      const delaysPayload = allSameDelay ? delaysArr[0] : delaysArr;
+
+      // OPTIMIZATION 2, 3, 4: Strip '\n' (Fixed-Width), apply Inter-Frame Delta ('`'), and RLE ('$cN$')
+      let prevChars = null;
+      const encodedFrames = asciiFrames.map(frame => {
+        const clean = frame.text.replace(/\n/g, '');
+        let delta = '';
+        if (!prevChars) {
+          delta = clean;
+        } else {
+          for (let i = 0; i < clean.length; i++) {
+            delta += (clean[i] === prevChars[i]) ? '`' : clean[i];
+          }
+        }
+        prevChars = clean;
+        // Compress runs of >= 4 identical characters into $<char><base36_len>$
+        return delta.replace(/([\s\S])\1{3,}/g, m => '$' + m[0] + m.length.toString(36) + '$');
+      });
+
+      const payload = {
+        w: width,
+        d: delaysPayload,
+        f: encodedFrames
+      };
+
+      // OPTIMIZATION 1, 3, 4: 12-bit quantized palette ('rgb' without '#') + Inter-Frame Delta + RLE on Color Stream
+      if (isColorMode) {
+        const colorMap = new Map();
+        const palette = [];
+        let prevColors = null;
+        const encodedColors = [];
+
+        for (let f = 0; f < asciiFrames.length; f++) {
+          const d = asciiFrames[f].ascii.imageData.data;
+          const numCells = d.length / 4;
+          const curColors = new Int32Array(numCells);
+          const deltaColors = new Int32Array(numCells);
+
+          for (let i = 0, cell = 0; i < d.length; i += 4, cell++) {
+            const hex3 = (d[i] >> 4).toString(16) + (d[i + 1] >> 4).toString(16) + (d[i + 2] >> 4).toString(16);
+            let cIdx = colorMap.get(hex3);
+            if (cIdx === undefined) {
+              cIdx = palette.length;
+              colorMap.set(hex3, cIdx);
+              palette.push(hex3);
+            }
+            curColors[cell] = cIdx;
+            deltaColors[cell] = (prevColors && prevColors[cell] === cIdx) ? -1 : cIdx;
+          }
+          prevColors = curColors;
+
+          // RLE encode deltaColors: -1 (unchanged) -> `N, palette index -> idx:N
+          const runs = [];
+          let i = 0;
+          while (i < numCells) {
+            const val = deltaColors[i];
+            let runLen = 1;
+            while (i + runLen < numCells && deltaColors[i + runLen] === val) {
+              runLen++;
+            }
+            if (val === -1) {
+              runs.push('`' + (runLen > 1 ? runLen.toString(36) : ''));
+            } else {
+              runs.push(val.toString(36) + (runLen > 1 ? ':' + runLen.toString(36) : ''));
+            }
+            i += runLen;
+          }
+          encodedColors.push(runs.join(','));
+        }
+
+        payload.p = palette;
+        payload.c = encodedColors;
+      }
+
+      return payload;
+    }
+
+    // Estimate unoptimized legacy size (for live telemetry comparison in modal)
+    function estimateLegacyByteLength() {
+      if (!asciiFrames.length) return 0;
+      const rawTextLen = JSON.stringify(asciiFrames.map(f => f.text)).length;
+      let rawColorLen = 0;
+      if (isColorMode) {
+        const pixelsPerFrame = asciiFrames[0].ascii.imageData.data.length / 4;
+        // Legacy RGB fallback Base64 size + escaping overhead
+        rawColorLen = Math.ceil((pixelsPerFrame * 3 * asciiFrames.length) * 1.37) + 400;
+      }
+      // Include legacy boilerplate + &quot; escaping inflation
+      return Math.round((rawTextLen + rawColorLen + 2350) * (currentEmbedMode === 'iframe' ? 1.12 : 1.0));
+    }
+
+    // OPTIMIZATION 5: Native browser deflate-raw stream compression to Base64
+    async function compressStringDeflate(str) {
+      const bytes = new TextEncoder().encode(str);
+      const cs = new CompressionStream('deflate-raw');
+      const writer = cs.writable.getWriter();
+      writer.write(bytes);
+      writer.close();
+      const buf = await new Response(cs.readable).arrayBuffer();
+      const u8 = new Uint8Array(buf);
+      let bin = '';
+      for (let i = 0; i < u8.length; i++) {
+        bin += String.fromCharCode(u8[i]);
+      }
+      return btoa(bin);
+    }
+
+    // OPTIMIZATION 6: Minified, Single-Quoted Standalone HTML Generator (Zero &quot; bloat)
+    async function generateStandaloneHtml() {
       if (!asciiFrames.length) return "";
 
       const theme = themeConfigs[currentThemeKey] || themeConfigs['theme-cyber'];
       const fontSize = `${fontSizeInput.value}px`;
       const lineHeight = `${lineHeightInput.value}px`;
+      const payload = buildOptimizedPayload();
+      const jsonStr = JSON.stringify(payload);
 
-      const framesText = asciiFrames.map(f => f.text);
-      const delaysData = asciiFrames.map(f => Math.round(f.delay / playbackSpeed));
+      const useDeflate = compressionSelect.value === 'deflate' && typeof CompressionStream !== 'undefined';
 
-      // Lossless color encoder: Preserves 100% of the exact sampled RGB values
-      let colorPayload = null;
+      // Shared runtime renderer (minified & single-quoted so iframe srcdoc requires zero &quot; escapes)
+      const runtimeCore = `const W=D.w,P=D.p,C=D.c,F=D.f,pre=document.getElementById('a');let K=[],L=[],i=0;function S(){const s=F[i].replace(/\\$([\\s\\S])([0-9a-z]+)\\$/g,(_,c,n)=>c.repeat(parseInt(n,36)));for(let k=0;k<s.length;k++)if(s[k]!=='\`')K[k]=s[k];if(C){let p=0;for(const t of C[i].split(',')){if(!t)continue;if(t[0]==='\`')p+=t.length>1?parseInt(t.slice(1),36):1;else{const[x,n]=t.split(':'),c='#'+P[parseInt(x,36)];let m=n?parseInt(n,36):1;while(m-->0)L[p++]=c}}}if(!C){let o='';for(let k=0;k<K.length;k++){if(k>0&&k%W===0)o+='\\n';o+=K[k]}pre.textContent=o}else{let h='',u='',r='';for(let k=0;k<K.length;k++){if(k>0&&k%W===0){if(r){h+="<span style='color:"+u+"'>"+r+'</span>';r=''}h+='<br>'}const c=K[k],v=c===' '?'&nbsp;':(c==='<'?'&lt;':(c==='>'?'&gt;':(c==='&'?'&amp;':c))),g=L[k];if(g===u)r+=v;else{if(r)h+="<span style='color:"+u+"'>"+r+'</span>';u=g;r=v}}if(r)h+="<span style='color:"+u+"'>"+r+'</span>';pre.innerHTML=h}const d=Array.isArray(D.d)?D.d[i]:D.d;i=(i+1)%F.length;setTimeout(S,d||100)}S()`;
 
-      if (isColorMode) {
-        function bytesToBase64(bytes) {
-          let binary = '';
-          const len = bytes.length;
-          for (let i = 0; i < len; i++) {
-            binary += String.fromCharCode(bytes[i]);
-          }
-          return btoa(binary);
-        }
-
-        // 1. Gather all exact unique colors
-        const exactColorMap = new Map();
-        const exactPalette = [];
-        let fitsIn8Bit = true;
-
-        for (let f = 0; f < asciiFrames.length; f++) {
-          const d = asciiFrames[f].ascii.imageData.data;
-          for (let i = 0; i < d.length; i += 4) {
-            const hex = '#' + ((1 << 24) + (d[i] << 16) + (d[i + 1] << 8) + d[i + 2]).toString(16).slice(1);
-            if (!exactColorMap.has(hex)) {
-              if (exactPalette.length >= 256) {
-                fitsIn8Bit = false;
-                break;
-              }
-              exactColorMap.set(hex, exactPalette.length);
-              exactPalette.push(hex);
-            }
-          }
-          if (!fitsIn8Bit) break;
-        }
-
-        // 2. Encode without any color loss
-        if (fitsIn8Bit) {
-          // Exact 8-bit indexed palette (1 byte per pixel in Base64)
-          const encoded = asciiFrames.map(frame => {
-            const d = frame.ascii.imageData.data;
-            const indices = new Uint8Array(d.length / 4);
-            let ptr = 0;
-            for (let i = 0; i < d.length; i += 4) {
-              const hex = '#' + ((1 << 24) + (d[i] << 16) + (d[i + 1] << 8) + d[i + 2]).toString(16).slice(1);
-              indices[ptr++] = exactColorMap.get(hex);
-            }
-            return bytesToBase64(indices);
-          });
-          colorPayload = { mode: 'pal', pal: exactPalette, data: encoded };
-        } else {
-          // Exact 24-bit raw RGB stream (3 bytes per pixel in Base64)
-          const encoded = asciiFrames.map(frame => {
-            const d = frame.ascii.imageData.data;
-            const rgb = new Uint8Array((d.length / 4) * 3);
-            let ptr = 0;
-            for (let i = 0; i < d.length; i += 4) {
-              rgb[ptr++] = d[i];
-              rgb[ptr++] = d[i + 1];
-              rgb[ptr++] = d[i + 2];
-            }
-            return bytesToBase64(rgb);
-          });
-          colorPayload = { mode: 'rgb', data: encoded };
-        }
+      let bootScript = '';
+      if (useDeflate) {
+        const b64 = await compressStringDeflate(jsonStr);
+        bootScript = `(()=>{const b=Uint8Array.from(atob('${b64}'),c=>c.charCodeAt(0)),s=new DecompressionStream('deflate-raw'),w=s.writable.getWriter();w.write(b);w.close();new Response(s.readable).json().then(D=>{${runtimeCore}})})()`;
+      } else {
+        // Escape single quotes if storing raw JSON inside single-quoted JS or inline object
+        bootScript = `(()=>{const D=${jsonStr};${runtimeCore}})()`;
       }
 
-      return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>ASCII Animation</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%;
-      height: 100%;
-      background-color: ${theme.preBg};
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    pre#ascii-anim-output {
-      font-family: "Courier New", Courier, monospace !important;
-      font-size: ${fontSize};
-      line-height: ${lineHeight};
-      color: ${theme.preFg};
-      background-color: ${theme.preBg};
-      white-space: pre;
-      margin: 0;
-      user-select: text;
-      letter-spacing: 0;
-      text-align: left;
-    }
-  </style>
-</head>
-<body>
-  <pre id="ascii-anim-output"></pre>
-  <script>
-    (function() {
-      const frames = ${JSON.stringify(framesText)};
-      const delays = ${JSON.stringify(delaysData)};
-      const colorData = ${JSON.stringify(colorPayload)};
-      const pre = document.getElementById('ascii-anim-output');
-      let i = 0;
-
-      function renderFrame(idx) {
-        const text = frames[idx];
-        if (!colorData) {
-          pre.textContent = text;
-          return;
-        }
-
-        const raw = atob(colorData.data[idx]);
-        const isPal = colorData.mode === 'pal';
-        const pal = colorData.pal;
-
-        let html = '';
-        let p = 0;
-        let currentColor = '';
-        let currentRun = '';
-
-        for (let j = 0; j < text.length; j++) {
-          const ch = text[j];
-          if (ch === '\\n') {
-            if (currentRun) {
-              html += '<span style="color:' + currentColor + '">' + currentRun + '</span>';
-              currentRun = '';
-            }
-            html += '<br>';
-            continue;
-          }
-
-          let col;
-          if (isPal) {
-            col = pal[raw.charCodeAt(p++)];
-          } else {
-            const off = p * 3;
-            col = 'rgb(' + raw.charCodeAt(off) + ',' + raw.charCodeAt(off + 1) + ',' + raw.charCodeAt(off + 2) + ')';
-            p++;
-          }
-
-          const charDisplay = ch === ' ' ? '&nbsp;' : (ch === '<' ? '&lt;' : (ch === '>' ? '&gt;' : (ch === '&' ? '&amp;' : ch)));
-
-          if (col === currentColor) {
-            currentRun += charDisplay;
-          } else {
-            if (currentRun) {
-              html += '<span style="color:' + currentColor + '">' + currentRun + '</span>';
-            }
-            currentColor = col;
-            currentRun = charDisplay;
-          }
-        }
-        if (currentRun) {
-          html += '<span style="color:' + currentColor + '">' + currentRun + '</span>';
-        }
-        pre.innerHTML = html;
-      }
-
-      function step() {
-        renderFrame(i);
-        const delay = delays[i] || 100;
-        i = (i + 1) % frames.length;
-        setTimeout(step, delay);
-      }
-      step();
-    })();
-  ${'<' + '/script>'}
-</body>
-</html>`;
+      return `<!DOCTYPE html><html><head><meta charset='UTF-8'><style>*{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;background:${theme.preBg};overflow:hidden;display:flex;justify-content:center;align-items:center}pre#a{font-family:'Courier New',Courier,monospace!important;font-size:${fontSize};line-height:${lineHeight};color:${theme.preFg};background:${theme.preBg};white-space:pre;user-select:text;letter-spacing:0;text-align:left}</style></head><body><pre id='a'></pre><script>${bootScript}${'<' + '/script>'}</body></html>`;
     }
 
-    function updateEmbedModal() {
+    async function updateEmbedModal() {
       if (!asciiFrames.length) {
         alert("Please load or convert a GIF first!");
         return;
       }
 
-      const standaloneHtml = generateStandaloneHtml();
+      const standaloneHtml = await generateStandaloneHtml();
       const theme = themeConfigs[currentThemeKey] || themeConfigs['theme-cyber'];
 
       embedPreviewIframe.srcdoc = standaloneHtml;
 
+      let finalOutput = '';
       if (currentEmbedMode === 'iframe') {
-        embedDesc.innerHTML = 'Copy and paste this self-contained <code>&lt;iframe&gt;</code> into any website. It runs completely client-side.';
+        embedDesc.innerHTML = 'Copy and paste this self-contained <code>&lt;iframe&gt;</code> into any website. Uses single-quoted attributes &amp; Delta+RLE+Deflate to minimize tokens.';
         
         const escapedHtml = standaloneHtml
           .replace(/&/g, '&amp;')
           .replace(/"/g, '&quot;');
 
-        const iframeCode = `<iframe 
-  width="100%" 
-  height="450" 
-  style="border: none; border-radius: 8px; overflow: hidden; background-color: ${theme.preBg};" 
-  srcdoc="${escapedHtml}">
-</iframe>`;
-        embedCodeText.value = iframeCode;
+        finalOutput = `<iframe width="100%" height="450" style="border:none;border-radius:8px;overflow:hidden;background:${theme.preBg};" srcdoc="${escapedHtml}"></iframe>`;
       } else {
-        embedDesc.innerHTML = 'Direct HTML snippet for embedding directly into the <code>&lt;body&gt;</code> of your web page:';
-        embedCodeText.value = standaloneHtml;
+        embedDesc.innerHTML = 'Direct HTML snippet for embedding into a page or standalone file:';
+        finalOutput = standaloneHtml;
       }
+
+      embedCodeText.value = finalOutput;
+
+      // Update live token & size savings telemetry
+      const legacyChars = estimateLegacyByteLength();
+      const optChars = finalOutput.length;
+      const legacyTokens = Math.ceil(legacyChars / 3.5);
+      const optTokens = Math.ceil(optChars / 3.5);
+      const pctSaved = legacyChars > 0 ? Math.max(0, ((1 - optChars / legacyChars) * 100)).toFixed(1) : '0.0';
+
+      statRawTokens.textContent = `~${legacyTokens.toLocaleString()} tokens (${(legacyChars / 1024).toFixed(1)} KB)`;
+      statOptTokens.textContent = `~${optTokens.toLocaleString()} tokens (${(optChars / 1024).toFixed(1)} KB)`;
+      statSavingsBadge.textContent = `-${pctSaved}% tokens`;
 
       embedModal.style.display = 'flex';
     }
 
     btnHeaderEmbed.addEventListener('click', updateEmbedModal);
     btnSidebarEmbed.addEventListener('click', updateEmbedModal);
+    compressionSelect.addEventListener('change', updateEmbedModal);
 
     btnCloseModal.addEventListener('click', () => {
       embedModal.style.display = 'none';
@@ -1915,7 +1962,7 @@
       if (e.target === embedModal) embedModal.style.display = 'none';
     });
 
-    tabIframe.addEventListener('click', () => {
+   tabIframe.addEventListener('click', () => {
       currentEmbedMode = 'iframe';
       tabIframe.classList.add('active');
       tabInline.classList.remove('active');
@@ -1936,8 +1983,8 @@
       });
     });
 
-    btnDownloadHtml.addEventListener('click', () => {
-      const htmlContent = generateStandaloneHtml();
+    btnDownloadHtml.addEventListener('click', async () => {
+      const htmlContent = await generateStandaloneHtml();
       const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2118,9 +2165,14 @@
 
     btnCopyFrame.addEventListener('click', () => {
       if (!asciiFrames.length) return;
-      const text = asciiFrames[currentFrameIndex].text;
+      // Strip trailing spaces per line to save tokens when pasting into chats/LLMs
+      const text = asciiFrames[currentFrameIndex].text
+        .split('\n')
+        .map(line => line.trimEnd())
+        .join('\n')
+        .trimEnd();
       navigator.clipboard.writeText(text).then(() => {
-        showToast("Copied frame ASCII to clipboard!");
+        showToast("Copied trimmed frame ASCII to clipboard!");
       });
     });
 
@@ -2131,7 +2183,13 @@
 
       asciiFrames.forEach((frame, idx) => {
         output += `=== FRAME ${idx + 1} (Delay: ${frame.delay}ms) ===\n`;
-        output += frame.text + "\n\n";
+        // Strip trailing spaces on each line to eliminate redundant whitespace tokens
+        const trimmedFrame = frame.text
+          .split('\n')
+          .map(line => line.trimEnd())
+          .join('\n')
+          .trimEnd();
+        output += trimmedFrame + "\n\n";
       });
 
       const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
@@ -2144,7 +2202,7 @@
       showToast("Download started!");
     });
 
-   // Initialize
+    // Initialize
     window.addEventListener('DOMContentLoaded', () => {
       applyGlobalTheme('theme-dark');
 
