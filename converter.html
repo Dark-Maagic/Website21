@@ -168,9 +168,35 @@
       flex-direction: column;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 18px;
-      gap: 18px;
+      padding: 15px 18px 20px;
+      gap: 14px;
       transition: width 0.25s ease, min-width 0.25s ease, padding 0.25s ease, opacity 0.2s ease, background-color 0.25s ease, border-color 0.25s ease;
+    }
+
+    /* Back to Overview link (Matches demo.html) */
+    .nav-back-wrapper {
+      display: flex;
+      align-items: center;
+      min-height: 22px;
+      margin-bottom: -2px;
+    }
+
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--brick-light);
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: all 0.25s ease;
+    }
+
+    .nav-back:hover {
+      color: var(--text);
+      transform: translateX(-4px);
     }
 
     .sidebar.collapsed {
@@ -884,6 +910,10 @@
     
     <!-- Sidebar Controls -->
     <aside class="sidebar">
+
+      <div class="nav-back-wrapper">
+        <a href="index.html" class="nav-back">← Back to Overview</a>
+      </div>
       
       <!-- Source Section -->
       <section>
