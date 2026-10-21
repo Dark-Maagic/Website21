@@ -261,6 +261,92 @@
       box-shadow: 0 6px 20px rgba(194, 94, 56, 0.25);
     }
 
+    /* Smooth Button Label Cross-Fade Transition */
+    .btn-label-inner {
+      display: inline-block;
+      transition: opacity 0.24s ease, transform 0.24s ease, filter 0.24s ease;
+    }
+
+    .btn-label-inner.swapping {
+      opacity: 0;
+      transform: translateY(4px);
+      filter: blur(3px);
+    }
+
+    /* Minimalist Architectural Loader for Gemini SVG Synthesis */
+    .gemini-loader-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 28px 16px;
+      text-align: center;
+    }
+
+    .gemini-loader-svg {
+      width: 56px;
+      height: 56px;
+      overflow: visible;
+    }
+
+    .gemini-orbit-outer {
+      transform-origin: 28px 28px;
+      animation: geminiSpin 8s linear infinite;
+    }
+
+    .gemini-orbit-inner {
+      transform-origin: 28px 28px;
+      animation: geminiSpinReverse 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    .gemini-core-node {
+      transform-origin: 28px 28px;
+      animation: geminiPulse 2s ease-in-out infinite;
+    }
+
+    .gemini-loader-bar {
+      width: 200px;
+      height: 1px;
+      background: rgba(232, 228, 223, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .gemini-loader-bar::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -40%;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, var(--brick-light), transparent);
+      animation: geminiSweep 1.6s ease-in-out infinite;
+    }
+
+    .gemini-loader-text {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--clay);
+    }
+
+    @keyframes geminiSpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes geminiSpinReverse {
+      to { transform: rotate(-360deg); }
+    }
+    @keyframes geminiPulse {
+      0%, 100% { transform: scale(0.85); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+    @keyframes geminiSweep {
+      0% { left: -40%; }
+      100% { left: 100%; }
+    }
+
     /* ============================================================== */
     /* TECHNICAL ARCHITECTURE EXPLAINER BUTTON & DOSSIER DRAWER       */
     /* ============================================================== */
@@ -967,9 +1053,9 @@
     <div class="pipeline-container">
       <!-- Primary Functional Demo Buttons -->
       <div class="button-group">
-        <button id="fetch-cat-btn">Live Ascii Quantizer</button>
-        <button id="fetch-gemini-btn">Convert Random Cat Photo to HTML Art</button>
-        <button id="toggle-embed-btn">Sample From My Ascii Animation Generator</button>
+        <button id="fetch-cat-btn"><span class="btn-label-inner">Live Ascii Quantizer</span></button>
+        <button id="fetch-gemini-btn"><span class="btn-label-inner">Convert Random Cat Photo to SVG/HTML Art</span></button>
+        <button id="toggle-embed-btn"><span class="btn-label-inner">Sample From My Ascii Animation Generator</span></button>
       </div>
 
       <!-- Technical Architecture Explainer Trigger -->
@@ -1877,8 +1963,64 @@
    const terminalCard = document.querySelector('.terminal-card');
     const fetchCatBtn = document.getElementById('fetch-cat-btn');
     const fetchGeminiBtn = document.getElementById('fetch-gemini-btn');
+    let activeCapability = 'idle';
+    let geminiRequestId = 0;
+    let closeRevealTimer = null;
+    let canCloseActive = false;
+
+    const GEMINI_LOADER_HTML = `
+      <div class="gemini-loader-wrap">
+        <svg class="gemini-loader-svg" viewBox="0 0 56 56" fill="none">
+          <circle class="gemini-orbit-outer" cx="28" cy="28" r="24" stroke="var(--clay)" stroke-width="1" stroke-dasharray="4 4" opacity="0.65" />
+          <polygon class="gemini-orbit-inner" points="28,10 46,28 28,46 10,28" stroke="var(--brick-light)" stroke-width="1.2" fill="rgba(194, 94, 56, 0.08)" />
+          <circle class="gemini-core-node" cx="28" cy="28" r="4" fill="var(--brick-light)" />
+        </svg>
+        <div class="gemini-loader-bar"></div>
+        <div class="gemini-loader-text">Synthesizing Vector SVG &amp; HTML Geometry...</div>
+      </div>
+    `;
+
+    // Locks button dimensions before changing text and smoothly cross-fades the label
+    function setButtonLabelSmooth(btn, newText) {
+      if (window.innerWidth > 960 && !btn.style.width) {
+        btn.style.width = `${btn.offsetWidth}px`;
+        btn.style.height = `${btn.offsetHeight}px`;
+      }
+      let span = btn.querySelector('.btn-label-inner');
+      if (!span) {
+        span = document.createElement('span');
+        span.className = 'btn-label-inner';
+        span.textContent = btn.textContent;
+        btn.textContent = '';
+        btn.appendChild(span);
+      }
+      if (span.textContent === newText) return;
+
+      span.classList.add('swapping');
+      setTimeout(() => {
+        span.textContent = newText;
+        span.classList.remove('swapping');
+      }, 230);
+    }
+
+    function scheduleCloseButtonReveal(btn) {
+      canCloseActive = false;
+      if (closeRevealTimer) clearTimeout(closeRevealTimer);
+      closeRevealTimer = setTimeout(() => {
+        canCloseActive = true;
+        setButtonLabelSmooth(btn, 'Close ✕');
+      }, 3000);
+    }
 
     function switchActiveCapability(mode) {
+      activeCapability = mode;
+      geminiRequestId++;
+      canCloseActive = false;
+      if (closeRevealTimer) {
+        clearTimeout(closeRevealTimer);
+        closeRevealTimer = null;
+      }
+
       // 1. Stop ASCII sandbox & clear overlay
       sandboxActive = false;
       shockwaves = [];
@@ -1889,13 +2031,19 @@
       displayArea.style.display = 'none';
       htmlArtContainer.innerHTML = '';
 
-      // 3. Reset Embed state if switching away from embed mode
+      // 3. Smoothly restore button labels for inactive modes
+      if (mode !== 'cat') {
+        setButtonLabelSmooth(fetchCatBtn, 'Live Ascii Quantizer');
+      }
+      if (mode !== 'gemini') {
+        setButtonLabelSmooth(fetchGeminiBtn, 'Convert Random Cat Photo to SVG/HTML Art');
+      }
       if (mode !== 'embed') {
         embedClickCount = 0;
         embedContainer.classList.remove('active');
         embedContainer.style.display = 'none';
         embedContainer.innerHTML = '';
-        toggleEmbedBtn.textContent = 'Sample From My Ascii Animation Generator';
+        setButtonLabelSmooth(toggleEmbedBtn, 'Sample From My Ascii Animation Generator');
       }
 
       // 4. Update active button visual state
@@ -1915,7 +2063,6 @@
         highlightExplainerCard(2);
         terminalCard.style.display = 'none';
       } else {
-        // Idle state (e.g., when closing the animation generator)
         highlightExplainerCard(-1);
         terminalCard.style.display = 'block';
         terminalStatus.textContent = 'IDLE // READY';
@@ -1925,7 +2072,15 @@
     }
 
     fetchCatBtn.addEventListener('click', async () => {
+      if (activeCapability === 'cat') {
+        if (canCloseActive) {
+          switchActiveCapability('idle');
+        }
+        return;
+      }
+
       switchActiveCapability('cat');
+      scheduleCloseButtonReveal(fetchCatBtn);
       prefetchWorkerCat();
 
       const nextUrl = CAT_RASTER_POOL[catSourceIndex % CAT_RASTER_POOL.length];
@@ -1966,18 +2121,28 @@
     });
 
     // ============================================================================
-    // 7. BUTTON 2: GEMINI PHOTO-TO-HTML/SVG PIPELINE
+    // 7. BUTTON 2: GEMINI PHOTO-TO-SVG/HTML PIPELINE
     // ============================================================================
     fetchGeminiBtn.addEventListener('click', async () => {
+      if (activeCapability === 'gemini') {
+        if (canCloseActive) {
+          switchActiveCapability('idle');
+        }
+        return;
+      }
+
       switchActiveCapability('gemini');
+      scheduleCloseButtonReveal(fetchGeminiBtn);
+      const currentReqId = geminiRequestId;
 
       terminalStatus.textContent = 'EXECUTING // /API/GEMINI';
-      terminalHint.textContent = 'Telemetry & Output Console';
-      output.textContent = 'Sampling remote image matrix and generating vector art representations...';
+      terminalHint.textContent = 'Vector SVG Synthesis Pipeline';
+      output.innerHTML = GEMINI_LOADER_HTML;
 
       try {
         const response = await fetch('/api/gemini');
         const data = await response.json();
+        if (currentReqId !== geminiRequestId) return;
         
         if (!response.ok || data.error) {
           terminalStatus.textContent = 'ERROR // PIPELINE HALTED';
@@ -1991,6 +2156,7 @@
         htmlArtContainer.innerHTML = data.generatedHtml;
         displayArea.style.display = 'flex';
       } catch (error) {
+        if (currentReqId !== geminiRequestId) return;
         terminalStatus.textContent = 'NETWORK EXCEPTION';
         output.textContent = 'Network/Fetch pipeline error: ' + error.message;
         console.error(error);
@@ -2020,14 +2186,14 @@
         embedContainer.innerHTML = contentOne;
         embedContainer.style.display = 'flex';
         requestAnimationFrame(() => embedContainer.classList.add('active'));
-        toggleEmbedBtn.textContent = 'Next Animation →';
+        setButtonLabelSmooth(toggleEmbedBtn, 'Next Animation →');
       } else if (embedClickCount === 2) {
         switchActiveCapability('embed');
         transitionSwap(contentTwo);
-        toggleEmbedBtn.textContent = 'Close ✕';
+        setButtonLabelSmooth(toggleEmbedBtn, 'Close ✕');
       } else {
         embedContainer.classList.remove('active');
-        toggleEmbedBtn.textContent = 'Sample From My Ascii Animation Generator';
+        setButtonLabelSmooth(toggleEmbedBtn, 'Sample From My Ascii Animation Generator');
         setTimeout(() => {
           if (embedClickCount === 0) {
             embedContainer.style.display = 'none';

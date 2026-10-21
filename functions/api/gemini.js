@@ -55,10 +55,10 @@ Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending 
 
     // Exact model priority hierarchy
     const modelHierarchy = [
+      "gemini-4-flash",
+      "gemini-3.8-flash",
       "gemini-3.7-flash",
-      "gemini-3.6-flash",
-      "gemini-3.5-flash",
-      "gemini-3.5-flash-lite"
+      "gemini-3.6-flash"
     ];
 
     let lastErrorDetails = "";
@@ -115,7 +115,7 @@ Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending 
     if (!geminiResponse || !geminiResponse.ok) {
       return new Response(
         JSON.stringify({
-          error: "Gemini 3.5 Flash Lite (and all preceding models: 3.7 Flash, 3.6 Flash, 3.5 Flash) failed to generate content.",
+          error: "Gemini 3.6 Flash (and all preceding models: 4 Flash, 3.8 Flash, 3.7 Flash) failed to generate content.",
           details: lastErrorDetails,
         }),
         {
