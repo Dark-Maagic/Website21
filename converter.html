@@ -352,19 +352,19 @@
     .btn:hover:not(:disabled),
     .btn-accent,
     .btn-glow {
-      background: #22201e;
-      border-color: var(--brick);
-      color: var(--brick-light);
+      background: var(--bg-card);
+      border-color: var(--accent);
+      color: var(--accent);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(194, 94, 56, 0.25);
+      box-shadow: 0 6px 20px var(--accent-glow);
     }
 
     .btn-accent:hover:not(:disabled),
     .btn-glow:hover:not(:disabled) {
-      background: rgba(194, 94, 56, 0.16);
-      border-color: var(--brick-light);
-      color: var(--brick-light);
-      box-shadow: 0 8px 24px rgba(224, 122, 82, 0.32);
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 8px 24px var(--accent-glow);
     }
 
     .btn:active:not(:disabled) {
