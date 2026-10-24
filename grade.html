@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Numismatic Optical Grader — Gabriel Forman</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #121110;
+      --surface: #1a1918;
+      --card-bg: #22201e;
+      --text: #e8e4df;
+      --text-muted: #9e9890;
+      --brick: #c25e38;
+      --brick-light: #e07a52;
+      --clay: #d68c68;
+      --amber-mint: #dca36a;
+      --border: rgba(232, 228, 223, 0.12);
+      --border-strong: rgba(224, 122, 82, 0.38);
+      --font-serif: "Playfair Display", Georgia, serif;
+      --font-display: "Cinzel", Georgia, serif;
+      --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Custom Magnetic Cursor */
+    .custom-cursor {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      background: var(--brick);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  height 0.3s cubic-bezier(0.25, 1, 0.5, 1), 
+                  background-color 0.3s ease;
+      z-index: 9999;
+      mix-blend-mode: difference;
+    }
+
+    .custom-cursor-follower {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(224, 122, 82, 0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease-out;
+      z-index: 9998;
+    }
+
+    /* Navigation Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 16px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(18,17,16,0.95) 0%, rgba(18,17,16,0) 100%);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: var(--brick-light);
+    }
+
+    /* Background Decals */
+    .bg-decal {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.22;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 150px 48px 100px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .nav-back-wrapper {
+      margin-bottom: 14px;
+    }
+
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--brick-light);
+      text-decoration: none;
+      font-size: 0.82rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: all 0.25s ease;
+    }
+
+    .nav-back:hover {
+      color: var(--text);
+      transform: translateX(-4px);
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(2.3rem, 4.2vw, 3.6rem);
+      font-weight: 400;
+      line-height: 1.08;
+      letter-spacing: -0.01em;
+      margin-bottom: 14px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.02rem;
+      line-height: 1.6;
+      max-width: 660px;
+      margin-bottom: 18px;
+    }
+
+    /* Datum Bar Divider */
+    .datum-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 14px auto 32px;
+      max-width: 1100px;
+      opacity: 0.5;
+    }
+
+    .datum-bar {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--brick) 0%, rgba(224,122,82,0.1) 100%);
+    }
+
+    .datum-bar.reverse-grad {
+      background: linear-gradient(90deg, rgba(224,122,82,0.1) 0%, var(--brick) 100%);
+    }
+
+    /* ============================================================== */
+    /* DUAL COIN UPLOAD & INDIVIDUAL REPORT COLUMNS                   */
+    /* ============================================================== */
+    .grading-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .coin-columns {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 28px;
+      width: 100%;
+      align-items: start;
+    }
+
+    .coin-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .upload-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+    }
+
+    .upload-card.has-file {
+      border-color: rgba(224, 122, 82, 0.45);
+    }
+
+    .card-header-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .side-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .side-index {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--brick-light);
+      padding: 2px 7px;
+      border: 1px solid rgba(224, 122, 82, 0.3);
+      border-radius: 3px;
+      background: rgba(194, 94, 56, 0.1);
+    }
+
+    .side-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .side-status {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .side-status.ready {
+      color: var(--amber-mint);
+    }
+
+    /* Planchet Dropzone */
+    .planchet-dropzone {
+      position: relative;
+      width: 100%;
+      height: 290px;
+      border: 1px dashed rgba(214, 140, 104, 0.32);
+      border-radius: 6px;
+      background: radial-gradient(circle at center, rgba(34, 32, 30, 0.7) 0%, rgba(18, 17, 16, 0.95) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .planchet-dropzone:hover,
+    .planchet-dropzone.dragover {
+      border-color: var(--brick-light);
+      background: radial-gradient(circle at center, rgba(194, 94, 56, 0.12) 0%, rgba(18, 17, 16, 0.95) 100%);
+    }
+
+    .planchet-dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    .reticle-guide {
+      width: 196px;
+      height: 196px;
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.45;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+
+    .planchet-dropzone:hover .reticle-guide {
+      transform: scale(1.04) rotate(8deg);
+      opacity: 0.72;
+    }
+
+    .dropzone-prompt {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 20px;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dropzone-icon {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      color: var(--brick-light);
+      line-height: 1;
+    }
+
+    .dropzone-primary-text {
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .dropzone-sub-text {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+    }
+
+    .coin-preview-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 14px;
+      z-index: 3;
+      display: none;
+      filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.75));
+    }
+
+    .planchet-dropzone.loaded .coin-preview-img {
+      display: block;
+    }
+
+    .planchet-dropzone.loaded .dropzone-prompt {
+      display: none;
+    }
+
+    .planchet-dropzone.loaded .reticle-guide {
+      opacity: 0.22;
+    }
+
+    .upload-footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      min-height: 26px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .clear-img-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      cursor: pointer;
+      display: none;
+      transition: all 0.2s ease;
+    }
+
+    .clear-img-btn.visible {
+      display: inline-block;
+    }
+
+    .clear-img-btn:hover {
+      border-color: var(--brick-light);
+      color: var(--brick-light);
+    }
+
+    /* ============================================================== */
+    /* ACTION BAR & RATE LIMIT TELEMETRY                              */
+    /* ============================================================== */
+    .action-deck {
+      margin: 28px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .grade-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      padding: 15px 42px;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .grade-btn:hover:not(:disabled) {
+      background: var(--card-bg);
+      border-color: var(--brick-light);
+      color: var(--brick-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 26px rgba(194, 94, 56, 0.28);
+    }
+
+    .grade-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      border-color: var(--border);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .telemetry-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.09em;
+      color: var(--text-muted);
+      background: rgba(26, 25, 24, 0.85);
+      border: 1px solid var(--border);
+      padding: 7px 16px;
+      border-radius: 40px;
+    }
+
+    .telemetry-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--clay);
+      display: inline-block;
+    }
+
+    .telemetry-dot.active {
+      background: var(--brick-light);
+      box-shadow: 0 0 8px var(--brick-light);
+    }
+
+    .telemetry-dot.cooldown {
+      background: #d97736;
+    }
+
+    /* ============================================================== */
+    /* INDIVIDUAL OBVERSE & REVERSE GRADING REPORT CARDS              */
+    /* ============================================================== */
+    .report-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--brick);
+      border-radius: 8px;
+      padding: 22px 24px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 190px;
+      transition: border-color 0.3s ease;
+    }
+
+    .report-card.graded {
+      border-color: rgba(224, 122, 82, 0.38);
+      border-top: 2px solid var(--brick-light);
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .report-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--clay);
+    }
+
+    .grade-pill {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--brick-light);
+      background: rgba(194, 94, 56, 0.14);
+      border: 1px solid rgba(224, 122, 82, 0.4);
+      padding: 3px 11px;
+      border-radius: 4px;
+    }
+
+    .report-body {
+      font-size: 0.9rem;
+      line-height: 1.68;
+      color: var(--text-muted);
+      white-space: pre-line;
+    }
+
+    .report-card.graded .report-body {
+      color: var(--text);
+    }
+
+    /* ============================================================== */
+    /* COMPOSITE GRADE DOSSIER (FULL WIDTH BELOW BOTH COLUMNS)        */
+    /* ============================================================== */
+    .composite-card {
+      width: 100%;
+      margin-top: 30px;
+      background: linear-gradient(180deg, rgba(34, 32, 30, 0.94) 0%, rgba(26, 25, 24, 0.98) 100%);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--amber-mint);
+      border-radius: 8px;
+      padding: 30px 34px;
+      box-shadow: 0 22px 55px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    .composite-card.graded {
+      border-color: rgba(220, 163, 106, 0.45);
+    }
+
+    .composite-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .composite-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .composite-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--brick-light);
+    }
+
+    .composite-title {
+      font-family: var(--font-serif);
+      font-size: 1.65rem;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    .composite-coin-id {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--clay);
+      letter-spacing: 0.06em;
+    }
+
+    .composite-score-box {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      background: rgba(18, 17, 16, 0.78);
+      border: 1px solid rgba(224, 122, 82, 0.4);
+      padding: 12px 22px;
+      border-radius: 6px;
+      min-width: 170px;
+    }
+
+    .composite-score-label {
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .composite-score-value {
+      font-family: var(--font-display);
+      font-size: 1.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--amber-mint);
+    }
+
+    .composite-body {
+      font-size: 0.95rem;
+      line-height: 1.72;
+      color: var(--text-muted);
+      white-space: pre-line;
+    }
+
+    .composite-card.graded .composite-body {
+      color: var(--text);
+    }
+
+    /* Architectural Loader inside Report Cards */
+    .gemini-loader-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 18px 12px;
+      text-align: center;
+    }
+
+    .gemini-loader-svg {
+      width: 44px;
+      height: 44px;
+      overflow: visible;
+    }
+
+    .gemini-orbit-outer {
+      transform-origin: 28px 28px;
+      animation: geminiSpin 8s linear infinite;
+    }
+
+    .gemini-orbit-inner {
+      transform-origin: 28px 28px;
+      animation: geminiSpinReverse 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    .gemini-core-node {
+      transform-origin: 28px 28px;
+      animation: geminiPulse 2s ease-in-out infinite;
+    }
+
+    .gemini-loader-text {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--clay);
+    }
+
+    @keyframes geminiSpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes geminiSpinReverse {
+      to { transform: rotate(-360deg); }
+    }
+    @keyframes geminiPulse {
+      0%, 100% { transform: scale(0.85); opacity: 0.5; }
+      50% { transform: scale(1.15); opacity: 1; }
+    }
+
+    /* Footer */
+    footer {
+      padding: 48px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      margin-top: auto;
+    }
+
+    @media (max-width: 960px) {
+      header { padding: 20px 24px; }
+      .header-lattice-wrap { display: none !important; }
+      nav { gap: 20px; }
+      main { padding: 120px 24px 60px; }
+      .custom-cursor, .custom-cursor-follower { display: none; }
+      .coin-columns { grid-template-columns: 1fr; }
+      .composite-top { flex-direction: column; align-items: flex-start; }
+      .composite-score-box { align-items: flex-start; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom Magnetic Cursor -->
+  <div class="custom-cursor" id="cursor"></div>
+  <div class="custom-cursor-follower" id="cursor-follower"></div>
+
+  <!-- Header Navigation (Copied in full from demo.html with Coin-Grading Lattice SVG) -->
+  <header style="padding: 16px 48px;">
+    <a href="/" class="brand">Gabriel Forman</a>
+
+    <!-- Numismatic Dual-Planchet Inspection & Composite Synthesis Lattice Graphic -->
+    <div class="header-lattice-wrap" style="flex: 1; display: flex; justify-content: center; align-items: center; padding: 0 24px; opacity: 0.68; pointer-events: none; filter: drop-shadow(0 0 12px rgba(194, 94, 56, 0.22));">
+      <svg width="480" height="52" viewBox="0 0 560 84" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width: 100%; height: auto;">
+        <!-- Optical Inspection Rays -->
+        <g stroke="rgba(224, 122, 82, 0.24)" stroke-width="0.9">
+          <line x1="18" y1="18" x2="105" y2="20" stroke-dasharray="2 4" />
+          <line x1="18" y1="42" x2="83" y2="42" />
+          <line x1="18" y1="66" x2="105" y2="64" stroke-dasharray="2 4" />
+          <line x1="127" y1="42" x2="193" y2="42" />
+          <line x1="105" y1="20" x2="215" y2="20" stroke-dasharray="2 3" />
+          <line x1="105" y1="64" x2="215" y2="64" stroke-dasharray="2 3" />
+          <!-- Convergence from Obverse & Reverse Planchets into Central Grading Reticle -->
+          <line x1="215" y1="20" x2="330" y2="42" />
+          <line x1="237" y1="42" x2="306" y2="42" />
+          <line x1="215" y1="64" x2="330" y2="42" />
+          <line x1="330" y1="42" x2="415" y2="24" />
+          <line x1="330" y1="42" x2="415" y2="60" />
+        </g>
+
+        <!-- Planchet 1: Obverse Die Circle (cx=105, cy=42) -->
+        <circle cx="105" cy="42" r="22" stroke="var(--brick-light)" stroke-width="0.95" opacity="0.7" />
+        <circle cx="105" cy="42" r="16" stroke="var(--clay)" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.55" />
+        <line x1="105" y1="23" x2="105" y2="61" stroke="rgba(224, 122, 82, 0.25)" stroke-width="0.75" />
+
+        <!-- Planchet 2: Reverse Die Circle (cx=215, cy=42) -->
+        <circle cx="215" cy="42" r="22" stroke="var(--brick-light)" stroke-width="0.95" opacity="0.7" />
+        <circle cx="215" cy="42" r="16" stroke="var(--clay)" stroke-width="0.75" stroke-dasharray="2 2" opacity="0.55" />
+        <line x1="215" y1="23" x2="215" y2="61" stroke="rgba(224, 122, 82, 0.25)" stroke-width="0.75" />
+
+        <!-- Central Optical Loupe & Caliper Reticle (cx=330, cy=42) -->
+        <circle cx="330" cy="42" r="28" stroke="var(--clay)" stroke-width="0.75" stroke-dasharray="3 3" opacity="0.5" />
+        <polygon points="330,27 345,42 330,57 315,42" stroke="var(--brick)" stroke-width="1" fill="rgba(194, 94, 56, 0.1)" />
+        <circle cx="330" cy="42" r="9" stroke="var(--brick-light)" stroke-width="0.85" opacity="0.7" />
+
+        <!-- Right: Sheldon Scale Spectrum & Composite Grade Convergence -->
+        <line x1="415" y1="42" x2="542" y2="42" stroke="var(--brick-light)" stroke-width="1.15" />
+        <line x1="415" y1="24" x2="542" y2="42" stroke="rgba(224, 122, 82, 0.22)" stroke-width="0.8" />
+        <line x1="415" y1="60" x2="542" y2="42" stroke="rgba(224, 122, 82, 0.22)" stroke-width="0.8" />
+        <path d="M 415 42 C 440 22, 465 62, 490 42 C 510 28, 526 48, 542 42" stroke="var(--clay)" stroke-width="0.95" stroke-dasharray="2 2" fill="none" opacity="0.65" />
+
+        <!-- Sheldon Calibration Tick Marks -->
+        <g stroke="var(--clay)" stroke-width="0.85" opacity="0.65">
+          <line x1="438" y1="36" x2="438" y2="48" />
+          <line x1="464" y1="34" x2="464" y2="50" />
+          <line x1="490" y1="36" x2="490" y2="48" />
+          <line x1="516" y1="34" x2="516" y2="50" />
+        </g>
+
+        <!-- Lattice Nodes -->
+        <circle cx="18" cy="18" r="3" fill="var(--brick)" />
+        <circle cx="18" cy="42" r="3.2" fill="var(--brick)" />
+        <circle cx="18" cy="66" r="3" fill="var(--brick)" />
+        <circle cx="105" cy="42" r="3.2" fill="var(--brick-light)" />
+        <circle cx="160" cy="42" r="2.4" fill="var(--clay)" />
+        <circle cx="215" cy="42" r="3.2" fill="var(--brick-light)" />
+        <circle cx="330" cy="42" r="3.2" fill="var(--text)" />
+        <circle cx="415" cy="24" r="2.8" fill="var(--clay)" />
+        <circle cx="415" cy="60" r="2.8" fill="var(--clay)" />
+        <circle cx="542" cy="42" r="4.2" fill="var(--brick-light)" />
+      </svg>
+    </div>
+
+    <nav>
+      <a href="/#about">About</a>
+      <a href="/#projects">Projects</a>
+      <a href="sports.html">Sports</a>
+    </nav>
+  </header>
+
+  <!-- Background Geometry Decal (Modified Numismatic Meridians) -->
+  <svg class="bg-decal" viewBox="0 0 1440 600" preserveAspectRatio="none">
+    <path fill="none" stroke="rgba(224,122,82,0.18)" stroke-width="1.3" d="M0,380 C360,520 720,120 1080,390 C1260,500 1360,290 1440,340" />
+    <path fill="none" stroke="rgba(214,140,104,0.12)" stroke-width="1" d="M0,430 C360,570 720,170 1080,440 C1260,550 1360,340 1440,390" />
+    <circle cx="720" cy="300" r="260" fill="none" stroke="rgba(194,94,56,0.07)" stroke-width="1" stroke-dasharray="4 8" />
+  </svg>
+
+  <main>
+    <!-- Center-Aligned Title Block -->
+    <div style="display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 1100px; margin: -28px auto 10px;">
+      <div class="nav-back-wrapper">
+        <a href="/" class="nav-back">← Back to Overview</a>
+      </div>
+      <h1>Numismatic Optical Inspection &amp; Grading</h1>
+      <p class="subtitle">
+        Upload high-resolution photographs of the obverse and reverse of the same coin for automated Sheldon-scale evaluation via the Gemini Interactions API.
+      </p>
+
+      <!-- Dual-Planchet Caliper Ornament under Title -->
+      <svg width="360" height="16" viewBox="0 0 360 16" fill="none" style="opacity: 0.6; display: block;">
+        <circle cx="16" cy="8" r="2" fill="var(--brick)" />
+        <line x1="28" y1="8" x2="138" y2="8" stroke="var(--clay)" stroke-width="0.8" stroke-dasharray="3 3" />
+        <circle cx="152" cy="8" r="5" stroke="var(--brick-light)" stroke-width="1" />
+        <circle cx="152" cy="8" r="1.5" fill="var(--clay)" />
+        <polygon points="180,2 186,8 180,14 174,8" stroke="var(--brick)" stroke-width="1" fill="none" />
+        <circle cx="208" cy="8" r="5" stroke="var(--brick-light)" stroke-width="1" />
+        <circle cx="208" cy="8" r="1.5" fill="var(--clay)" />
+        <line x1="222" y1="8" x2="332" y2="8" stroke="var(--clay)" stroke-width="0.8" stroke-dasharray="3 3" />
+        <circle cx="344" cy="8" r="2" fill="var(--brick)" />
+      </svg>
+    </div>
+
+    <!-- Symmetrical Datum Divider -->
+    <div class="datum-divider">
+      <div class="datum-bar"></div>
+      <svg width="56" height="14" viewBox="0 0 56 14" fill="none" style="opacity: 0.8;">
+        <circle cx="6" cy="7" r="2.5" stroke="var(--clay)" stroke-width="1" />
+        <line x1="9" y1="7" x2="21" y2="7" stroke="var(--clay)" stroke-width="1" />
+        <circle cx="28" cy="7" r="4.5" stroke="var(--brick-light)" stroke-width="1.1" />
+        <circle cx="28" cy="7" r="1.5" fill="var(--brick)" />
+        <line x1="35" y1="7" x2="47" y2="7" stroke="var(--clay)" stroke-width="1" />
+        <circle cx="50" cy="7" r="2.5" stroke="var(--clay)" stroke-width="1" />
+      </svg>
+      <div class="datum-bar reverse-grad"></div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MAIN GRADING WORKSPACE                                         -->
+    <!-- ============================================================== -->
+    <div class="grading-stage">
+
+      <!-- Side-by-Side Obverse and Reverse Columns -->
+      <div class="coin-columns">
+
+        <!-- LEFT COLUMN: OBVERSE UPLOAD + OBVERSE REPORT -->
+        <div class="coin-column">
+          <div class="upload-card" id="obverse-upload-card">
+            <div class="card-header-meta">
+              <div class="side-title-group">
+                <span class="side-index">01 // OBV</span>
+                <span class="side-title">Obverse (Heads)</span>
+              </div>
+              <span class="side-status" id="obverse-status">Awaiting Image</span>
+            </div>
+
+            <div class="planchet-dropzone" id="obverse-dropzone">
+              <input type="file" id="obverse-input" accept="image/jpeg,image/png,image/webp,image/heic" aria-label="Upload Obverse Coin Image" />
+              
+              <!-- Circular Coin Planchet Reticle SVG -->
+              <svg class="reticle-guide" viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="90" stroke="var(--clay)" stroke-width="1" stroke-dasharray="4 4" />
+                <circle cx="100" cy="100" r="74" stroke="var(--brick-light)" stroke-width="0.8" opacity="0.6" />
+                <line x1="100" y1="4" x2="100" y2="26" stroke="var(--brick)" stroke-width="1.2" />
+                <line x1="100" y1="174" x2="100" y2="196" stroke="var(--brick)" stroke-width="1.2" />
+                <line x1="4" y1="100" x2="26" y2="100" stroke="var(--brick)" stroke-width="1.2" />
+                <line x1="174" y1="100" x2="196" y2="100" stroke="var(--brick)" stroke-width="1.2" />
+              </svg>
+
+              <div class="dropzone-prompt">
+                <span class="dropzone-icon">⊕</span>
+                <span class="dropzone-primary-text">Upload Obverse Specimen</span>
+                <span class="dropzone-sub-text">Drop image or click to browse (JPG, PNG, WEBP)</span>
+              </div>
+
+              <img id="obverse-preview" class="coin-preview-img" alt="Obverse Coin Preview" />
+            </div>
+
+            <div class="upload-footer-bar">
+              <span id="obverse-file-info">No file selected</span>
+              <button type="button" class="clear-img-btn" id="clear-obverse-btn">Clear ✕</button>
+            </div>
+          </div>
+
+          <!-- OBVERSE GRADING REPORT (Directly under Obverse Upload) -->
+          <div class="report-card" id="obverse-report-card">
+            <div class="report-header">
+              <span class="report-label">Obverse Grading Report</span>
+              <span class="grade-pill" id="obverse-grade-badge">PENDING</span>
+            </div>
+            <div class="report-body" id="obverse-report-body">
+              Upload both the obverse and reverse photographs above and press "Grade Coin" to generate the official obverse surface, strike, and wear evaluation.
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: REVERSE UPLOAD + REVERSE REPORT -->
+        <div class="coin-column">
+          <div class="upload-card" id="reverse-upload-card">
+            <div class="card-header-meta">
+              <div class="side-title-group">
+                <span class="side-index">02 // REV</span>
+                <span class="side-title">Reverse (Tails)</span>
+              </div>
+              <span class="side-status" id="reverse-status">Awaiting Image</span>
+            </div>
+
+            <div class="planchet-dropzone" id="reverse-dropzone">
+              <input type="file" id="reverse-input" accept="image/jpeg,image/png,image/webp,image/heic" aria-label="Upload Reverse Coin Image" />
+              
+              <!-- Circular Coin Planchet Reticle SVG -->
+              <svg class="reticle-guide" viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="90" stroke="var(--clay)" stroke-width="1" stroke-dasharray="4 4" />
+                <circle cx="100" cy="100" r="74" stroke="var(--brick-light)" stroke-width="0.8" opacity="0.6" />
+                <line x1="100" y1="4" x2="100" y2="26" stroke="var(--brick)" stroke-width="1.2" />
+                <line x1="100" y1="174" x2="100" y2="196" stroke="var(--brick)" stroke-width="1.2" />
+                <line x1="4" y1="100" x2="26" y2="100" stroke="var(--brick)" stroke-width="1.2" />
+                <line x1="174" y1="100" x2="196" y2="100" stroke="var(--brick)" stroke-width="1.2" />
+              </svg>
+
+              <div class="dropzone-prompt">
+                <span class="dropzone-icon">⊕</span>
+                <span class="dropzone-primary-text">Upload Reverse Specimen</span>
+                <span class="dropzone-sub-text">Drop image or click to browse (JPG, PNG, WEBP)</span>
+              </div>
+
+              <img id="reverse-preview" class="coin-preview-img" alt="Reverse Coin Preview" />
+            </div>
+
+            <div class="upload-footer-bar">
+              <span id="reverse-file-info">No file selected</span>
+              <button type="button" class="clear-img-btn" id="clear-reverse-btn">Clear ✕</button>
+            </div>
+          </div>
+
+          <!-- REVERSE GRADING REPORT (Directly under Reverse Upload) -->
+          <div class="report-card" id="reverse-report-card">
+            <div class="report-header">
+              <span class="report-label">Reverse Grading Report</span>
+              <span class="grade-pill" id="reverse-grade-badge">PENDING</span>
+            </div>
+            <div class="report-body" id="reverse-report-body">
+              Upload both the obverse and reverse photographs above and press "Grade Coin" to generate the official reverse surface, strike, and wear evaluation.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- CENTER ACTION DECK: GRADE COIN BUTTON & RATE LIMIT TELEMETRY   -->
+      <!-- ============================================================== -->
+      <div class="action-deck">
+        <button type="button" class="grade-btn" id="grade-coin-btn" disabled>
+          <span>◈</span> <span id="grade-btn-label">Grade Coin</span> <span>◈</span>
+        </button>
+
+        <div class="telemetry-bar">
+          <span class="telemetry-dot" id="telemetry-dot"></span>
+          <span id="telemetry-status">STATUS: UPLOAD OBVERSE &amp; REVERSE TO ARM GRADER</span>
+          <span>•</span>
+          <span id="rate-limit-status">QUOTA: 1 REQ / 60s</span>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- OVERALL COMPOSITE GRADE (UNDERNEATH BOTH COLUMNS)              -->
+      <!-- ============================================================== -->
+      <div class="composite-card" id="composite-card">
+        <div class="composite-top">
+          <div class="composite-title-block">
+            <span class="composite-eyebrow">03 // Synthesis &amp; Final Determination</span>
+            <h2 class="composite-title">Overall Composite Grade</h2>
+            <span class="composite-coin-id" id="composite-coin-id">SPECIMEN: UNIDENTIFIED</span>
+          </div>
+
+          <div class="composite-score-box">
+            <span class="composite-score-label">Composite Sheldon Grade</span>
+            <span class="composite-score-value" id="composite-grade-badge">— / 70</span>
+          </div>
+        </div>
+
+        <div class="composite-body" id="composite-report-body">
+          The composite grade and unified numismatic determination will appear here once both sides of the coin have been analyzed.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Numismatic Balance Ornament -->
+    <div style="display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 72px; opacity: 0.38; pointer-events: none; user-select: none;">
+      <div style="flex: 1; max-width: 260px; height: 1px; background: linear-gradient(90deg, transparent, var(--clay));"></div>
+      <svg width="92" height="24" viewBox="0 0 92 24" fill="none">
+        <circle cx="18" cy="12" r="6" stroke="var(--clay)" stroke-width="0.85" />
+        <circle cx="18" cy="12" r="2" fill="var(--brick)" />
+        <line x1="24" y1="12" x2="36" y2="12" stroke="var(--clay)" stroke-width="0.8" />
+        <polygon points="46,3 55,12 46,21 37,12" stroke="var(--brick-light)" stroke-width="0.95" fill="none" />
+        <circle cx="46" cy="12" r="2" fill="var(--clay)" />
+        <line x1="56" y1="12" x2="68" y2="12" stroke="var(--clay)" stroke-width="0.8" />
+        <circle cx="74" cy="12" r="6" stroke="var(--clay)" stroke-width="0.85" />
+        <circle cx="74" cy="12" r="2" fill="var(--brick)" />
+      </svg>
+      <div style="flex: 1; max-width: 260px; height: 1px; background: linear-gradient(90deg, var(--clay), transparent);"></div>
+    </div>
+  </main>
+
+  <!-- Lower Catenary Wave Decal -->
+  <svg viewBox="0 0 1440 180" preserveAspectRatio="none" style="position: absolute; bottom: 65px; left: 0; width: 100%; height: 160px; pointer-events: none; z-index: 0; opacity: 0.14;">
+    <path fill="none" stroke="var(--brick-light)" stroke-width="1.2" d="M0,130 C420,40 760,165 1140,70 C1300,30 1390,95 1440,115" />
+    <path fill="none" stroke="var(--clay)" stroke-width="0.9" d="M0,155 C420,65 760,190 1140,95 C1300,55 1390,120 1440,140" />
+  </svg>
+
+  <footer>
+    <p>Powered by Cloudflare Workers &amp; Pages • Gemini Interactions API</p>
+  </footer>
+
+  <script>
+    // ============================================================================
+    // 1. CUSTOM MAGNETIC CURSOR
+    // ============================================================================
+    const cursor = document.getElementById('cursor');
+    const follower = document.getElementById('cursor-follower');
+    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+    let followerX = mouseX, followerY = mouseY;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (cursor) {
+        cursor.style.left = `${mouseX}px`;
+        cursor.style.top = `${mouseY}px`;
+      }
+    });
+
+    function animateCursor() {
+      if (follower) {
+        followerX += (mouseX - followerX) * 0.15;
+        followerY += (mouseY - followerY) * 0.15;
+        follower.style.left = `${followerX}px`;
+        follower.style.top = `${followerY}px`;
+      }
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // ============================================================================
+    // 2. STATE & RATE LIMIT MANAGEMENT (1 REQUEST PER 60 SECONDS)
+    // ============================================================================
+    const COOLDOWN_MS = 60 * 1000;
+    const STORAGE_KEY = 'coingrader_last_request_ts';
+
+    const state = {
+      obverse: null, // { base64, mimeType, name }
+      reverse: null, // { base64, mimeType, name }
+      isGrading: false
+    };
+
+    const gradeBtn = document.getElementById('grade-coin-btn');
+    const gradeBtnLabel = document.getElementById('grade-btn-label');
+    const telemetryDot = document.getElementById('telemetry-dot');
+    const telemetryStatus = document.getElementById('telemetry-status');
+    const rateLimitStatus = document.getElementById('rate-limit-status');
+
+    const LOADER_HTML = `
+      <div class="gemini-loader-wrap">
+        <svg class="gemini-loader-svg" viewBox="0 0 56 56" fill="none">
+          <circle class="gemini-orbit-outer" cx="28" cy="28" r="24" stroke="var(--clay)" stroke-width="1" stroke-dasharray="4 4" opacity="0.65" />
+          <polygon class="gemini-orbit-inner" points="28,10 46,28 28,46 10,28" stroke="var(--brick-light)" stroke-width="1.2" fill="rgba(194, 94, 56, 0.08)" />
+          <circle class="gemini-core-node" cx="28" cy="28" r="4" fill="var(--brick-light)" />
+        </svg>
+        <div class="gemini-loader-text">Inspecting Surfaces &amp; Strike...</div>
+      </div>
+    `;
+
+    function getRemainingCooldownSeconds() {
+      const lastTs = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+      if (!lastTs) return 0;
+      const elapsed = Date.now() - lastTs;
+      return elapsed < COOLDOWN_MS ? Math.ceil((COOLDOWN_MS - elapsed) / 1000) : 0;
+    }
+
+    function setCooldownFromNow(seconds = 60) {
+      const targetLastTs = Date.now() - (COOLDOWN_MS - seconds * 1000);
+      localStorage.setItem(STORAGE_KEY, String(targetLastTs));
+      updateControlsState();
+    }
+
+    function updateControlsState() {
+      const remainingSec = getRemainingCooldownSeconds();
+      const bothUploaded = Boolean(state.obverse && state.reverse);
+
+      if (state.isGrading) {
+        gradeBtn.disabled = true;
+        gradeBtnLabel.textContent = 'Analyzing Specimen...';
+        telemetryDot.className = 'telemetry-dot active';
+        telemetryStatus.textContent = 'STATUS: EXECUTING /API/COINGRADER (INTERACTIONS API)';
+        return;
+      }
+
+      if (remainingSec > 0) {
+        gradeBtn.disabled = true;
+        gradeBtnLabel.textContent = `Cooldown (${remainingSec}s)`;
+        telemetryDot.className = 'telemetry-dot cooldown';
+        rateLimitStatus.textContent = `RATE LIMIT: WAIT ${remainingSec}s`;
+        telemetryStatus.textContent = bothUploaded
+          ? 'STATUS: SPECIMENS READY // AWAITING COOLDOWN WINDOW'
+          : 'STATUS: RATE LIMIT COOLDOWN ACTIVE';
+      } else {
+        rateLimitStatus.textContent = 'QUOTA: 1 REQ / 60s (AVAILABLE)';
+        if (bothUploaded) {
+          gradeBtn.disabled = false;
+          gradeBtnLabel.textContent = 'Grade Coin';
+          telemetryDot.className = 'telemetry-dot active';
+          telemetryStatus.textContent = 'STATUS: BOTH SIDES LOCKED // READY TO GRADE';
+        } else {
+          gradeBtn.disabled = true;
+          gradeBtnLabel.textContent = 'Grade Coin';
+          telemetryDot.className = 'telemetry-dot';
+          telemetryStatus.textContent = 'STATUS: UPLOAD OBVERSE & REVERSE TO ARM GRADER';
+        }
+      }
+    }
+
+    setInterval(updateControlsState, 500);
+
+    // ============================================================================
+    // 3. IMAGE NORMALIZATION & UPLOAD HANDLERS
+    // ============================================================================
+    // Resizes large smartphone photos to max 1500px so base64 payloads stay fast and within Worker limits
+    function processUploadedImage(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Failed to read image file.'));
+        reader.onload = (e) => {
+          const dataUrl = e.target.result;
+          const img = new Image();
+          img.onload = () => {
+            const maxDim = 1500;
+            let { width, height } = img;
+            if (width > maxDim || height > maxDim) {
+              const scale = maxDim / Math.max(width, height);
+              width = Math.round(width * scale);
+              height = Math.round(height * scale);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const outputMime = 'image/jpeg';
+            const compressedDataUrl = canvas.toDataURL(outputMime, 0.9);
+            const base64 = compressedDataUrl.split(',')[1];
+            resolve({
+              base64,
+              mimeType: outputMime,
+              previewUrl: compressedDataUrl,
+              name: file.name,
+              dimensions: `${width}×${height}`
+            });
+          };
+          img.onerror = () => {
+            // Fallback for formats the browser canvas cannot decode directly
+            const parts = String(dataUrl).split(',');
+            const mimeMatch = parts[0].match(/:(.*?);/);
+            resolve({
+              base64: parts[1],
+              mimeType: mimeMatch ? mimeMatch[1] : (file.type || 'image/jpeg'),
+              previewUrl: dataUrl,
+              name: file.name,
+              dimensions: `${Math.round(file.size / 1024)} KB`
+            });
+          };
+          img.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function wireSideUpload(side) {
+      const input = document.getElementById(`${side}-input`);
+      const dropzone = document.getElementById(`${side}-dropzone`);
+      const preview = document.getElementById(`${side}-preview`);
+      const status = document.getElementById(`${side}-status`);
+      const fileInfo = document.getElementById(`${side}-file-info`);
+      const clearBtn = document.getElementById(`clear-${side}-btn`);
+      const card = document.getElementById(`${side}-upload-card`);
+
+      async function handleFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        status.textContent = 'Processing...';
+        try {
+          const processed = await processUploadedImage(file);
+          state[side] = processed;
+          preview.src = processed.previewUrl;
+          dropzone.classList.add('loaded');
+          card.classList.add('has-file');
+          status.textContent = 'Locked';
+          status.classList.add('ready');
+          fileInfo.textContent = `${processed.name} (${processed.dimensions})`;
+          clearBtn.classList.add('visible');
+          updateControlsState();
+        } catch (err) {
+          status.textContent = 'Upload Error';
+          fileInfo.textContent = err.message;
+        }
+      }
+
+      input.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('dragover');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      clearBtn.addEventListener('click', () => {
+        state[side] = null;
+        input.value = '';
+        preview.src = '';
+        dropzone.classList.remove('loaded');
+        card.classList.remove('has-file');
+        status.textContent = 'Awaiting Image';
+        status.classList.remove('ready');
+        fileInfo.textContent = 'No file selected';
+        clearBtn.classList.remove('visible');
+        updateControlsState();
+      });
+    }
+
+    wireSideUpload('obverse');
+    wireSideUpload('reverse');
+
+    // ============================================================================
+    // 4. EXECUTE GRADING VIA CLOUDFLARE WORKER (/api/coingrader)
+    // ============================================================================
+    gradeBtn.addEventListener('click', async () => {
+      if (!state.obverse || !state.reverse || state.isGrading) return;
+      if (getRemainingCooldownSeconds() > 0) return;
+
+      state.isGrading = true;
+      updateControlsState();
+
+      const obvCard = document.getElementById('obverse-report-card');
+      const revCard = document.getElementById('reverse-report-card');
+      const compCard = document.getElementById('composite-card');
+
+      const obvGradeBadge = document.getElementById('obverse-grade-badge');
+      const revGradeBadge = document.getElementById('reverse-grade-badge');
+      const compGradeBadge = document.getElementById('composite-grade-badge');
+      const compCoinId = document.getElementById('composite-coin-id');
+
+      const obvBody = document.getElementById('obverse-report-body');
+      const revBody = document.getElementById('reverse-report-body');
+      const compBody = document.getElementById('composite-report-body');
+
+      obvCard.classList.remove('graded');
+      revCard.classList.remove('graded');
+      compCard.classList.remove('graded');
+
+      obvGradeBadge.textContent = 'ANALYZING...';
+      revGradeBadge.textContent = 'ANALYZING...';
+      compGradeBadge.textContent = '...';
+      compCoinId.textContent = 'SPECIMEN: ANALYZING DIE & PLANCHET...';
+
+      obvBody.innerHTML = LOADER_HTML;
+      revBody.innerHTML = LOADER_HTML;
+      compBody.innerHTML = LOADER_HTML;
+
+      try {
+        const response = await fetch('/api/coingrader', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            obverse: {
+              data: state.obverse.base64,
+              mimeType: state.obverse.mimeType
+            },
+            reverse: {
+              data: state.reverse.base64,
+              mimeType: state.reverse.mimeType
+            }
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.status === 429) {
+          const waitSec = result.retryAfterSeconds || 60;
+          setCooldownFromNow(waitSec);
+          throw new Error(result.error || `Rate limit exceeded. Please wait ${waitSec} seconds.`);
+        }
+
+        if (!response.ok || result.error) {
+          throw new Error(result.error || `Server responded with status ${response.status}`);
+        }
+
+        // Start 60-second per-user cooldown after a successful request
+        setCooldownFromNow(60);
+
+        // Populate Obverse Report under Obverse Upload
+        obvGradeBadge.textContent = result.obverseGrade || 'GRADED';
+        obvBody.textContent = result.obverseReport || 'No obverse report returned.';
+        obvCard.classList.add('graded');
+
+        // Populate Reverse Report under Reverse Upload
+        revGradeBadge.textContent = result.reverseGrade || 'GRADED';
+        revBody.textContent = result.reverseReport || 'No reverse report returned.';
+        revCard.classList.add('graded');
+
+        // Populate Composite Grade under both columns
+        compGradeBadge.textContent = result.compositeGrade || 'GRADED';
+        compCoinId.textContent = `SPECIMEN: ${(result.coinIdentification || 'Standard Numismatic Specimen').toUpperCase()} • MODEL: ${(result.modelUsed || 'GEMINI').toUpperCase()}`;
+        compBody.textContent = result.compositeReport || 'No composite report returned.';
+        compCard.classList.add('graded');
+
+      } catch (err) {
+        obvGradeBadge.textContent = 'ERROR';
+        revGradeBadge.textContent = 'ERROR';
+        compGradeBadge.textContent = 'HALTED';
+        compCoinId.textContent = 'SPECIMEN: EVALUATION INTERRUPTED';
+        obvBody.textContent = `Grading pipeline halted: ${err.message}`;
+        revBody.textContent = `Grading pipeline halted: ${err.message}`;
+        compBody.textContent = `Unable to compute composite grade: ${err.message}`;
+      } finally {
+        state.isGrading = false;
+        updateControlsState();
+      }
+    });
+  </script>
+</body>
+</html>
