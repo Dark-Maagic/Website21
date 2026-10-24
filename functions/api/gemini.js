@@ -53,47 +53,54 @@ export async function onRequest(context) {
     const prompt = `Analyze this cat picture. Recreate the image as a standalone, visually detailed SVG/HTML snippet with shapes, gradients, and colors matching the cat and background. 
 Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending with </svg> or </div>). Do NOT include markdown formatting, backticks, or explanations.`;
 
-    // Exact model priority hierarchy
+    // Valid, distinct Flash model priority hierarchy
+    // Note: gemini-3.7-flash is deprecated and aliases to gemini-3.8-flash, so it is omitted to avoid duplicate retries.
     const modelHierarchy = [
-      "gemini-4-flash",
       "gemini-3.8-flash",
-      "gemini-3.7-flash",
-      "gemini-3.6-flash"
+      "gemini-3.6-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.1-flash-lite"
     ];
 
+    const interactionsUrl = "https://generativelanguage.googleapis.com/v1beta/interactions";
     let lastErrorDetails = "";
     let geminiResponse = null;
+    let interactionData = null;
     let successfulModel = null;
 
-    // 3. Iterate through fallback models
+    // 3. Iterate through fallback models using the Interactions API
     for (const model of modelHierarchy) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
       for (let attempt = 0; attempt < 2; attempt++) {
-        geminiResponse = await fetch(url, {
+        geminiResponse = await fetch(interactionsUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
           body: JSON.stringify({
-            contents: [
+            model: model,
+            store: false, // Stateless execution for single-turn Worker requests
+            input: [
               {
-                parts: [
-                  {
-                    inline_data: {
-                      mime_type: "image/jpeg",
-                      data: base64Image,
-                    },
-                  },
-                  {
-                    text: prompt,
-                  },
-                ],
+                type: "text",
+                text: prompt,
+              },
+              {
+                type: "image",
+                mime_type: "image/jpeg",
+                data: base64Image,
               },
             ],
           }),
         });
 
         if (geminiResponse.ok) {
-          successfulModel = model;
+          interactionData = await geminiResponse.json();
+          if (interactionData.status !== "failed") {
+            successfulModel = model;
+            break;
+          }
+          lastErrorDetails = JSON.stringify(interactionData.errors || interactionData);
           break;
         }
 
@@ -107,15 +114,15 @@ Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending 
         }
       }
 
-      if (geminiResponse && geminiResponse.ok) {
+      if (successfulModel) {
         break;
       }
     }
 
-    if (!geminiResponse || !geminiResponse.ok) {
+    if (!successfulModel || !interactionData) {
       return new Response(
         JSON.stringify({
-          error: "Gemini 3.6 Flash (and all preceding models: 4 Flash, 3.8 Flash, 3.7 Flash) failed to generate content.",
+          error: `All Gemini models in rotation (${modelHierarchy.join(", ")}) failed to generate content.`,
           details: lastErrorDetails,
         }),
         {
@@ -125,11 +132,17 @@ Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending 
       );
     }
 
-    const data = await geminiResponse.json();
-    let rawHtml = data.candidates?.[0]?.content?.parts?.[0]?.text || "<p>No output generated</p>";
+    // 4. Extract text from the Interactions API `steps` timeline
+    let rawHtml =
+      interactionData.steps
+        ?.filter((step) => step.type === "model_output")
+        .flatMap((step) => step.content || [])
+        .filter((part) => part.type === "text" && typeof part.text === "string")
+        .map((part) => part.text)
+        .join("") || "<p>No output generated</p>";
 
     // Remove markdown code fences
-    rawHtml = rawHtml.replace(/```html/gi, "").replace(/```/g, "").trim();
+    rawHtml = rawHtml.replace(/```html/gi, "").replace(/```svg/gi, "").replace(/```/g, "").trim();
 
     return new Response(
       JSON.stringify({
