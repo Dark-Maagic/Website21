@@ -206,6 +206,35 @@
     }
 
     /* ============================================================== */
+    /* UNIFIED BUTTON BASE & HOVER GLOW (MATCHING DEMO.HTML)          */
+    /* ============================================================== */
+    button {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      font-family: var(--font-sans);
+      font-size: 0.76rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    button:hover:not(:disabled),
+    button.active-mode:not(:disabled) {
+      background: var(--card-bg);
+      border-color: var(--brick);
+      color: var(--brick-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(194, 94, 56, 0.25);
+    }
+
+    /* ============================================================== */
     /* DUAL COIN UPLOAD & INDIVIDUAL REPORT COLUMNS                   */
     /* ============================================================== */
     .grading-stage {
@@ -398,25 +427,29 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 12px;
-      min-height: 26px;
+      margin-top: 14px;
+      min-height: 32px;
       font-family: var(--font-mono);
       font-size: 0.7rem;
       color: var(--text-muted);
     }
 
+    /* Clear Button (inherits demo.html hover glow from button rule) */
     .clear-img-btn {
-      background: transparent;
+      background: var(--surface);
       border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 4px 10px;
-      font-size: 0.66rem;
+      color: var(--text);
+      padding: 6px 14px;
+      font-family: var(--font-sans);
+      font-size: 0.68rem;
+      font-weight: 500;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      border-radius: 3px;
+      border-radius: 4px;
       cursor: pointer;
       display: none;
-      transition: all 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     }
 
     .clear-img-btn.visible {
@@ -424,55 +457,105 @@
     }
 
     .clear-img-btn:hover {
-      border-color: var(--brick-light);
+      background: var(--card-bg);
+      border-color: var(--brick);
       color: var(--brick-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(194, 94, 56, 0.25);
     }
 
     /* ============================================================== */
-    /* ACTION BAR & RATE LIMIT TELEMETRY                              */
+    /* STANDOUT ACTION BAR & GRADE COIN BUTTON                        */
     /* ============================================================== */
     .action-deck {
-      margin: 28px 0;
+      margin: 34px 0 30px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
+      width: 100%;
+      position: relative;
+    }
+
+    .grade-btn-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
       width: 100%;
     }
 
-    .grade-btn {
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border-strong);
-      padding: 15px 42px;
-      font-family: var(--font-display);
-      font-size: 0.9rem;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
+    .grade-flank-line {
+      height: 1px;
+      width: 110px;
+      background: linear-gradient(90deg, transparent, var(--brick-light));
+      opacity: 0.65;
     }
 
+    .grade-flank-line.right {
+      background: linear-gradient(90deg, var(--brick-light), transparent);
+    }
+
+    .grade-btn {
+      position: relative;
+      background: linear-gradient(135deg, rgba(194, 94, 56, 0.34) 0%, rgba(34, 32, 30, 0.96) 50%, rgba(194, 94, 56, 0.34) 100%);
+      color: #ffffff;
+      border: 1.5px solid var(--brick-light);
+      padding: 18px 54px;
+      font-family: var(--font-display);
+      font-size: 1.02rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65),
+                  0 0 24px rgba(194, 94, 56, 0.28),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .grade-btn .diamond-accent {
+      color: var(--brick-light);
+      font-size: 0.95rem;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+
+    /* Armed state when both Obverse & Reverse are uploaded */
+    .grade-btn:not(:disabled) {
+      background: linear-gradient(135deg, rgba(194, 94, 56, 0.52) 0%, rgba(44, 28, 22, 0.96) 50%, rgba(194, 94, 56, 0.52) 100%);
+      border-color: var(--amber-mint);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7),
+                  0 0 30px rgba(224, 122, 82, 0.42),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    }
+
+    /* Consistent demo.html hover glow property */
     .grade-btn:hover:not(:disabled) {
       background: var(--card-bg);
-      border-color: var(--brick-light);
+      border-color: var(--brick);
       color: var(--brick-light);
       transform: translateY(-2px);
-      box-shadow: 0 8px 26px rgba(194, 94, 56, 0.28);
+      box-shadow: 0 6px 20px rgba(194, 94, 56, 0.25),
+                  0 0 36px rgba(194, 94, 56, 0.45);
+    }
+
+    .grade-btn:hover:not(:disabled) .diamond-accent {
+      transform: rotate(45deg) scale(1.15);
+      color: var(--amber-mint);
     }
 
     .grade-btn:disabled {
-      opacity: 0.45;
+      opacity: 0.68;
       cursor: not-allowed;
-      border-color: var(--border);
+      border-color: rgba(224, 122, 82, 0.42);
+      color: rgba(232, 228, 223, 0.8);
       transform: none;
-      box-shadow: none;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45),
+                  0 0 14px rgba(194, 94, 56, 0.14);
     }
 
     .telemetry-bar {
@@ -558,7 +641,7 @@
 
     .report-body {
       font-size: 0.9rem;
-      line-height: 1.68;
+      line-height: 1.72;
       color: var(--text-muted);
       white-space: pre-line;
     }
@@ -572,7 +655,7 @@
     /* ============================================================== */
     .composite-card {
       width: 100%;
-      margin-top: 30px;
+      margin-top: 12px;
       background: linear-gradient(180deg, rgba(34, 32, 30, 0.94) 0%, rgba(26, 25, 24, 0.98) 100%);
       border: 1px solid var(--border);
       border-top: 2px solid var(--amber-mint);
@@ -657,12 +740,90 @@
 
     .composite-body {
       font-size: 0.95rem;
-      line-height: 1.72;
+      line-height: 1.75;
       color: var(--text-muted);
       white-space: pre-line;
     }
 
     .composite-card.graded .composite-body {
+      color: var(--text);
+    }
+
+    /* ============================================================== */
+    /* TECHNICAL TERM UNDERLINE & POPUP EXPLANATION BOX               */
+    /* ============================================================== */
+    .tech-term {
+      color: #ffffff;
+      text-decoration: underline;
+      text-decoration-color: var(--brick-light);
+      text-decoration-thickness: 1.5px;
+      text-underline-offset: 3px;
+      cursor: help;
+      border-radius: 2px;
+      padding: 0 2px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .tech-term:hover,
+    .tech-term:focus,
+    .tech-term.active-term {
+      background-color: rgba(224, 122, 82, 0.18);
+      color: #ffffff;
+      outline: none;
+    }
+
+    .term-popover {
+      position: fixed;
+      z-index: 9500;
+      width: max-content;
+      max-width: 310px;
+      background: #171514;
+      border: 1px solid var(--brick-light);
+      border-top: 2px solid var(--brick);
+      border-radius: 6px;
+      padding: 11px 14px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.85),
+                  0 0 18px rgba(194, 94, 56, 0.25);
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, -100%) translateY(-4px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .term-popover.visible {
+      opacity: 1;
+      transform: translate(-50%, -100%) translateY(-10px);
+    }
+
+    /* Downward caret pointing directly to the underlined word */
+    .term-popover::after {
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      left: var(--caret-left, 50%);
+      transform: translateX(-50%) rotate(45deg);
+      width: 10px;
+      height: 10px;
+      background: #171514;
+      border-right: 1px solid var(--brick-light);
+      border-bottom: 1px solid var(--brick-light);
+    }
+
+    .term-popover-title {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--brick-light);
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .term-popover-desc {
+      font-family: var(--font-sans);
+      font-size: 0.79rem;
+      line-height: 1.5;
       color: var(--text);
     }
 
@@ -735,6 +896,8 @@
       main { padding: 120px 24px 60px; }
       .custom-cursor, .custom-cursor-follower { display: none; }
       .coin-columns { grid-template-columns: 1fr; }
+      .grade-flank-line { display: none; }
+      .grade-btn { width: 100%; justify-content: center; padding: 18px 28px; }
       .composite-top { flex-direction: column; align-items: flex-start; }
       .composite-score-box { align-items: flex-start; width: 100%; }
     }
@@ -745,6 +908,12 @@
   <!-- Custom Magnetic Cursor -->
   <div class="custom-cursor" id="cursor"></div>
   <div class="custom-cursor-follower" id="cursor-follower"></div>
+
+  <!-- Floating Technical Term Explanation Popover -->
+  <div class="term-popover" id="term-popover" role="tooltip" aria-hidden="true">
+    <span class="term-popover-title" id="term-popover-title"></span>
+    <div class="term-popover-desc" id="term-popover-desc"></div>
+  </div>
 
   <!-- Header Navigation (Copied in full from demo.html with Coin-Grading Lattice SVG) -->
   <header style="padding: 16px 48px;">
@@ -819,7 +988,7 @@
     </nav>
   </header>
 
-  <!-- Background Geometry Decal (Modified Numismatic Meridians) -->
+  <!-- Background Geometry Decal -->
   <svg class="bg-decal" viewBox="0 0 1440 600" preserveAspectRatio="none">
     <path fill="none" stroke="rgba(224,122,82,0.18)" stroke-width="1.3" d="M0,380 C360,520 720,120 1080,390 C1260,500 1360,290 1440,340" />
     <path fill="none" stroke="rgba(214,140,104,0.12)" stroke-width="1" d="M0,430 C360,570 720,170 1080,440 C1260,550 1360,340 1440,390" />
@@ -834,7 +1003,7 @@
       </div>
       <h1>Numismatic Optical Inspection &amp; Grading</h1>
       <p class="subtitle">
-        Upload high-resolution photographs of the obverse and reverse of the same coin for automated Sheldon-scale evaluation via the Gemini Interactions API.
+        Upload high-resolution photographs of the obverse and reverse of the same coin for automated Sheldon-scale evaluation. Hover or click any <span class="tech-term" tabindex="0" data-term="Technical Term" data-def="Specialized numismatic grading vocabulary is underlined in orange inside your reports. Hover or click to view a plain-English explanation.">underlined term</span> in a report for an instant explanation.
       </p>
 
       <!-- Dual-Planchet Caliper Ornament under Title -->
@@ -978,12 +1147,18 @@
       </div>
 
       <!-- ============================================================== -->
-      <!-- CENTER ACTION DECK: GRADE COIN BUTTON & RATE LIMIT TELEMETRY   -->
+      <!-- CENTER ACTION DECK: STANDOUT GRADE COIN BUTTON & TELEMETRY     -->
       <!-- ============================================================== -->
       <div class="action-deck">
-        <button type="button" class="grade-btn" id="grade-coin-btn" disabled>
-          <span>◈</span> <span id="grade-btn-label">Grade Coin</span> <span>◈</span>
-        </button>
+        <div class="grade-btn-wrapper">
+          <div class="grade-flank-line"></div>
+          <button type="button" class="grade-btn" id="grade-coin-btn" disabled>
+            <span class="diamond-accent">◈</span>
+            <span id="grade-btn-label">Grade Coin</span>
+            <span class="diamond-accent">◈</span>
+          </button>
+          <div class="grade-flank-line right"></div>
+        </div>
 
         <div class="telemetry-bar">
           <span class="telemetry-dot" id="telemetry-dot"></span>
@@ -1074,14 +1249,245 @@
     animateCursor();
 
     // ============================================================================
-    // 2. STATE & RATE LIMIT MANAGEMENT (1 REQUEST PER 60 SECONDS)
+    // 2. NUMISMATIC TECHNICAL GLOSSARY & INTERACTIVE POPOVER ENGINE
+    // ============================================================================
+    const NUMISMATIC_GLOSSARY = {
+      "honest wear": "Natural, even smoothing of a coin's surface caused by normal hand-to-hand use in everyday commerce rather than damage or tampering.",
+      "porosity": "Tiny microscopic pits or a spongy surface texture on a coin, usually caused by environmental corrosion or an imperfect metal blank.",
+      "porous": "Having tiny surface pits or a rough, spongy texture caused by corrosion or casting imperfections.",
+      "planchet": "The blank, prepared metal disc onto which a coin's design is stamped by the mint's dies.",
+      "planchet flaw": "A natural imperfection present in the metal blank before the coin was even struck at the mint.",
+      "cartwheel luster": "A windmill-like band of light that spins across an uncirculated coin's surface when tilted under a light source.",
+      "mint luster": "The original frosty or satiny sheen left on a coin's metal surface by the microscopic flow lines created when it was struck.",
+      "luster": "The way light reflects off microscopic flow lines on a coin's surface; a key indicator of how little a coin has circulated.",
+      "contact marks": "Minor nicks, scuffs, or abrasions caused when coins bump against one another in mint bags or rolls.",
+      "bag marks": "Surface nicks and scratches acquired when newly minted coins clink against each other inside heavy canvas mint bags.",
+      "hairlines": "Very fine, microscopic scratches sitting in the coin's flat surfaces, most often caused by wiping or abrasive cleaning.",
+      "high points": "The most elevated areas of a coin's sculpted design (such as the cheek, hair curls, or eagle's breast) that rub against surfaces first and show wear earliest.",
+      "devices": "The raised sculptural elements—portraits, emblems, shields, and lettering—that rise above the flat background of a coin.",
+      "fields": "The flat, open background areas of a coin surrounding the raised portrait, emblems, and lettering.",
+      "field": "The flat, open background area of a coin surrounding the raised design elements.",
+      "relief": "The height and three-dimensional depth of the raised design relative to the coin's flat background field.",
+      "weak strike": "A coin where the mint's dies did not press fully into the metal blank, leaving high points looking soft or flat even without wear.",
+      "full strike": "A coin struck with enough pressure for the metal to completely fill every tiny recess of the die, producing razor-sharp details.",
+      "strike": "The sharpness and completeness of the design transferred from the minting dies onto the metal coin blank.",
+      "sheldon scale": "The official 1-to-70 numerical grading scale used to rate a coin's condition, where 1 is barely identifiable and 70 is flawless.",
+      "mint state": "A coin (graded MS-60 to MS-70) that shows zero trace of wear from circulation, though it may have minor mint bag marks.",
+      "uncirculated": "A coin that has never been used in everyday commerce and retains no wear on its highest design points.",
+      "about uncirculated": "A grade tier (AU-50 to AU-58) for coins showing only the faintest trace of friction on the very highest points of the design.",
+      "extremely fine": "A grade tier (XF-40 or XF-45) where light wear appears on the high points, but all fine design details remain sharp.",
+      "very fine": "A mid-range circulated grade (VF-20 to VF-35) showing moderate wear on high points while major lettering and features remain clear.",
+      "very good": "A well-worn circulated grade (VG-8 or VG-10) where the main design outline is clear, but most interior details are worn flat.",
+      "about good": "A heavily worn grade (AG-3) where the design is mostly smooth and parts of the outer rim blend into the lettering.",
+      "details grade": "A designation given to a coin that has a clear level of wear, but cannot receive a standard numerical grade due to cleaning, scratches, or environmental damage.",
+      "eye appeal": "The overall visual attractiveness of a coin—combining luster, toning color, strike sharpness, and absence of distracting marks.",
+      "toning": "A natural, thin chemical layer of oxidation that forms on a coin's surface over time, creating colors ranging from warmrusset to rainbow hues.",
+      "artificial toning": "Color rapidly forced onto a coin using chemicals or heat rather than natural aging.",
+      "patina": "The natural surface film or mellow color layer that develops on old metal (especially copper and bronze) over decades.",
+      "verdigris": "A greenish or bluish-green crusty chemical deposit that forms on copper or bronze coins exposed to moisture and air.",
+      "environmental damage": "Surface degradation—such as corrosion, pitting, or heavy discoloration—caused by exposure to moisture, soil, or chemicals.",
+      "pitting": "Small cavities or craters eaten into a coin's metal surface by corrosion or rust.",
+      "granularity": "A finely roughened, sandpaper-like surface texture caused by microscopic oxidation or corrosion.",
+      "granular": "Showing a finely roughened, grainy surface texture resulting from microscopic corrosion.",
+      "corrosion": "Chemical breakdown of a coin's metal surface due to moisture, acids, or air exposure.",
+      "cleaned": "A coin whose original surface has been altered by polishing, wiping, or chemical dipping, typically reducing its numismatic value.",
+      "whizzed": "A coin mechanically buffed with a high-speed rotating wire brush to fake the appearance of original mint luster.",
+      "dipped": "A coin briefly submerged in a mild acid solution to strip away surface toning or tarnish.",
+      "cabinet friction": "Slight, harmless rub on the very highest points of an otherwise uncirculated coin caused by sliding in wooden collector drawers.",
+      "friction": "Slight disturbance or smoothing of the original surface luster on a coin's highest points without removing actual metal.",
+      "rub": "Very light trace wear or disturbance of the mint luster on the highest raised points of a coin.",
+      "chatter": "A cluster of tiny, shallow contact ticks in the flat fields of a coin from jostling against other coins.",
+      "denticles": "The small tooth-like or bead-like projections arranged in a ring around the inside edge of a coin's rim.",
+      "reeding": "The series of vertical grooves cut around the outer perimeter edge of a coin (seen on dimes, quarters, and halves).",
+      "reeded edge": "An outer coin edge grooved with fine vertical ridges, originally invented to prevent people from shaving precious metal off the edge.",
+      "rim bruise": "A localized dent or flattened spot on the raised outer border of a coin, usually caused by being dropped.",
+      "rim ding": "A small nick or indentation along the raised outer edge of a coin.",
+      "collar": "The steel ring chamber that holds a coin blank in place during striking and forms its outer edge.",
+      "die crack": "A thin, raised line of metal on a coin caused by a crack in the steel die that stamped it.",
+      "die clash": "An error where the front and back dies accidentally slam together without a coin blank between them, transferring faint ghost outlines onto later coins.",
+      "die state": "The stage of wear of the minting die itself when it struck the coin; worn dies produce softer details and heavier flow lines.",
+      "doubled die": "A minting variety where the die itself received a misaligned double impression during manufacturing, creating crisp doubling on letters or numbers.",
+      "cud": "A raised, unstamped blob of metal along a coin's rim caused by a piece of the steel die breaking completely away.",
+      "lamination": "A mint error where trapped gas or impurities in the metal alloy cause a thin layer of the coin's surface to peel, crack, or flake.",
+      "carbon spots": "Small dark brown or black specks of oxidation that often form on copper and bronze coins.",
+      "milk spots": "Cloudy white surface spots that sometimes appear on modern silver coins due to rinsed annealing solutions at the mint.",
+      "exergue": "The lower portion of a coin's reverse design, often separated by a horizontal line, where the date or denomination is placed.",
+      "legend": "The principal inscription or lettering wrapped around the outer perimeter of a coin.",
+      "motto": "An inspirational phrase inscribed on a coin, such as 'E Pluribus Unum' or 'In God We Trust'.",
+      "truncation": "The bottom cut-off edge of a portrait's neck or bust where the designer's initials are often hidden.",
+      "full bands": "A special designation for Mercury and Roosevelt dimes indicating the horizontal bands on the reverse torch are completely separated and unworn.",
+      "full steps": "A designation for Jefferson nickels indicating the horizontal steps at the base of Monticello are crisply and completely struck.",
+      "full bell lines": "A designation for Franklin half dollars indicating the horizontal lines across the bottom of the Liberty Bell are uninterrupted.",
+      "full red": "A color designation (RD) for copper coins that retain 95% or more of their original bright fiery-orange mint color.",
+      "red-brown": "A color designation (RB) for copper coins retaining between 5% and 95% of their original orange mint color mixed with brown toning.",
+      "cameo": "Strong visual contrast between frosted, matte raised design elements and deeply mirrored flat background fields.",
+      "proof": "A specially made collector coin struck multiple times using polished dies and hand-selected blanks to create mirror-like fields.",
+      "business strike": "A standard coin produced at high speed for everyday public circulation rather than special collector sets.",
+      "circulation cameo": "An attractive, natural two-tone look on a worn coin where darker toning in the recessed areas frames lighter, worn high points.",
+      "obverse": "The front or 'heads' side of a coin, which usually bears the primary portrait, monarch, or national emblem.",
+      "reverse": "The back or 'tails' side of a coin, opposite the main portrait."
+    };
+
+    // Sort keys longest-first so multi-word phrases ("honest wear") match before single words
+    const SORTED_GLOSSARY_KEYS = Object.keys(NUMISMATIC_GLOSSARY).sort((a, b) => b.length - a.length);
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    /**
+     * Converts raw report text into safe HTML with technical terms wrapped in
+     * interactive orange-underlined <span class="tech-term"> elements.
+     */
+    function formatReportWithTechnicalTerms(rawText, dynamicGlossary = {}) {
+      if (!rawText) return '';
+
+      const combinedDict = { ...NUMISMATIC_GLOSSARY };
+      if (dynamicGlossary && typeof dynamicGlossary === 'object') {
+        for (const [k, v] of Object.entries(dynamicGlossary)) {
+          if (k && v) combinedDict[k.toLowerCase().trim()] = String(v);
+        }
+      }
+
+      const allKeys = Object.keys(combinedDict).sort((a, b) => b.length - a.length);
+      if (allKeys.length === 0) return escapeHtml(rawText);
+
+      // Match whole words/phrases (including optional plural 's' on single nouns)
+      const pattern = allKeys.map(k => escapeRegex(k)).join('|');
+      const regex = new RegExp(`\\b(${pattern})(s?)\\b`, 'gi');
+
+      const safeText = escapeHtml(rawText);
+
+      return safeText.replace(regex, (fullMatch, baseTerm) => {
+        const lookupKey = baseTerm.toLowerCase();
+        const definition = combinedDict[lookupKey];
+        if (!definition) return fullMatch;
+
+        const safeTermAttr = escapeHtml(baseTerm);
+        const safeDefAttr = escapeHtml(definition);
+        return `<span class="tech-term" tabindex="0" data-term="${safeTermAttr}" data-def="${safeDefAttr}">${fullMatch}</span>`;
+      });
+    }
+
+    // Popover Positioning & Event Delegation (Supports both Hover and Click/Tap)
+    const termPopover = document.getElementById('term-popover');
+    const termPopoverTitle = document.getElementById('term-popover-title');
+    const termPopoverDesc = document.getElementById('term-popover-desc');
+    let activeTermEl = null;
+    let pinnedByClick = false;
+
+    function showTermPopover(targetEl) {
+      const term = targetEl.getAttribute('data-term');
+      const def = targetEl.getAttribute('data-def');
+      if (!def) return;
+
+      if (activeTermEl && activeTermEl !== targetEl) {
+        activeTermEl.classList.remove('active-term');
+      }
+      activeTermEl = targetEl;
+      targetEl.classList.add('active-term');
+
+      termPopoverTitle.textContent = term || 'Technical Term';
+      termPopoverDesc.textContent = def;
+      termPopover.classList.add('visible');
+      termPopover.setAttribute('aria-hidden', 'false');
+
+      positionPopoverAbove(targetEl);
+    }
+
+    function positionPopoverAbove(targetEl) {
+      if (!targetEl || !termPopover.classList.contains('visible')) return;
+      const rect = targetEl.getBoundingClientRect();
+      const popWidth = termPopover.offsetWidth || 280;
+      const margin = 16;
+
+      const wordCenterX = rect.left + rect.width / 2;
+      const clampedCenterX = Math.max(
+        popWidth / 2 + margin,
+        Math.min(window.innerWidth - popWidth / 2 - margin, wordCenterX)
+      );
+
+      // Keep caret pointing directly at the word even if box is clamped near screen edge
+      const caretOffsetPx = wordCenterX - (clampedCenterX - popWidth / 2);
+      const clampedCaretPx = Math.max(14, Math.min(popWidth - 14, caretOffsetPx));
+
+      termPopover.style.left = `${clampedCenterX}px`;
+      termPopover.style.top = `${rect.top}px`;
+      termPopover.style.setProperty('--caret-left', `${clampedCaretPx}px`);
+    }
+
+    function hideTermPopover(force = false) {
+      if (pinnedByClick && !force) return;
+      if (activeTermEl) {
+        activeTermEl.classList.remove('active-term');
+        activeTermEl = null;
+      }
+      pinnedByClick = false;
+      termPopover.classList.remove('visible');
+      termPopover.setAttribute('aria-hidden', 'true');
+    }
+
+    document.addEventListener('mouseover', (e) => {
+      const termEl = e.target.closest('.tech-term');
+      if (termEl) {
+        showTermPopover(termEl);
+      } else if (!pinnedByClick && activeTermEl) {
+        hideTermPopover();
+      }
+    });
+
+    document.addEventListener('focusin', (e) => {
+      const termEl = e.target.closest('.tech-term');
+      if (termEl) showTermPopover(termEl);
+    });
+
+    document.addEventListener('focusout', (e) => {
+      if (e.target.closest('.tech-term') && !pinnedByClick) {
+        hideTermPopover();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      const termEl = e.target.closest('.tech-term');
+      if (termEl) {
+        e.stopPropagation();
+        if (activeTermEl === termEl && pinnedByClick) {
+          hideTermPopover(true);
+        } else {
+          pinnedByClick = true;
+          showTermPopover(termEl);
+        }
+      } else {
+        hideTermPopover(true);
+      }
+    });
+
+    window.addEventListener('scroll', () => {
+      if (activeTermEl) positionPopoverAbove(activeTermEl);
+    }, { passive: true });
+
+    window.addEventListener('resize', () => {
+      if (activeTermEl) positionPopoverAbove(activeTermEl);
+    });
+
+    // ============================================================================
+    // 3. STATE & RATE LIMIT MANAGEMENT (1 REQUEST PER 60 SECONDS)
     // ============================================================================
     const COOLDOWN_MS = 60 * 1000;
     const STORAGE_KEY = 'coingrader_last_request_ts';
 
     const state = {
-      obverse: null, // { base64, mimeType, name }
-      reverse: null, // { base64, mimeType, name }
+      obverse: null,
+      reverse: null,
       isGrading: false
     };
 
@@ -1154,9 +1560,8 @@
     setInterval(updateControlsState, 500);
 
     // ============================================================================
-    // 3. IMAGE NORMALIZATION & UPLOAD HANDLERS
+    // 4. IMAGE NORMALIZATION & UPLOAD HANDLERS
     // ============================================================================
-    // Resizes large smartphone photos to max 1500px so base64 payloads stay fast and within Worker limits
     function processUploadedImage(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1190,7 +1595,6 @@
             });
           };
           img.onerror = () => {
-            // Fallback for formats the browser canvas cannot decode directly
             const parts = String(dataUrl).split(',');
             const mimeMatch = parts[0].match(/:(.*?);/);
             resolve({
@@ -1277,12 +1681,13 @@
     wireSideUpload('reverse');
 
     // ============================================================================
-    // 4. EXECUTE GRADING VIA CLOUDFLARE WORKER (/api/coingrader)
+    // 5. EXECUTE GRADING VIA CLOUDFLARE WORKER (/api/coingrader)
     // ============================================================================
     gradeBtn.addEventListener('click', async () => {
       if (!state.obverse || !state.reverse || state.isGrading) return;
       if (getRemainingCooldownSeconds() > 0) return;
 
+      hideTermPopover(true);
       state.isGrading = true;
       updateControlsState();
 
@@ -1343,20 +1748,39 @@
         // Start 60-second per-user cooldown after a successful request
         setCooldownFromNow(60);
 
-        // Populate Obverse Report under Obverse Upload
+        // Merge any dynamic technical terms returned by the worker with our built-in glossary
+        const dynamicGlossary = {};
+        if (Array.isArray(result.technicalTerms)) {
+          for (const item of result.technicalTerms) {
+            if (item?.term && item?.definition) {
+              dynamicGlossary[item.term.toLowerCase()] = item.definition;
+            }
+          }
+        }
+
+        // Populate Obverse Report under Obverse Upload (with orange-underlined technical terms)
         obvGradeBadge.textContent = result.obverseGrade || 'GRADED';
-        obvBody.textContent = result.obverseReport || 'No obverse report returned.';
+        obvBody.innerHTML = formatReportWithTechnicalTerms(
+          result.obverseReport || 'No obverse report returned.',
+          dynamicGlossary
+        );
         obvCard.classList.add('graded');
 
-        // Populate Reverse Report under Reverse Upload
+        // Populate Reverse Report under Reverse Upload (with orange-underlined technical terms)
         revGradeBadge.textContent = result.reverseGrade || 'GRADED';
-        revBody.textContent = result.reverseReport || 'No reverse report returned.';
+        revBody.innerHTML = formatReportWithTechnicalTerms(
+          result.reverseReport || 'No reverse report returned.',
+          dynamicGlossary
+        );
         revCard.classList.add('graded');
 
-        // Populate Composite Grade under both columns
+        // Populate Composite Grade under both columns (Specimen only, no model name)
         compGradeBadge.textContent = result.compositeGrade || 'GRADED';
-        compCoinId.textContent = `SPECIMEN: ${(result.coinIdentification || 'Standard Numismatic Specimen').toUpperCase()} • MODEL: ${(result.modelUsed || 'GEMINI').toUpperCase()}`;
-        compBody.textContent = result.compositeReport || 'No composite report returned.';
+        compCoinId.textContent = `SPECIMEN: ${(result.coinIdentification || 'Standard Numismatic Specimen').toUpperCase()}`;
+        compBody.innerHTML = formatReportWithTechnicalTerms(
+          result.compositeReport || 'No composite report returned.',
+          dynamicGlossary
+        );
         compCard.classList.add('graded');
 
       } catch (err) {

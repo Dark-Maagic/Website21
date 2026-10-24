@@ -42,6 +42,24 @@ const GRADING_RESPONSE_SCHEMA = {
     compositeReport: {
       type: "string",
       description: "Comprehensive composite grading report synthesizing the obverse and reverse findings into the final overall grade."
+    },
+    technicalTerms: {
+      type: "array",
+      description: "List of specialized numismatic or technical grading terms used anywhere in the obverse, reverse, or composite reports, paired with brief plain-English explanations for a non-expert.",
+      items: {
+        type: "object",
+        properties: {
+          term: {
+            type: "string",
+            description: "Exact technical term or phrase as it appears in the report (e.g., 'honest wear', 'porosity', 'die clash')."
+          },
+          definition: {
+            type: "string",
+            description: "Brief 1-sentence plain-English explanation of what the term means."
+          }
+        },
+        required: ["term", "definition"]
+      }
     }
   },
   required: [
@@ -51,10 +69,10 @@ const GRADING_RESPONSE_SCHEMA = {
     "reverseGrade",
     "reverseReport",
     "compositeGrade",
-    "compositeReport"
+    "compositeReport",
+    "technicalTerms"
   ]
 };
-
 /**
  * Checks and records a 1-request-per-minute rate limit per user IP
  * using both isolate memory and Cloudflare's Edge Cache API.
