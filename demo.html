@@ -2121,8 +2121,65 @@
     });
 
     // ============================================================================
-    // 7. BUTTON 2: GEMINI PHOTO-TO-SVG/HTML PIPELINE
+    // 7. BUTTON 2: GEMINI PHOTO-TO-SVG/HTML PIPELINE (INSTANT PREVIEW + PREFETCH)
     // ============================================================================
+    const GEMINI_CAT_IDS = [
+      'photo-1514888286974-6c03e2ca1dba',
+      'photo-1543852786-1cf6624b9987',
+      'photo-1533738363-b7f9aef128ce',
+      'photo-1573865526739-10659fec78a5',
+      'photo-1518791841217-8f162f1e1131',
+      'photo-1561948955-570b270e7c36',
+      'photo-1495360010541-f48722b34f7d',
+      'photo-1513360375582-619d49866d99',
+      'photo-1574158622682-e40e69881006',
+      'photo-1478098711619-5ab0b478d6e6',
+      'photo-1535930891776-0c2dfb7fda1a',
+      'photo-1519052537078-e6302a4968d4'
+    ];
+
+    let geminiCatOrder = GEMINI_CAT_IDS
+      .map((_, idx) => idx)
+      .sort(() => Math.random() - 0.5);
+    let geminiCatCursor = 0;
+    let prefetchedGeminiJob = null;
+
+    function getNextGeminiCatIndex() {
+      const idx = geminiCatOrder[geminiCatCursor % geminiCatOrder.length];
+      geminiCatCursor++;
+      return idx;
+    }
+
+    function getGeminiDisplayUrl(index) {
+      return `https://images.unsplash.com/${GEMINI_CAT_IDS[index]}?auto=format&fit=crop&w=700&q=80`;
+    }
+
+    function createGeminiJob() {
+      const index = getNextGeminiCatIndex();
+      const previewUrl = getGeminiDisplayUrl(index);
+
+      // Pre-warm the browser's image cache for the source photo
+      const preloadImg = new Image();
+      preloadImg.src = previewUrl;
+
+      const promise = fetch(`/api/gemini?index=${index}`).then(async (res) => {
+        const data = await res.json();
+        return { ok: res.ok && !data.error, data };
+      });
+
+      return { index, previewUrl, promise };
+    }
+
+    function ensureGeminiPrefetch() {
+      if (!prefetchedGeminiJob) {
+        prefetchedGeminiJob = createGeminiJob();
+      }
+    }
+
+    // Start pre-computing in the background as soon as the user hovers or focuses the button
+    fetchGeminiBtn.addEventListener('mouseenter', ensureGeminiPrefetch, { passive: true });
+    fetchGeminiBtn.addEventListener('focus', ensureGeminiPrefetch, { passive: true });
+
     fetchGeminiBtn.addEventListener('click', async () => {
       if (activeCapability === 'gemini') {
         if (canCloseActive) {
@@ -2135,26 +2192,44 @@
       scheduleCloseButtonReveal(fetchGeminiBtn);
       const currentReqId = geminiRequestId;
 
+      // Use the already in-flight/completed prefetch job, or create one immediately
+      const job = prefetchedGeminiJob || createGeminiJob();
+      prefetchedGeminiJob = null;
+
       terminalStatus.textContent = 'EXECUTING // /API/GEMINI';
       terminalHint.textContent = 'Vector SVG Synthesis Pipeline';
       output.innerHTML = GEMINI_LOADER_HTML;
 
+      // Immediately reveal the comparison cards with the source photo on the left
+      sourceImg.src = job.previewUrl;
+      htmlArtContainer.innerHTML = `
+        <svg viewBox="0 0 400 400" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="400" fill="#1a1918"/>
+          <circle cx="200" cy="200" r="64" stroke="rgba(224,122,82,0.25)" stroke-width="1.5" stroke-dasharray="4 6" fill="none"/>
+          <text x="200" y="205" text-anchor="middle" fill="#9e9890" font-family="monospace" font-size="11" letter-spacing="2">AWAITING VECTOR STREAM...</text>
+        </svg>
+      `;
+      displayArea.style.display = 'flex';
+
       try {
-        const response = await fetch('/api/gemini');
-        const data = await response.json();
+        const { ok, data } = await job.promise;
         if (currentReqId !== geminiRequestId) return;
-        
-        if (!response.ok || data.error) {
+
+        if (!ok) {
           terminalStatus.textContent = 'ERROR // PIPELINE HALTED';
           output.textContent = 'API Error:\n' + JSON.stringify(data, null, 2);
           return;
         }
 
         terminalStatus.textContent = 'COMPLETE // 200 OK';
-        output.textContent = `Synthesis complete. Engine target: ${data.modelUsed || 'Gemini'}`;
-        sourceImg.src = data.sourceImageUrl;
+        const timingText = data.latencyMs ? ` in ${(data.latencyMs / 1000).toFixed(2)}s` : '';
+        output.textContent = `Synthesis complete${timingText}. Engine target: ${data.modelUsed || 'Gemini'}`;
+        sourceImg.src = data.sourceImageUrl || job.previewUrl;
         htmlArtContainer.innerHTML = data.generatedHtml;
         displayArea.style.display = 'flex';
+
+        // Pre-warm the next random cat in the background for the next click
+        ensureGeminiPrefetch();
       } catch (error) {
         if (currentReqId !== geminiRequestId) return;
         terminalStatus.textContent = 'NETWORK EXCEPTION';

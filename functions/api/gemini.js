@@ -1,9 +1,65 @@
+// Pre-allocated Base64 helper (uses native V8 Uint8Array.toBase64 when available,
+// falling back to 32KB chunked String.fromCharCode to avoid O(N^2) string concatenation)
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  if (typeof bytes.toBase64 === "function") {
+    return bytes.toBase64();
+  }
+  const CHUNK_SIZE = 0x8000;
+  const chunks = [];
+  for (let i = 0; i < bytes.byteLength; i += CHUNK_SIZE) {
+    chunks.push(
+      String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE))
+    );
+  }
+  return btoa(chunks.join(""));
+}
+
+// Rotating library of cat photo IDs on Unsplash
+const CAT_PHOTO_IDS = [
+  "photo-1514888286974-6c03e2ca1dba",
+  "photo-1543852786-1cf6624b9987",
+  "photo-1533738363-b7f9aef128ce",
+  "photo-1573865526739-10659fec78a5",
+  "photo-1518791841217-8f162f1e1131",
+  "photo-1561948955-570b270e7c36",
+  "photo-1495360010541-f48722b34f7d",
+  "photo-1513360375582-619d49866d99",
+  "photo-1574158622682-e40e69881006",
+  "photo-1478098711619-5ab0b478d6e6",
+  "photo-1535930891776-0c2dfb7fda1a",
+  "photo-1519052537078-e6302a4968d4",
+];
+
+// Active Flash model hierarchy with each model's lowest-latency thinking_level
+// Note: gemini-3.8-flash minimum supported thinking_level is "low" ("minimal" returns 400).
+// gemini-3.6-flash, gemini-3.5-flash-lite, and gemini-3.1-flash-lite support "minimal".
+const MODEL_HIERARCHY = [
+  { id: "gemini-3.8-flash", thinkingLevel: "low" },
+  { id: "gemini-3.6-flash", thinkingLevel: "minimal" },
+  { id: "gemini-3.5-flash-lite", thinkingLevel: "minimal" },
+  { id: "gemini-3.1-flash-lite", thinkingLevel: "minimal" },
+];
+
+const SYSTEM_INSTRUCTION =
+  "You are a fast, precision geometric SVG illustrator. " +
+  "Output ONLY raw, valid <svg>...</svg> markup. " +
+  "Never output markdown code fences, explanations, or XML comments. " +
+  "Keep the SVG concise (under 3500 characters) using integer coordinates, clean <defs> gradients, and 25 to 45 layered vector shapes (<polygon>, <path>, <ellipse>, <circle>, <rect>).";
+
+const USER_PROMPT =
+  'Recreate this cat photo as an expressive, standalone geometric SVG illustration with viewBox="0 0 400 400" width="100%" height="100%". ' +
+  "Accurately capture the background palette/lighting, the cat's exact posture, fur markings, ears, eyes, nose, and whiskers.";
+
 export async function onRequest(context) {
+  const startTime = Date.now();
   const apiKey = context.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ error: "GEMINI_API_KEY is not defined in Cloudflare settings." }),
+      JSON.stringify({
+        error: "GEMINI_API_KEY is not defined in Cloudflare settings.",
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
@@ -11,31 +67,31 @@ export async function onRequest(context) {
     );
   }
 
-  // 1. Rotating library of high-quality cat photos in nature
-  const catImages = [
-    "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1543852786-1cf6624b9987?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1533738363-b7f9aef128ce?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1573865526739-10659fec78a5?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1561948955-570b270e7c36?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1495360010541-f48722b34f7d?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1513360375582-619d49866d99?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1478098711619-5ab0b478d6e6?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1535930891776-0c2dfb7fda1a?auto=format&fit=crop&w=700&q=80",
-    "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?auto=format&fit=crop&w=700&q=80"
-  ];
+  // Allow client to request a specific index (for instant client-side preview) or pick randomly
+  const url = new URL(context.request.url);
+  const requestedIndex = parseInt(url.searchParams.get("index"), 10);
+  const index =
+    !Number.isNaN(requestedIndex) && requestedIndex >= 0
+      ? requestedIndex % CAT_PHOTO_IDS.length
+      : Math.floor(Math.random() * CAT_PHOTO_IDS.length);
 
-  const randomIndex = Math.floor(Math.random() * catImages.length);
-  const sourceImageUrl = catImages[randomIndex];
+  const photoId = CAT_PHOTO_IDS[index];
+  // High-res URL for browser display
+  const sourceImageUrl = `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=700&q=80`;
+  // Compact <=384px URL for Gemini vision ingestion (single tile, ~18KB, cached at Cloudflare Edge)
+  const visionImageUrl = `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=384&q=70`;
 
   try {
-    // 2. Fetch the chosen image and convert to Base64
-    const imageResponse = await fetch(sourceImageUrl, {
+    // 1. Fetch compact image with Cloudflare Edge Caching enabled
+    const imageResponse = await fetch(visionImageUrl, {
+      cf: {
+        cacheEverything: true,
+        cacheTtl: 86400,
+      },
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-      }
+        "User-Agent": "Cloudflare-Workers-Image-Ingest/1.0",
+        Accept: "image/jpeg,image/*;q=0.8",
+      },
     });
 
     if (!imageResponse.ok) {
@@ -43,112 +99,112 @@ export async function onRequest(context) {
     }
 
     const imageBuffer = await imageResponse.arrayBuffer();
-    const bytes = new Uint8Array(imageBuffer);
-    let binaryString = "";
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binaryString += String.fromCharCode(bytes[i]);
-    }
-    const base64Image = btoa(binaryString);
+    const base64Image = arrayBufferToBase64(imageBuffer);
 
-    const prompt = `Analyze this cat picture. Recreate the image as a standalone, visually detailed SVG/HTML snippet with shapes, gradients, and colors matching the cat and background. 
-Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending with </svg> or </div>). Do NOT include markdown formatting, backticks, or explanations.`;
-
-    // Valid, distinct Flash model priority hierarchy
-    // Note: gemini-3.7-flash is deprecated and aliases to gemini-3.8-flash, so it is omitted to avoid duplicate retries.
-    const modelHierarchy = [
-      "gemini-3.8-flash",
-      "gemini-3.6-flash",
-      "gemini-3.5-flash-lite",
-      "gemini-3.1-flash-lite"
-    ];
-
-    const interactionsUrl = "https://generativelanguage.googleapis.com/v1beta/interactions";
+    const interactionsUrl =
+      "https://generativelanguage.googleapis.com/v1beta/interactions";
     let lastErrorDetails = "";
-    let geminiResponse = null;
+    let lastStatus = 503;
     let interactionData = null;
     let successfulModel = null;
 
-    // 3. Iterate through fallback models using the Interactions API
-    for (const model of modelHierarchy) {
-      for (let attempt = 0; attempt < 2; attempt++) {
-        geminiResponse = await fetch(interactionsUrl, {
+    // 2. Iterate through fallback models using the Interactions API (fail-fast on 429/503)
+    for (const modelConfig of MODEL_HIERARCHY) {
+      try {
+        const geminiResponse = await fetch(interactionsUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "x-goog-api-key": apiKey,
           },
+          signal: AbortSignal.timeout(14000), // Prevent hung connections from stalling the Worker
           body: JSON.stringify({
-            model: model,
+            model: modelConfig.id,
             store: false, // Stateless execution for single-turn Worker requests
+            system_instruction: SYSTEM_INSTRUCTION,
+            generation_config: {
+              thinking_level: modelConfig.thinkingLevel,
+              max_output_tokens: 4096,
+            },
+            // Best practice: place text prompt before image in the input array
             input: [
               {
                 type: "text",
-                text: prompt,
+                text: USER_PROMPT,
               },
               {
                 type: "image",
                 mime_type: "image/jpeg",
                 data: base64Image,
+                resolution: "low", // 280 tokens (vs 1,120 default), cutting vision prefill latency by 4x
               },
             ],
           }),
         });
 
+        lastStatus = geminiResponse.status;
+
         if (geminiResponse.ok) {
-          interactionData = await geminiResponse.json();
-          if (interactionData.status !== "failed") {
-            successfulModel = model;
+          const data = await geminiResponse.json();
+          if (data.status !== "failed" && data.status !== "incomplete") {
+            interactionData = data;
+            successfulModel = modelConfig.id;
             break;
           }
-          lastErrorDetails = JSON.stringify(interactionData.errors || interactionData);
-          break;
-        }
-
-        lastErrorDetails = await geminiResponse.text();
-
-        // Retry if 503 (high demand) or 429 (rate-limit)
-        if (geminiResponse.status === 503 || geminiResponse.status === 429) {
-          await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+          lastErrorDetails = JSON.stringify(data.errors || data);
         } else {
-          break;
+          lastErrorDetails = await geminiResponse.text();
         }
-      }
-
-      if (successfulModel) {
-        break;
+      } catch (fetchErr) {
+        lastErrorDetails = fetchErr.message || "Model request timed out";
       }
     }
 
     if (!successfulModel || !interactionData) {
       return new Response(
         JSON.stringify({
-          error: `All Gemini models in rotation (${modelHierarchy.join(", ")}) failed to generate content.`,
+          error: `All Gemini models in rotation (${MODEL_HIERARCHY.map((m) => m.id).join(", ")}) failed to generate content.`,
           details: lastErrorDetails,
         }),
         {
-          status: geminiResponse ? geminiResponse.status : 503,
+          status: lastStatus,
           headers: { "Content-Type": "application/json" },
         }
       );
     }
 
-    // 4. Extract text from the Interactions API `steps` timeline
+    // 3. Extract text from the Interactions API `steps` timeline
     let rawHtml =
       interactionData.steps
         ?.filter((step) => step.type === "model_output")
         .flatMap((step) => step.content || [])
         .filter((part) => part.type === "text" && typeof part.text === "string")
         .map((part) => part.text)
-        .join("") || "<p>No output generated</p>";
+        .join("") ||
+      interactionData.output_text ||
+      "";
 
-    // Remove markdown code fences
-    rawHtml = rawHtml.replace(/```html/gi, "").replace(/```svg/gi, "").replace(/```/g, "").trim();
+    // Strip markdown fences if any and isolate the <svg> or <div> root element
+    rawHtml = rawHtml
+      .replace(/```(?:html|svg|xml)?/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const svgMatch = rawHtml.match(/<svg[\s\S]*<\/svg>/i);
+    if (svgMatch) {
+      rawHtml = svgMatch[0];
+    }
+
+    if (!rawHtml) {
+      rawHtml = "<p>No output generated</p>";
+    }
 
     return new Response(
       JSON.stringify({
-        sourceImageUrl: sourceImageUrl,
+        sourceImageUrl,
         generatedHtml: rawHtml,
         modelUsed: successfulModel,
+        latencyMs: Date.now() - startTime,
       }),
       {
         headers: {
@@ -159,7 +215,10 @@ Return ONLY valid, raw HTML/SVG markup (starting with <svg> or <div> and ending 
     );
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: "Failed to process image", details: err.message }),
+      JSON.stringify({
+        error: "Failed to process image",
+        details: err.message,
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
